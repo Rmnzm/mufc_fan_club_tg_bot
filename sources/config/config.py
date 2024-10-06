@@ -5,6 +5,11 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     tg_token: str
+    database: str
+    login: str
+    password: str
+    host: str
+    port: str
 
     class Config:
         env_file = '.env'
