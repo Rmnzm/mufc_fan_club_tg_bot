@@ -165,6 +165,16 @@ yarl = ">=1.0,<2.0"
 speedups = ["Brotli", "aiodns (>=3.2.0)", "brotlicffi"]
 
 [[package]]
+name = "aioschedule"
+version = "0.5.2"
+description = "Job scheduling for humans."
+optional = false
+python-versions = "*"
+files = [
+    {file = "aioschedule-0.5.2.tar.gz", hash = "sha256:1fe8621d287f58cbba3d73695fbbd890355294ac0c01981a1fd1e4f0510fc744"},
+]
+
+[[package]]
 name = "aiosignal"
 version = "1.3.1"
 description = "aiosignal: a list of registered asynchronous callbacks"
@@ -774,4 +784,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d5d1869c66ebc326306efdad3ba6404df577c3d8d6ce0b603a3d37fe18f43383"
+content-hash = "9ac9e287f458616d457195c90341ccdd23918204133ae74eb80bdb7c16647d9a"

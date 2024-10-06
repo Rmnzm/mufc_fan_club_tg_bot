@@ -12,6 +12,7 @@ pydantic-settings = "2.4.0"
 python-slugify = "8.0.4"
 aiohttp = "3.10.5"
 psycopg2 = "^2.9.9"
+aioschedule = "^0.5.2"
 
 
 [build-system]
