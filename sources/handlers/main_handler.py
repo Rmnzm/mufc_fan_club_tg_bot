@@ -28,3 +28,9 @@ async def process_scheduled_match_days(callback: CallbackQuery):
     nearest_matches = match_day_manager.get_match_days()
     await callback.message.edit_text(text=nearest_matches)
     await callback.answer()
+
+
+@router.callback_query(F.data == 'add_match_day')
+async def process_add_match_day(callback: CallbackQuery):
+    await callback.message.edit_text(text="Впиши всю инфу пж")
+    await callback.answer()

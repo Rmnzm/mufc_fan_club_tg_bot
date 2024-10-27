@@ -30,11 +30,11 @@ class MatchDayManager:
 
         return self.__convert_user_info(command_result)
 
-    def add_match_day(self, match_date, opponent, is_home):
-        command = """
-        INSERT INTO public.match_day (match_date, opponent, is_home) 
-        VALUES (%s, %s, %s)""".format(
-            match_date, opponent, is_home
+    def add_match_day(self, match_date, opponent, is_home, matchday_type):
+        command = f"""
+        INSERT INTO public.match_day (match_date, opponent, is_home, matchday_type) 
+        VALUES (%s, %s, %s, %s)""".format(
+            datetime.strptime(match_date, ''), opponent, is_home, matchday_type
         )
         self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
