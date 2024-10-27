@@ -11,3 +11,4 @@ class MatchDaySchema(BaseModel):
     opponent: str
     is_home: bool
     matchday_status: MatchDayStatusEnum
+    match_type: str

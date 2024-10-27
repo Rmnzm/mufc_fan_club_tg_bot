@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from schemes.matchday_schema import MatchDaySchema
 from schemes.user_role_schema import UserRoleSchema
@@ -9,11 +11,15 @@ class MatchDayManager:
         self.kzn_reds_pg_connector = KznRedsPgConnector()
 
     def get_match_days(self):
-        command = """SELECT * FROM public.match_day"""
+        current_date = datetime.now()
+        command = f"""SELECT * FROM public.match_day 
+        WHERE matchday_status = 'PLANNED' and match_date > '{current_date}'"""
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         match_days = self.__convert_match_day_info(command_result)
         return_string = "\n".join(
-            f"{match_day.match_date.isoformat()}\n{match_day.opponent}" for match_day in match_days
+            f"{match_day.match_date.date().strftime('%d %b %Y %H:%M')}\n"
+            f"{match_day.match_type} against {match_day.opponent}\n"
+            for match_day in match_days
         )
 
         return return_string
