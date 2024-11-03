@@ -5,6 +5,10 @@ from psycopg2 import InterfaceError, OperationalError
 from psycopg2._psycopg import connection
 
 from tools.singleton import SingletonWithParams
+from config.config import get_settings
+
+
+settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +25,16 @@ class KznRedsPgConnector(metaclass=SingletonWithParams):
                 or not self.is_connection_valid
         ):
             try:
-                self.instance_connection = psycopg2.connect()
+                self.instance_connection = psycopg2.connect(
+                    dbname=settings.database,
+                    user=settings.login,
+                    password=settings.password,
+                    host=settings.host,
+                    port=settings.port
+                )
                 self.instance_connection.autocommit = False
             except Exception as error:
-                raise RuntimeError("Connection to PG RDC failed") from error
+                raise RuntimeError("Connection to PG KZN_REDS failed") from error
 
         return self.instance_connection
 
@@ -36,7 +46,7 @@ class KznRedsPgConnector(metaclass=SingletonWithParams):
         except (InterfaceError, OperationalError) as interface_error:
             self.instance_connection.close()
             logger.warning(
-                f"Connection to RDC will be reloaded, cause failed with error: {interface_error}"
+                f"Connection to KZN_REDS will be reloaded, cause failed with error: {interface_error}"
             )
             return False
         except Exception as error:
