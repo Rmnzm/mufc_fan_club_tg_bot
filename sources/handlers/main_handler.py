@@ -9,6 +9,10 @@ from config.config import get_settings
 from functions.match_day_manager import MatchDayManager
 from keyboards.main_keyboard import MainKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
+from lexicon.MATCH_DAY_ADDING_LEXICON_RU import MATCH_DAY_ADDING_LEXICON_RU
+from states.main_states import MatchDayAddingStateGroup
+from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, DialogCalendar, DialogCalendarCallback, \
+    get_user_locale
 
 settings = get_settings()
 
@@ -31,6 +35,18 @@ async def process_scheduled_match_days(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == 'add_match_day')
-async def process_add_match_day(callback: CallbackQuery):
-    await callback.message.edit_text(text="Впиши всю инфу пж")
+async def process_add_match_day(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
+        text="Выберем дату",
+        reply_markup=await SimpleCalendar().start_calendar()
+    )
+    await state.set_state(MatchDayAddingStateGroup.match_date)
+
+    print(await state.get_state())
+    await callback.answer()
+
+
+@router.callback_query(MatchDayAddingStateGroup.apply_match_day)
+async def process_apply_match_day(callback: CallbackQuery, state: FSMContext):
+    context_data = await state.get_data()
     await callback.answer()
