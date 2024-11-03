@@ -35,14 +35,11 @@ async def process_scheduled_match_days(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == 'add_match_day')
-async def process_add_match_day(callback: CallbackQuery, state: FSMContext):
+async def process_add_match_day(callback: CallbackQuery):
     await callback.message.answer(
         text="Выберем дату",
         reply_markup=await SimpleCalendar().start_calendar()
     )
-    await state.set_state(MatchDayAddingStateGroup.match_date)
-
-    print(await state.get_state())
     await callback.answer()
 
 
