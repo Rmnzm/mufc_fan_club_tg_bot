@@ -8,6 +8,5 @@ class MatchDayStatusEnum(Enum):
 
 
 class UserRoleEnum(Enum):
-    ALL = "ALL"
     ADMIN = "ADMIN"
     USER = "USER"
