@@ -1,3 +1,4 @@
+import locale
 import logging
 from datetime import datetime
 
@@ -21,12 +22,29 @@ class MatchDayManager:
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         match_days = self.__convert_match_day_info(command_result)
         return_string = "\n".join(
-            f"{match_day.match_date.date().strftime('%d %b %Y %H:%M')}\n"
-            f"{match_day.match_type} against {match_day.opponent}\n"
+            f"{match_day.start_timestamp.strftime('%a, %d %b %H:%M')}\n"
+            f"{match_day.tournament_name}\n{match_day.localed_match_day_name}\n"
             for match_day in match_days
         )
 
         return return_string if return_string else "Нет ближайших матчей"
+
+    def get_nearest_match_day(self):
+        current_date = datetime.now()
+        command = f"""
+                    SELECT * FROM public.match_day 
+                    WHERE match_status = 'notstarted' and start_timestamp > '{current_date}' 
+                    ORDER BY start_timestamp DESC
+        """
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+        match_days = self.__convert_match_day_info(command_result)
+        return_string = (
+            f"{match_days[0].start_timestamp.strftime('%a, %d %b %H:%M')}\n"
+            f"{match_days[0].tournament_name}\n"
+            f"{match_days[0].localed_match_day_name}"
+        )
+
+        return return_string
 
     def get_user_info(self, user_id):
         command = """SELECT user_role FROM public.users where user_id = %s""".format(user_id)
@@ -44,6 +62,7 @@ class MatchDayManager:
                         VALUES ('{datetime.fromtimestamp(start_timestamp)}', '{match_status}', 
                         '{opponent_name}', '{opponent_name_slug}', '{tournament_name}', 
                         '{tournament_name_slug}', '{localed_match_day_name}')
+                        ON CONFLICT ON CONSTRAINT match_day_pk DO NOTHING;
                         """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:

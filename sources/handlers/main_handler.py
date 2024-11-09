@@ -57,7 +57,7 @@ async def process_add_match_day(callback: CallbackQuery):
                 localed_match_day_name=localed_match_day_name
             )
 
-    await callback.message.answer(text="Матчи выведены в консоль")
+    await callback.message.edit_text(text="Матчи выведены в консоль")
     await callback.answer()
 
 
