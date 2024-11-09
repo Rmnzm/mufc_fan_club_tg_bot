@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
@@ -36,13 +36,8 @@ class MatchDayManager:
         """
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         match_days = self.__convert_match_day_info(command_result)
-        return_string = (
-            f"{match_days[0].start_timestamp.strftime('%a, %d %b %H:%M')}\n"
-            f"{match_days[0].tournament_name}\n"
-            f"{match_days[0].localed_match_day_name}"
-        )
 
-        return return_string
+        return match_days
 
     def get_user_info(self, user_id):
         command = """SELECT user_role FROM public.users where user_id = %s""".format(user_id)
@@ -78,6 +73,20 @@ class MatchDayManager:
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
             logger.error(e)
+
+    def add_watch_day(self, address: str, match_day_context: MatchDaySchema):
+        try:
+            command = f"""
+                        INSERT INTO public.watch_day (
+                        address, meeting_date, match_day_id
+                        )
+                        VALUES ('{address}', '{match_day_context.start_timestamp - timedelta(minutes=30)}', {match_day_context.id})
+                        ON CONFLICT ON CONSTRAINT match_day_id_unique DO NOTHING;
+            """
+            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+        except Exception as e:
+            logger.error(e)
+
 
     @staticmethod
     def __convert_match_day_info(match_days):
