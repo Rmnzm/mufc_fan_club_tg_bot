@@ -2,7 +2,7 @@ import datetime
 
 from pydantic import BaseModel
 
-from tools.enums import MatchDayStatusEnum
+from context.enums import MatchDayStatusEnum
 
 
 class MatchDaySchema(BaseModel):

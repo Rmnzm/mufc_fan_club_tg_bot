@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
+from context.enums import UserRoleEnum
 from schemes.matchday_schema import MatchDaySchema
 from schemes.user_role_schema import UserRoleSchema
 
@@ -48,13 +49,18 @@ class MatchDayManager:
         except Exception as e:
             logger.error(e)
 
-    def add_watch_day(self, address, meeting_date, match_id):
-        command = """
-        INSERT INTO public.watch_day (address, meeting_date, match_id) 
-        VALUES (%s, %s, %s)""".format(
-            address, meeting_date, match_id
-        )
-        self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+    def add_user_info(self, user_id: int, user_name: str):
+        try:
+            command = f"""
+                        INSERT INTO public.users (
+                        username, user_tg_id, user_role
+                        )
+                        VALUES ('{user_name}', '{user_id}', '{UserRoleEnum.USER.value}')
+                        ON CONFLICT ON CONSTRAINT username_userid_unique DO NOTHING
+            """
+            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+        except Exception as e:
+            logger.error(e)
 
     @staticmethod
     def __convert_match_day_info(match_days):

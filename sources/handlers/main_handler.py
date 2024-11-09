@@ -23,6 +23,9 @@ match_day_manager = MatchDayManager()
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
+    user_id = message.from_user.id
+    username = message.from_user.username
+    match_day_manager.add_user_info(user_id=user_id, user_name=username)
     await message.answer(text=BASE_LEXICON_RU['/start'], reply_markup=main_keyboard.main_keyboard())
 
 
