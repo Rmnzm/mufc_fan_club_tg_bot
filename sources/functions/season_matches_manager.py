@@ -16,7 +16,7 @@ class SeasonMatchesManager:
 
     def get_next_matches(self):
         response = requests.get(
-            f"https://sofascore.p.rapidapi.com/teams/get-next-matches?teamId={settings.team_id}&pageIndex=0",
+            f"{settings.sofascore_rapidapi_url}/teams/get-next-matches?teamId={settings.team_id}&pageIndex=0",
             headers={
                 "x-rapidapi-host": settings.x_rapidapi_host,
                 "x-rapidapi-key": settings.x_rapidapi_key,

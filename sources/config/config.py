@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     tg_token: str
+    sofascore_rapidapi_url: str
     x_rapidapi_host: str
     x_rapidapi_key: str
     team_id: int = 35

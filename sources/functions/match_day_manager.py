@@ -16,7 +16,7 @@ class MatchDayManager:
     def get_match_days(self):
         current_date = datetime.now()
         command = f"""SELECT * FROM public.match_day 
-        WHERE matchday_status = 'notstarted' and match_date > '{current_date}'"""
+        WHERE match_status = 'notstarted' and start_timestamp > '{current_date}'"""
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         match_days = self.__convert_match_day_info(command_result)
         return_string = "\n".join(
@@ -25,7 +25,7 @@ class MatchDayManager:
             for match_day in match_days
         )
 
-        return return_string
+        return return_string if return_string else "Нет ближайших матчей"
 
     def get_user_info(self, user_id):
         command = """SELECT user_role FROM public.users where user_id = %s""".format(user_id)

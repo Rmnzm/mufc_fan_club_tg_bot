@@ -1,9 +1,7 @@
-import datetime
 import logging
 
 from aiogram import F, Router
-from aiogram.filters import Command, CommandStart
-from aiogram.fsm.context import FSMContext
+from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 
 from config.config import get_settings
@@ -11,11 +9,7 @@ from functions.match_day_manager import MatchDayManager
 from functions.season_matches_manager import SeasonMatchesManager
 from keyboards.main_keyboard import MainKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
-from lexicon.MATCH_DAY_ADDING_LEXICON_RU import MATCH_DAY_ADDING_LEXICON_RU
 from schemes.matchday_dto import EventDTO
-from states.main_states import MatchDayAddingStateGroup
-from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, DialogCalendar, DialogCalendarCallback, \
-    get_user_locale
 
 logger = logging.getLogger(__name__)
 
