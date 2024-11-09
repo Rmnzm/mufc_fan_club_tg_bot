@@ -1,11 +1,9 @@
-import locale
 import logging
 from datetime import datetime
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
-from schemes.matchday_schema import MatchDaySchema
-from schemes.user_role_schema import UserRoleSchema
+from schemes.scheme import MatchDaySchema, UserRoleSchema
 
 logger = logging.getLogger(__name__)
 
