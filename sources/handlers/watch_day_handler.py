@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 from config.config import get_settings
-from functions.match_day_manager import MatchDayManager
+from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
@@ -17,7 +17,7 @@ settings = get_settings()
 
 router = Router()
 
-match_day_manager = MatchDayManager()
+match_day_manager = KznRedsPGManager()
 
 watch_day_keyboard = WatchDayKeyboard().watch_day_keyboard()
 main_keyboard = MainKeyboard().main_keyboard()

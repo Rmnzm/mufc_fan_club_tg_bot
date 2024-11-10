@@ -5,7 +5,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 
 from config.config import get_settings
-from functions.match_day_manager import MatchDayManager
+from functions.kzn_reds_pg_manager import KznRedsPGManager
 from functions.season_matches_manager import SeasonMatchesManager
 from keyboards.main_keyboard import MainKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
@@ -18,7 +18,7 @@ settings = get_settings()
 router = Router()
 main_keyboard = MainKeyboard()
 
-match_day_manager = MatchDayManager()
+match_day_manager = KznRedsPGManager()
 
 
 @router.message(CommandStart())
@@ -57,8 +57,8 @@ async def process_add_match_day(callback: CallbackQuery):
                 localed_match_day_name=localed_match_day_name
             )
 
-    await callback.message.edit_text(text="Матчи выведены в консоль")
-    await callback.answer()
+    await callback.message.edit_text(text="Заглушка! Текста пока нет")
+    await callback.message.answer(text=BASE_LEXICON_RU['/start'], reply_markup=main_keyboard.main_keyboard())
 
 
 def get_opponent_names(event: EventDTO):

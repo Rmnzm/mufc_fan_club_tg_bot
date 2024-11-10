@@ -8,7 +8,7 @@ from schemes.scheme import MatchDaySchema, UserRoleSchema
 logger = logging.getLogger(__name__)
 
 
-class MatchDayManager:
+class KznRedsPGManager:
 
     def __init__(self):
         self.kzn_reds_pg_connector = KznRedsPgConnector()
