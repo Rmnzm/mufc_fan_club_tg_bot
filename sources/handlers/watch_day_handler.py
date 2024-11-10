@@ -62,6 +62,7 @@ async def edit_address(message: Message, state: FSMContext):
     address = message.text
     match_day_context = await state.get_data()
     match_day_manager.add_watch_day(address=address, match_day_context=match_day_context['choose_match_day'][0])
+    match_day_manager.create_watch_day_table(match_day_context=match_day_context['choose_match_day'][0])
 
     await message.answer(
         text=f"{WATCH_DAY_LEXICON_RU['register_success']}", reply_markup=main_keyboard
