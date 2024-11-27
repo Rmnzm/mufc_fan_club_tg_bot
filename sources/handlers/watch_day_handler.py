@@ -1,4 +1,5 @@
 import logging
+from pyexpat.errors import messages
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -25,6 +26,7 @@ main_keyboard = MainKeyboard().main_keyboard()
 
 class WatchDay(StatesGroup):
     choose_match_day = State()
+    edit_place_name = State()
     edit_address = State()
 
 
@@ -49,16 +51,31 @@ async def watch_day_handler(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "add_watch_day")
 async def watch_day_register(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(WatchDay.edit_address)
+    await state.set_state(WatchDay.edit_place_name)
 
     await callback.message.edit_text(
-        text=f"{WATCH_DAY_LEXICON_RU['edit_address']}"
+        text=f"{WATCH_DAY_LEXICON_RU['edit_place_name']}"
     )
     await callback.answer()
 
 
+@router.message(WatchDay.edit_place_name)
+async def edit_place_name_handler(message: Message, state: FSMContext):
+    place_name = message.text
+    await state.update_data(place_name=place_name)
+    await state.set_state(WatchDay.edit_address)
+
+    await message.answer(
+        text=f"{WATCH_DAY_LEXICON_RU['edit_address']}"
+    )
+
+
 @router.message(WatchDay.edit_address)
 async def edit_address(message: Message, state: FSMContext):
+    print(await state.get_data())
+    # Example of state.get_data() -- {'choose_match_day': [MatchDaySchema(id=5, start_timestamp=datetime.datetime(2024, 11, 28, 23, 0), opponent_name='Bodø/Glimt', opponent_name_slug='bodoglimt', match_status=<MatchDayStatusEnum.NOTSTARTED: 'notstarted'>, tournament_name='UEFA Europa League', tournament_name_slug='uefa-europa-league', localed_match_day_name='Манчестер Юнайтед -- ФК Буде/Глимт')], 'place_name': 'top hop'}
+    # TODO: register watching place. Make row with place if not exists.
+    #  Add watch day and  attach link place row into watch day table
     address = message.text
     match_day_context = await state.get_data()
     match_day_manager.add_watch_day(address=address, match_day_context=match_day_context['choose_match_day'][0])

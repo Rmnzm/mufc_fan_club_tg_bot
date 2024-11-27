@@ -33,7 +33,8 @@ async def process_start_command(message: Message):
 async def process_scheduled_match_days(callback: CallbackQuery):
     nearest_matches = match_day_manager.get_match_days()
     await callback.message.edit_text(text=nearest_matches)
-    await callback.answer()
+    # TODO: replace keyboard to back_to_menu
+    await callback.answer(reply_markup=main_keyboard.main_keyboard())
 
 
 @router.callback_query(F.data == 'add_match_days')
@@ -57,7 +58,8 @@ async def process_add_match_day(callback: CallbackQuery):
                 localed_match_day_name=localed_match_day_name
             )
 
-    await callback.message.edit_text(text="Заглушка! Текста пока нет")
+    # TODO: Make real text
+    await callback.message.edit_text(text="Заглушка! Текста пока нет. Но что-то произошло")
     await callback.message.answer(text=BASE_LEXICON_RU['/start'], reply_markup=main_keyboard.main_keyboard())
 
 
