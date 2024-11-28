@@ -5,7 +5,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config.config import get_settings
-from handlers import main_handler, add_match_day_handler, watch_day_handler
+from handlers import main_handler
+from handlers.admin import watch_day_handler, add_match_day_handler
 
 settings = get_settings()
 
