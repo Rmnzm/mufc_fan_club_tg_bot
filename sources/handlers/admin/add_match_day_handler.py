@@ -7,14 +7,14 @@ from aiogram.types import CallbackQuery
 from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback
 
 from config.config import get_settings
-from functions.match_day_manager import MatchDayManager
+from functions.kzn_reds_pg_manager import KznRedsPGManager
 from states.main_states import MatchDayAddingStateGroup
 
 settings = get_settings()
 
 router = Router()
 
-match_day_manager = MatchDayManager()
+match_day_manager = KznRedsPGManager()
 
 
 @router.callback_query(SimpleCalendarCallback.filter())

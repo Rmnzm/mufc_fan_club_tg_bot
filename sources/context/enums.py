@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class MatchDayStatusEnum(Enum):
-    PLANNED = "PLANNED"
-    PASSED = "PASSED"
-    POSTPONED = "POSTPONED"
+    NOTSTARTED = "notstarted"
+    PASSED = "passed"
+    POSTPONED = "postponed"
 
 
 class UserRoleEnum(Enum):
