@@ -25,8 +25,8 @@ async def main():
     dispatcher = Dispatcher()
 
     dispatcher.include_router(main_handler.router)
-    dispatcher.include_router(add_match_day_handler.router)
-    dispatcher.include_router(watch_day_handler.router)
+    # dispatcher.include_router(add_match_day_handler.router)
+    # dispatcher.include_router(watch_day_handler.router)
 
     logger.info("Bot started.")
 
