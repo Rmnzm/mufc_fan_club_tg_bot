@@ -9,6 +9,7 @@ from functions.kzn_reds_pg_manager import KznRedsPGManager
 from functions.season_matches_manager import SeasonMatchesManager
 from keyboards.main_keyboard import MainKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
+from lexicon.WATCH_DAY_LEXICON_RU import WATCH_DAY_LEXICON_RU
 from schemes.matchday_dto import EventDTO
 
 logger = logging.getLogger(__name__)
@@ -32,9 +33,27 @@ async def process_start_command(message: Message):
 @router.callback_query(F.data == "scheduled_match_days")
 async def process_scheduled_match_days(callback: CallbackQuery):
     nearest_matches = match_day_manager.get_match_days()
-    await callback.message.edit_text(text=nearest_matches)
+    await callback.message.edit_text(text=nearest_matches, reply_markup=main_keyboard.main_keyboard())
     # TODO: replace keyboard to back_to_menu
-    await callback.answer(reply_markup=main_keyboard.main_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "nearest_meetings")
+async def process_nearest_meetings(callback: CallbackQuery):
+    nearest_match_day_context = match_day_manager.get_nearest_meetings()
+    nearest_match_day = (
+        f"{nearest_match_day_context[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
+        f"{nearest_match_day_context[0].tournament_name}\n"
+        f"{nearest_match_day_context[0].localed_match_day_name}\n"
+        f"{nearest_match_day_context[0].place_name}\n"
+        f"{nearest_match_day_context[0].address}\n\n"
+        f"(встреча назначена за пол часа до события)"
+    )
+    await callback.message.edit_text(
+        text=f"{WATCH_DAY_LEXICON_RU['next_match_day_is']}\n\n{nearest_match_day}",
+        reply_markup=main_keyboard.main_keyboard()
+    )
+    await callback.answer()
 
 
 # @router.callback_query(F.data == 'add_match_days')

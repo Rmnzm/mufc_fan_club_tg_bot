@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
-from schemes.scheme import MatchDaySchema, UserRoleSchema
+from schemes.scheme import MatchDaySchema, UserRoleSchema, WatchDaySchema, NearestMeetingsSchema
 
 logger = logging.getLogger(__name__)
 
@@ -111,10 +111,37 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(e)
 
+    def get_nearest_watch_day(self):
+        current_date = datetime.now()
+        command = f"""SELECT * FROM public.watch_day 
+                WHERE watch_status = 'notstarted' and meeting_date > '{current_date}'"""
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+        watch_days = self.__convert_watch_day_info(command_result)
+
+        return watch_days
+
+    def get_nearest_meetings(self):
+        current_date = datetime.now()
+        command = f"""SELECT * FROM public.watch_day 
+                        JOIN public.match_day ON public.watch_day.match_day_id = public.match_day.id
+                        WHERE public.watch_day.watch_status = 'notstarted' and 
+                        public.match_day.match_status = 'notstarted' and 
+                        public.watch_day.meeting_date > '{current_date}'"""
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+        nearest_meetings = self.__convert_nearest_meetings(command_result)
+        return nearest_meetings
 
     @staticmethod
     def __convert_match_day_info(match_days):
         return [MatchDaySchema(**match_day) for match_day in match_days]
+
+    @staticmethod
+    def __convert_watch_day_info(watch_days):
+        return [WatchDaySchema(**watch_day) for watch_day in watch_days]
+
+    @staticmethod
+    def __convert_nearest_meetings(nearest_meetings):
+        return [NearestMeetingsSchema(**nearest_meeting) for nearest_meeting in nearest_meetings]
 
     @staticmethod
     def __convert_user_info(user_info):
