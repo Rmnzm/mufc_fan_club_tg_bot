@@ -7,6 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from functions.season_matches_manager import SeasonMatchesManager
+from keyboards.keyboard_generator import KeyboardGenerator, MatchDayCallbackFactory
 from keyboards.main_keyboard import MainKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
 from lexicon.WATCH_DAY_LEXICON_RU import WATCH_DAY_LEXICON_RU
@@ -20,6 +21,7 @@ router = Router()
 main_keyboard = MainKeyboard()
 
 match_day_manager = KznRedsPGManager()
+keyboard_generator = KeyboardGenerator()
 
 
 @router.message(CommandStart())
@@ -41,17 +43,25 @@ async def process_scheduled_match_days(callback: CallbackQuery):
 @router.callback_query(F.data == "nearest_meetings")
 async def process_nearest_meetings(callback: CallbackQuery):
     nearest_match_day_context = match_day_manager.get_nearest_meetings()
-    nearest_match_day = (
-        f"{nearest_match_day_context[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
-        f"{nearest_match_day_context[0].tournament_name}\n"
-        f"{nearest_match_day_context[0].localed_match_day_name}\n"
-        f"{nearest_match_day_context[0].place_name}\n"
-        f"{nearest_match_day_context[0].address}\n\n"
-        f"(встреча назначена за пол часа до события)"
-    )
+    data = [
+        MatchDayCallbackFactory(
+            id=context.id,
+            date=context.meeting_date.strftime('%d/%m/%Y'),
+            match_name=context.localed_match_day_name
+        ) for context in nearest_match_day_context
+    ]
+    reply_keyboard = keyboard_generator.watch_day_keyboard(data)
+    # nearest_match_day = (
+    #     f"{nearest_match_day_context[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
+    #     f"{nearest_match_day_context[0].tournament_name}\n"
+    #     f"{nearest_match_day_context[0].localed_match_day_name}\n"
+    #     f"{nearest_match_day_context[0].place_name}\n"
+    #     f"{nearest_match_day_context[0].address}\n\n"
+    #     f"(встреча назначена за пол часа до события)"
+    # )
     await callback.message.edit_text(
-        text=f"{WATCH_DAY_LEXICON_RU['next_match_day_is']}\n\n{nearest_match_day}",
-        reply_markup=main_keyboard.main_keyboard()
+        text="Some text",
+        reply_markup=reply_keyboard
     )
     await callback.answer()
 

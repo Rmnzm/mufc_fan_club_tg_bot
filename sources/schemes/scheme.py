@@ -35,6 +35,7 @@ class WatchDaySchema(BaseModel):
 
 
 class NearestMeetingsSchema(BaseModel):
+    id: int
     address: str
     place_name: str
     meeting_date: datetime.datetime

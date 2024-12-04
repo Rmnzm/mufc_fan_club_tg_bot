@@ -128,6 +128,7 @@ class KznRedsPGManager:
                         public.match_day.match_status = 'notstarted' and 
                         public.watch_day.meeting_date > '{current_date}'"""
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+        print(command_result)
         nearest_meetings = self.__convert_nearest_meetings(command_result)
         return nearest_meetings
 
