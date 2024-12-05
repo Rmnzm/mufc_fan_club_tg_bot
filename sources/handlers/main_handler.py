@@ -4,13 +4,12 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 
+from callback_factory.callback_factory import MatchDayCallbackFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
-from functions.season_matches_manager import SeasonMatchesManager
-from keyboards.keyboard_generator import KeyboardGenerator, MatchDayCallbackFactory
+from keyboards.keyboard_generator import KeyboardGenerator
 from keyboards.main_keyboard import MainKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
-from lexicon.WATCH_DAY_LEXICON_RU import WATCH_DAY_LEXICON_RU
 from schemes.matchday_dto import EventDTO
 
 logger = logging.getLogger(__name__)
@@ -43,14 +42,12 @@ async def process_scheduled_match_days(callback: CallbackQuery):
 @router.callback_query(F.data == "nearest_meetings")
 async def process_nearest_meetings(callback: CallbackQuery):
     nearest_match_day_context = match_day_manager.get_nearest_meetings()
-    data = [
+    data_factories = [
         MatchDayCallbackFactory(
-            id=context.id,
-            date=context.meeting_date.strftime('%d/%m/%Y'),
-            match_name=context.localed_match_day_name
+            id=context.id
         ) for context in nearest_match_day_context
     ]
-    reply_keyboard = keyboard_generator.watch_day_keyboard(data)
+    reply_keyboard = keyboard_generator.watch_day_keyboard(data_factories, nearest_match_day_context)
     # nearest_match_day = (
     #     f"{nearest_match_day_context[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
     #     f"{nearest_match_day_context[0].tournament_name}\n"
@@ -60,6 +57,7 @@ async def process_nearest_meetings(callback: CallbackQuery):
     #     f"(встреча назначена за пол часа до события)"
     # )
     await callback.message.edit_text(
+        # TODO: add relevant text
         text="Some text",
         reply_markup=reply_keyboard
     )

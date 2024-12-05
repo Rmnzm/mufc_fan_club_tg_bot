@@ -1,31 +1,29 @@
 from typing import Iterable, List
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram.filters.callback_data import CallbackData
 
-
-class MatchDayCallbackFactory(CallbackData, prefix='watch_days'):
-    id: int
-    date: str
-    match_name: str
+from callback_factory.callback_factory import MatchDayCallbackFactory
+from schemes.scheme import NearestMeetingsSchema
 
 
 class KeyboardGenerator:
     def __init__(self):
         pass
 
-    def watch_day_keyboard(self, data: List[MatchDayCallbackFactory]):
+    def watch_day_keyboard(self, data_factories: List[MatchDayCallbackFactory], buttons_info: list[NearestMeetingsSchema]):
         keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[[self.__button(callback_data)] for callback_data in data],
+            inline_keyboard=[[self.__button(factory_data, buttons_info)] for factory_data in data_factories],
             resize_keyboard=True
         )
         return keyboard
 
     @staticmethod
-    def __button(callback_data) -> InlineKeyboardButton:
+    def __button(callback_data: MatchDayCallbackFactory, button_data: list[NearestMeetingsSchema]) -> InlineKeyboardButton:
         try:
+            btn_data = list(filter(lambda i: callback_data.id == i.id, button_data))
+            button_name = f"{btn_data[0].meeting_date.strftime('%a, %d %b %H:%M')} {btn_data[0].localed_match_day_name}"
             button = InlineKeyboardButton(
-                text=f"{callback_data.date} {callback_data.match_name}", callback_data=callback_data.pack()
+                text=button_name, callback_data=callback_data.pack()
             )
             return button
         except ValueError:
