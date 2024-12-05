@@ -132,6 +132,37 @@ class KznRedsPGManager:
         nearest_meetings = self.__convert_nearest_meetings(command_result)
         return nearest_meetings
 
+    def get_watch_day_by_id(self, watch_day_id: int) -> list[NearestMeetingsSchema]:
+        command = (f"SELECT * FROM public.watch_day "
+                   f"JOIN public.match_day ON public.watch_day.match_day_id = public.match_day.id "
+                   f"WHERE public.watch_day.id = {watch_day_id}")
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+        print(command_result)
+        watch_day_by_id = self.__convert_nearest_meetings(command_result)
+        return watch_day_by_id
+
+    def register_user_to_watch(self, user_id, watch_day_id):
+        watch_day_info = self.get_watch_day_by_id(watch_day_id)
+        match_day_id = self.get_match_day_id_watch_day_id(watch_day_id)
+        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
+        watch_day_table_name = f"match_day_{watch_day_date}"
+        place_name = watch_day_info[0].place_name.replace("'", "''")
+
+        command = (f"INSERT INTO public.{watch_day_table_name} (user_id, watch_day_id, match_day_id, watch_place) "
+                   f"VALUES ({user_id}, {watch_day_id}, {match_day_id}, '{place_name}')")
+
+        self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+
+
+
+    def get_match_day_id_watch_day_id(self, watch_day_id):
+        command = f"SELECT match_day_id FROM public.watch_day WHERE id = {watch_day_id}"
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+        print(command_result)
+
+        return int(command_result[0]['match_day_id'])
+
+
     @staticmethod
     def __convert_match_day_info(match_days):
         return [MatchDaySchema(**match_day) for match_day in match_days]

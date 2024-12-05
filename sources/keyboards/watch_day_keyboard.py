@@ -29,3 +29,24 @@ class WatchDayKeyboard:
         )
 
         return keyboard
+
+    @staticmethod
+    def approve_meeting_keyboard():
+        go_button = InlineKeyboardButton(
+            text="Иду", callback_data="go_button"
+        )
+        not_go_button = InlineKeyboardButton(
+            text="Не иду", callback_data="not_go_button"
+        )
+        menu_button = InlineKeyboardButton(
+            text="Назад в меню", callback_data="menu_button"
+        )
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [go_button, not_go_button],
+                [menu_button],
+            ],
+            resize_keyboard=True,
+        )
+
+        return keyboard
