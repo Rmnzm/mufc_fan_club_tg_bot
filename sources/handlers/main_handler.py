@@ -93,11 +93,31 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 
     user_id = callback.from_user.id
     print(user_id)
+    try:
+        match_day_manager.register_user_to_watch(user_id, state_data['watch_day_id'])
 
-    match_day_manager.register_user_to_watch(user_id, state_data['watch_day_id'])
+        await callback.message.edit_text(
+            text="Вы зарегистрировались на матч", reply_markup=main_keyboard.main_keyboard()
+        )
+    except Exception as e:
+        await callback.message.edit_text(
+            text="Вы уже зарегистрировались на матч, ждем вас", reply_markup=main_keyboard.main_keyboard()
+        )
+    await callback.answer()
 
+
+@router.callback_query(F.data == "not_go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
+async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
-        text="Вы зарегистрировались на матч", reply_markup=main_keyboard.main_keyboard()
+        text="Жаль...", reply_markup=main_keyboard.main_keyboard()
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu_button", WatchDayUserRegistrationStateGroup.watch_day_id)
+async def process_menu_button(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        text=BASE_LEXICON_RU['/start'], reply_markup=main_keyboard.main_keyboard()
     )
     await callback.answer()
 
