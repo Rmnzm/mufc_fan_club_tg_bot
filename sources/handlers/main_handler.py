@@ -12,10 +12,6 @@ from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
 from schemes.matchday_dto import EventDTO
-from states.main_states import WatchDayUserRegistrationStateGroup
-
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 
 logger = logging.getLogger(__name__)
 
