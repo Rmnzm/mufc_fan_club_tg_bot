@@ -97,6 +97,7 @@ class KznRedsPGManager:
                             created_at timestamp without time zone NOT NULL DEFAULT now(),
                             user_id integer NOT NULL REFERENCES users (id),
                             is_approved boolean NOT NULL DEFAULT false,
+                            is_canceled boolean NOT NULL DEFAULT false,
                             watch_day_id integer NOT NULL REFERENCES watch_day (id),
                             match_day_id integer NOT NULL REFERENCES match_day (id),
                             watch_place character varying(255) NULL

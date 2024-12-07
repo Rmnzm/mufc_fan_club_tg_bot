@@ -33,7 +33,7 @@ async def show_users(callback: CallbackQuery):
 @router.callback_query(F.data == "show_nearest_watching_days")
 async def show_nearest_watching_days(callback: CallbackQuery):
     await callback.message.edit_text(
-        text="Тут будут кнопки с ближайшими просмотрами"
+        text="Тут будут кнопки с ближайшими просмотрами, клавиатура с кнопками"
     )
     await callback.answer()
 
