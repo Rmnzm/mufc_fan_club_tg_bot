@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
-from schemes.scheme import MatchDaySchema, UserRoleSchema, WatchDaySchema, NearestMeetingsSchema
+from schemes.scheme import MatchDaySchema, UserRoleSchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +184,20 @@ class KznRedsPGManager:
         print(command_result)
 
         return int(command_result[0]['match_day_id'])
+
+
+    def get_users(self):
+        command = "SELECT * FROM users"
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+        users = self.__convert_users_info(command_result)
+
+        return users
+
+
+    @staticmethod
+    def __convert_users_info(users):
+        return [UsersSchema(**user) for user in users]
 
 
     @staticmethod

@@ -41,3 +41,8 @@ class NearestMeetingsSchema(BaseModel):
     meeting_date: datetime.datetime
     localed_match_day_name: str
     tournament_name: str
+
+
+class UsersSchema(BaseModel):
+    username: str
+    user_role: str

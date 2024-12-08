@@ -6,7 +6,9 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config.config import get_settings
 from handlers import main_handler
+from handlers.admin import base_admin_handler
 from handlers.customer import watch_day_registration_handler
+from handlers.admin import add_match_day_handler
 
 settings = get_settings()
 
@@ -25,6 +27,7 @@ async def main():
     dispatcher = Dispatcher()
 
     dispatcher.include_router(main_handler.router)
+    dispatcher.include_router(base_admin_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
 
     logger.info("Bot started.")
