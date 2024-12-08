@@ -12,6 +12,9 @@ class AdminKeyboard:
         show_nearest_watching_days = InlineKeyboardButton(
             text="Ближайшие просмотры", callback_data="show_nearest_watching_days"
         )
+        show_places = InlineKeyboardButton(
+            text="Места просмотров", callback_data="show_places"
+        )
         back_to_main_menu = InlineKeyboardButton(
             text="назад", callback_data="back_to_main_menu"
         )
@@ -20,6 +23,7 @@ class AdminKeyboard:
             inline_keyboard=[
                 [show_users],
                 [show_nearest_watching_days],
+                [show_places],
                 [back_to_main_menu],
             ],
             resize_keyboard=True,
