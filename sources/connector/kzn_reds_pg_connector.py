@@ -69,6 +69,7 @@ class KznRedsPgConnector(metaclass=SingletonWithParams):
             except Exception as error:
                 active_connection.rollback()
                 logger.exception(f"{exception_log}, Error: {error}")
+                raise
 
     def select_with_dict_result(self, command):
         with self.connection as active_connection:

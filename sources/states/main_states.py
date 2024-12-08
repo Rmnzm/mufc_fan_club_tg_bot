@@ -7,3 +7,8 @@ class MatchDayAddingStateGroup(StatesGroup):
     match_date = State()
     match_type = State()
     apply_match_day = State()
+
+
+class WatchDayUserRegistrationStateGroup(StatesGroup):
+    watch_day_id = State()
+    user_id = State()

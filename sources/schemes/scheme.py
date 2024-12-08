@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -21,3 +22,22 @@ class UserRoleSchema(BaseModel):
     user_id: int
     username: str
     user_role: UserRoleEnum
+
+
+class WatchDaySchema(BaseModel):
+    id: int
+    address: str
+    meeting_date: datetime.datetime
+    description: Optional[str]
+    match_day_id: int
+    place_name: str
+    watch_status: MatchDayStatusEnum
+
+
+class NearestMeetingsSchema(BaseModel):
+    id: int
+    address: str
+    place_name: str
+    meeting_date: datetime.datetime
+    localed_match_day_name: str
+    tournament_name: str
