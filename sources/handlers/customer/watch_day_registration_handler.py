@@ -68,7 +68,13 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "not_go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
-async def process_not_go_button(callback: CallbackQuery):
+async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
+    state_data = await state.get_data()
+    print(state_data['watch_day_id'])
+
+    user_id = callback.from_user.id
+    print(user_id)
+    match_day_manager.cancel_registration_to_watch(user_id, state_data['watch_day_id'])
     await callback.message.edit_text(
         text="Жаль...", reply_markup=main_keyboard.main_keyboard()
     )

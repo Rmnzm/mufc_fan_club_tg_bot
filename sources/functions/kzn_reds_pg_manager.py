@@ -155,6 +155,28 @@ class KznRedsPGManager:
         self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
 
+    def cancel_registration_to_watch(self, user_id, watch_day_id):
+        watch_day_info = self.get_watch_day_by_id(watch_day_id)
+        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
+        watch_day_table_name = f"match_day_{watch_day_date}"
+
+        user_registration = self.get_user_watch_day_registration_info(user_id, watch_day_table_name)
+
+        print(user_registration)
+
+        if user_registration:
+            command = f"UPDATE {watch_day_table_name} SET is_canceled = true WHERE user_id = {user_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+
+
+    def get_user_watch_day_registration_info(self, user_id, table_name):
+        command = f"SELECT * FROM {table_name} WHERE user_id = {user_id}"
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+        print(command_result)
+
+        return command_result
+
 
     def get_match_day_id_watch_day_id(self, watch_day_id):
         command = f"SELECT match_day_id FROM public.watch_day WHERE id = {watch_day_id}"
