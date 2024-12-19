@@ -29,3 +29,25 @@ class AdminKeyboard:
             resize_keyboard=True,
         )
         return keyboard
+
+
+    @staticmethod
+    def edit_meeting_keyboard():
+        edit_place = InlineKeyboardButton(
+            text="Изменить место", callback_data="edit_place"
+        )
+        cancel_meeting = InlineKeyboardButton(
+            text="Отменить встречу", callback_data="cancel_meeting"
+        )
+        back_to_main_menu = InlineKeyboardButton(
+            text="Назад в меню", callback_data="back_to_main_menu"
+        )
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [edit_place, cancel_meeting],
+                [back_to_main_menu],
+            ],
+            resize_keyboard=True,
+        )
+
+        return keyboard

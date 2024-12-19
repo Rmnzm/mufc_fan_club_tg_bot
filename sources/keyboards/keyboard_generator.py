@@ -2,7 +2,7 @@ from typing import Iterable, List
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from callback_factory.callback_factory import MatchDayCallbackFactory
+from callback_factory.callback_factory import MatchDayCallbackFactory, AdminMatchDayCallbackFactory
 from schemes.scheme import NearestMeetingsSchema
 
 
@@ -17,8 +17,19 @@ class KeyboardGenerator:
         )
         return keyboard
 
+    def admin_watch_day_keyboard(self, data_factories: List[AdminMatchDayCallbackFactory], buttons_info: list[NearestMeetingsSchema]):
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[[self.__button(factory_data, buttons_info)] for factory_data in data_factories],
+            resize_keyboard=True
+        )
+        return keyboard
+
+
     @staticmethod
-    def __button(callback_data: MatchDayCallbackFactory, button_data: list[NearestMeetingsSchema]) -> InlineKeyboardButton:
+    def __button(
+            callback_data: MatchDayCallbackFactory | AdminMatchDayCallbackFactory,
+            button_data: list[NearestMeetingsSchema]
+    ) -> InlineKeyboardButton:
         try:
             btn_data = list(filter(lambda i: callback_data.id == i.id, button_data))
             button_name = f"{btn_data[0].meeting_date.strftime('%a, %d %b %H:%M')} {btn_data[0].localed_match_day_name}"

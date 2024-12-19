@@ -4,7 +4,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.filters import Command
 
-from callback_factory.callback_factory import MatchDayCallbackFactory
+from callback_factory.callback_factory import MatchDayCallbackFactory, AdminMatchDayCallbackFactory
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -47,11 +47,11 @@ async def show_users(callback: CallbackQuery):
 async def process_nearest_meetings(callback: CallbackQuery):
     nearest_match_day_context = match_day_manager.get_nearest_meetings()
     data_factories = [
-        MatchDayCallbackFactory(
+        AdminMatchDayCallbackFactory(
             id=context.id
         ) for context in nearest_match_day_context
     ]
-    reply_keyboard = keyboard_generator.watch_day_keyboard(data_factories, nearest_match_day_context)
+    reply_keyboard = keyboard_generator.admin_watch_day_keyboard(data_factories, nearest_match_day_context)
     await callback.message.edit_text(
         # TODO: add relevant text
         text="Some text",
