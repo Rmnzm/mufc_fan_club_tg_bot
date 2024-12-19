@@ -15,16 +15,16 @@ class AdminKeyboard:
         show_places = InlineKeyboardButton(
             text="Места просмотров", callback_data="show_places"
         )
-        back_to_main_menu = InlineKeyboardButton(
-            text="назад", callback_data="back_to_main_menu"
-        )
+        # back_to_main_menu = InlineKeyboardButton(
+        #     text="Назад", callback_data="back_to_main_menu"
+        # )
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [show_users],
                 [show_nearest_watching_days],
                 [show_places],
-                [back_to_main_menu],
+                # [back_to_main_menu],
             ],
             resize_keyboard=True,
         )
