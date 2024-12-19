@@ -58,11 +58,3 @@ async def process_nearest_meetings(callback: CallbackQuery):
         reply_markup=reply_keyboard
     )
     await callback.answer()
-
-
-# @router.callback_query(F.data == "back_to_main_menu")
-# async def back_to_main_menu(callback: CallbackQuery):
-#     await callback.message.edit_text(
-#         text="Base admin command processing", reply_markup=admin_keyboard.main_admin_keyboard()
-#     )
-#     await callback.answer()

@@ -4,28 +4,24 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from callback_factory.callback_factory import MatchDayCallbackFactory
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
-# from keyboards.main_keyboard import MainKeyboard
 from keyboards.admin_keyboard import AdminKeyboard
-from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
-# from states.main_states import WatchDayUserRegistrationStateGroup
 
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
 router = Router()
-# main_keyboard = MainKeyboard()
 admin_watch_day_keyboard = AdminKeyboard()
 
 match_day_manager = KznRedsPGManager()
 
 
-@router.callback_query(MatchDayCallbackFactory.filter())
+@router.callback_query(AdminMatchDayCallbackFactory.filter())
 async def process_scheduled_match_days_filter(
-        callback: CallbackQuery, callback_data: MatchDayCallbackFactory, state: FSMContext
+        callback: CallbackQuery, callback_data: AdminMatchDayCallbackFactory, state: FSMContext
 ):
     watch_day_by_id = match_day_manager.get_watch_day_by_id(callback_data.id)
 
