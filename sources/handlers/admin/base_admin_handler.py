@@ -1,13 +1,15 @@
 import logging
-from aiogram.types import Message, CallbackQuery
 
 from aiogram import F, Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery
 
-from callback_factory.callback_factory import MatchDayCallbackFactory, AdminMatchDayCallbackFactory
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
+from states.create_place_state import CreatePlaceStateGroup
 
 logger = logging.getLogger(__name__)
 
@@ -58,3 +60,14 @@ async def process_nearest_meetings(callback: CallbackQuery):
         reply_markup=reply_keyboard
     )
     await callback.answer()
+
+
+
+@router.callback_query(F.data == "add_watching_place")
+async def add_watching_place(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(CreatePlaceStateGroup.start_state)
+    await callback.message.edit_text(
+        text="Добавление места"
+    )
+    await callback.answer()
+

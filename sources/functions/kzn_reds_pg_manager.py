@@ -194,6 +194,13 @@ class KznRedsPGManager:
 
         return users
 
+    def add_watch_place(self, place_name: str, place_address: str):
+        try:
+            command = f"INSERT INTO public.places (place_name, address) VALUES ('{place_name}', '{place_address}')"
+            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+        except Exception as e:
+            logger.error(e)
+
 
     @staticmethod
     def __convert_users_info(users):

@@ -15,6 +15,9 @@ class AdminKeyboard:
         show_places = InlineKeyboardButton(
             text="Места просмотров", callback_data="show_places"
         )
+        add_watching_place = InlineKeyboardButton(
+            text="Добавить место просмотра", callback_data="add_watching_place"
+        )
         # back_to_main_menu = InlineKeyboardButton(
         #     text="Назад", callback_data="back_to_main_menu"
         # )
@@ -24,6 +27,7 @@ class AdminKeyboard:
                 [show_users],
                 [show_nearest_watching_days],
                 [show_places],
+                [add_watching_place]
                 # [back_to_main_menu],
             ],
             resize_keyboard=True,

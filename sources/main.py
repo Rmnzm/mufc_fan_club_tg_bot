@@ -9,6 +9,7 @@ from handlers import main_handler
 from handlers.admin import base_admin_handler
 from handlers.customer import watch_day_registration_handler
 from handlers.admin import watch_day_edition_handler
+from handlers.admin import create_place_handler
 
 settings = get_settings()
 
@@ -30,6 +31,7 @@ async def main():
     dispatcher.include_router(base_admin_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
     dispatcher.include_router(watch_day_edition_handler.router)
+    dispatcher.include_router(create_place_handler.router)
 
     logger.info("Bot started.")
 
