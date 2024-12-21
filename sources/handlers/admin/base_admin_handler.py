@@ -53,7 +53,9 @@ async def process_nearest_meetings(callback: CallbackQuery):
             id=context.id
         ) for context in nearest_match_day_context
     ]
-    reply_keyboard = keyboard_generator.admin_watch_day_keyboard(data_factories, nearest_match_day_context)
+    reply_keyboard = keyboard_generator.admin_watch_day_keyboard(
+        data_factories, nearest_match_day_context, add_watch_day=True
+    )
     await callback.message.edit_text(
         # TODO: add relevant text
         text="Some text",

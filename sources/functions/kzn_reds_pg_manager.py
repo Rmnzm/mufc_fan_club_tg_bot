@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
-from schemes.scheme import MatchDaySchema, UserRoleSchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema
+from schemes.scheme import MatchDaySchema, UserRoleSchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema, \
+    PlacesSchema
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,14 @@ class KznRedsPGManager:
         match_days = self.__convert_match_day_info(command_result)
 
         return match_days
+
+    def get_places(self):
+        command = f"""SELECT * FROM public.places"""
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+        return self.__convert_places(command_result)
+
+
 
     def get_user_info(self, user_id):
         command = """SELECT user_role FROM public.users where user_id = %s""".format(user_id)
@@ -74,13 +83,15 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(e)
 
-    def add_watch_day(self, address: str, match_day_context: MatchDaySchema):
+    def add_watch_day(self, match_day_context: MatchDaySchema, place_id: int):
         try:
             command = f"""
                         INSERT INTO public.watch_day (
-                        address, meeting_date, match_day_id
+                        meeting_date, match_day_id, place_id, watch_status
                         )
-                        VALUES ('{address}', '{match_day_context.start_timestamp - timedelta(minutes=30)}', {match_day_context.id})
+                        VALUES ('{match_day_context.start_timestamp - timedelta(minutes=30)}', 
+                                {match_day_context.id},
+                                {place_id})
                         ON CONFLICT ON CONSTRAINT match_day_id_unique DO NOTHING;
             """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
@@ -100,7 +111,7 @@ class KznRedsPGManager:
                             is_canceled boolean NOT NULL DEFAULT false,
                             watch_day_id integer NOT NULL REFERENCES watch_day (id),
                             match_day_id integer NOT NULL REFERENCES match_day (id),
-                            watch_place character varying(255) NULL
+                            watch_day_id integer NOT NULL REFERENCES places (id)
                           );
                         
                         ALTER TABLE
@@ -111,6 +122,7 @@ class KznRedsPGManager:
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
             logger.error(e)
+
 
     def get_nearest_watch_day(self):
         current_date = datetime.now()
@@ -132,6 +144,14 @@ class KznRedsPGManager:
         print(command_result)
         nearest_meetings = self.__convert_nearest_meetings(command_result)
         return nearest_meetings
+
+    def get_match_day_by_id(self, match_day_id):
+        command = f"SELECT * FROM public.match_day WHERE id = {match_day_id}"
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+        match_day_by_id = self.__convert_match_day_info(command_result)
+
+        return match_day_by_id[0]
 
     def get_watch_day_by_id(self, watch_day_id: int) -> list[NearestMeetingsSchema]:
         command = (f"SELECT * FROM public.watch_day "
@@ -222,3 +242,7 @@ class KznRedsPGManager:
     @staticmethod
     def __convert_user_info(user_info):
         return UserRoleSchema(**user_info[0])
+
+    @staticmethod
+    def __convert_places(places):
+        return [PlacesSchema(**place) for place in places]
