@@ -50,7 +50,7 @@ async def process_nearest_meetings(callback: CallbackQuery):
     nearest_match_day_context = match_day_manager.get_nearest_meetings()
     data_factories = [
         AdminMatchDayCallbackFactory(
-            id=context.id
+            id=context.match_day_id
         ) for context in nearest_match_day_context
     ]
     reply_keyboard = keyboard_generator.admin_watch_day_keyboard(

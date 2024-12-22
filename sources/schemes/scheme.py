@@ -35,10 +35,14 @@ class WatchDaySchema(BaseModel):
 
 
 class NearestMeetingsSchema(BaseModel):
-    id: int
+    watch_day_id: int
     meeting_date: datetime.datetime
+    match_day_id: int
+    place_id: int
     localed_match_day_name: str
     tournament_name: str
+    place_name: str
+    address: str
 
 
 class UsersSchema(BaseModel):

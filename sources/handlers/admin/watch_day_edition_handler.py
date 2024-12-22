@@ -23,7 +23,7 @@ match_day_manager = KznRedsPGManager()
 async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: AdminMatchDayCallbackFactory, state: FSMContext
 ):
-    watch_day_by_id = match_day_manager.get_watch_day_by_id(callback_data.id)
+    watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(callback_data.id)
 
     nearest_match_day = (
         f"{watch_day_by_id[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"

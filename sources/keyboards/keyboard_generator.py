@@ -69,7 +69,7 @@ class KeyboardGenerator:
             button_data: list[NearestMeetingsSchema]
     ) -> InlineKeyboardButton:
         try:
-            btn_data = list(filter(lambda i: callback_data.id == i.id, button_data))
+            btn_data = list(filter(lambda i: callback_data.id == i.match_day_id, button_data))
             button_name = f"{btn_data[0].meeting_date.strftime('%a, %d %b %H:%M')} {btn_data[0].localed_match_day_name}"
             button = InlineKeyboardButton(
                 text=button_name, callback_data=callback_data.pack()
