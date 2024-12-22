@@ -73,3 +73,16 @@ async def add_watching_place(callback: CallbackQuery, state: FSMContext):
     )
     await callback.answer()
 
+
+@router.callback_query(F.data == "show_places")
+async def show_places(callback: CallbackQuery):
+    places = match_day_manager.get_places()
+    places_string = "<b>Места просмотров:</b>\n"
+    for place in places:
+        places_string += f"{place.place_name}\n{place.address}\n"
+
+    await callback.message.edit_text(
+        text=places_string, reply_markup=admin_keyboard.main_admin_keyboard()
+    )
+    await callback.answer()
+
