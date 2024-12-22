@@ -76,7 +76,7 @@ class KeyboardGenerator:
             )
             return button
         except ValueError:
-            print(len('watch_days:5:30/12/2024:Манчестер Юнайтед -- ФК Буде/Глимт'.encode()))
+            raise
 
     @staticmethod
     def __button_2(
@@ -91,7 +91,7 @@ class KeyboardGenerator:
             )
             return button
         except ValueError:
-            print(len('watch_days:5:30/12/2024:Манчестер Юнайтед -- ФК Буде/Глимт'.encode()))
+            raise
 
 
     @staticmethod
@@ -107,4 +107,4 @@ class KeyboardGenerator:
             )
             return button
         except ValueError:
-            print(len('watch_days:5:30/12/2024:Манчестер Юнайтед -- ФК Буде/Глимт'.encode()))
+            raise
