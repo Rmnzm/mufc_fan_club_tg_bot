@@ -87,7 +87,7 @@ class KznRedsPGManager:
         try:
             command = f"""
                         INSERT INTO public.watch_day (
-                        meeting_date, match_day_id, place_id, watch_status
+                        meeting_date, match_day_id, place_id
                         )
                         VALUES ('{match_day_context.start_timestamp - timedelta(minutes=30)}', 
                                 {match_day_context.id},
@@ -111,7 +111,7 @@ class KznRedsPGManager:
                             is_canceled boolean NOT NULL DEFAULT false,
                             watch_day_id integer NOT NULL REFERENCES watch_day (id),
                             match_day_id integer NOT NULL REFERENCES match_day (id),
-                            watch_day_id integer NOT NULL REFERENCES places (id)
+                            place_id integer NOT NULL REFERENCES places (id)
                           );
                         
                         ALTER TABLE

@@ -1,24 +1,18 @@
 import logging
-from lib2to3.fixes.fix_input import context
-from multiprocessing.util import sub_warning
-from pyexpat.errors import messages
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory, AdminCreateWatchDayCallbackFactory, \
+from callback_factory.callback_factory import AdminCreateWatchDayCallbackFactory, \
     PlacesFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from handlers.admin.base_admin_handler import admin_keyboard
-from keyboards.keyboard_generator import KeyboardGenerator
-from keyboards.main_keyboard import MainKeyboard
-from keyboards.watch_day_keyboard import WatchDayKeyboard
 from keyboards.admin_keyboard import AdminKeyboard
-from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
-from lexicon.WATCH_DAY_LEXICON_RU import WATCH_DAY_LEXICON_RU
+from keyboards.keyboard_generator import KeyboardGenerator
+from keyboards.watch_day_keyboard import WatchDayKeyboard
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +36,7 @@ class WatchDay(StatesGroup):
 async def watch_day_register(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WatchDay.choose_match_day)
     nearest_matches = match_day_manager.get_nearest_match_day()
-    print(nearest_matches)
+
     data_factories = [
         AdminCreateWatchDayCallbackFactory(
             id=context.id
@@ -68,8 +62,6 @@ async def choose_place(
 
     places = match_day_manager.get_places()
 
-    print(f"{places=}")
-
     data_factories = [
         PlacesFactory(id=context.id) for context in places
     ]
@@ -89,11 +81,9 @@ async def registrate_meeting(
     current_state_data = await state.get_data()
     place_id = callback_data.id
 
-    print(f"{current_state_data=}")
-    print(f"{place_id=}")
-
     try:
         match_day_manager.add_watch_day(current_state_data['match_day_by_id'], place_id)
+        match_day_manager.create_watch_day_table(current_state_data['match_day_by_id'])
         await callback.message.edit_text(
             text=f"Встреча добавлена", reply_markup=admin_keyboard.main_admin_keyboard()
         )
