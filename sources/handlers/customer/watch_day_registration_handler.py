@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 router = Router()
+
 main_keyboard = MainKeyboard()
 watch_day_keyboard = WatchDayKeyboard()
 
@@ -28,9 +29,6 @@ async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: MatchDayCallbackFactory, state: FSMContext
 ):
     watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(callback_data.id)
-    print(f"{callback_data.id=}")
-
-    print(f"{watch_day_by_id=}")
 
     nearest_match_day = (
         f"{watch_day_by_id[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
@@ -55,10 +53,8 @@ async def process_scheduled_match_days_filter(
 @router.callback_query(F.data == "go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
 async def process_go_button(callback: CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
-    print(state_data['watch_day_id'])
-
     user_id = callback.from_user.id
-    print(user_id)
+
     try:
         match_day_manager.register_user_to_watch(
             user_id, state_data['watch_day_id'], state_data['match_day_id'], state_data['place_id']
@@ -78,13 +74,12 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "not_go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
 async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
-    print(state_data['watch_day_id'])
 
     user_id = callback.from_user.id
-    print(user_id)
-    match_day_manager.cancel_registration_to_watch(user_id, state_data['watch_day_id'])
+
+    match_day_manager.cancel_registration_to_watch(user_id, state_data['match_day_id'])
     await callback.message.edit_text(
-        text="Жаль...", reply_markup=main_keyboard.main_keyboard()
+        text="Жаль...\nУвидимся в следующий раз!", reply_markup=main_keyboard.main_keyboard()
     )
     await callback.answer()
 

@@ -41,18 +41,10 @@ class KznRedsPGManager:
         return match_days
 
     def get_places(self):
-        command = f"""SELECT * FROM public.places"""
+        command = "SELECT * FROM public.places"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
 
         return self.__convert_places(command_result)
-
-
-
-    def get_user_info(self, user_id):
-        command = """SELECT user_role FROM public.users where user_id = %s""".format(user_id)
-        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-
-        return self.__convert_user_info(command_result)
 
     def add_match_day(self, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
                       tournament_name_slug, localed_match_day_name):
@@ -160,13 +152,12 @@ class KznRedsPGManager:
                    f"JOIN public.places ON public.watch_day.place_id = public.places.id "
                    f"WHERE public.match_day.id = {match_day_id}")
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        print(command_result)
+
         watch_day_by_id = self.__convert_nearest_meetings(command_result)
         return watch_day_by_id
 
     def register_user_to_watch(self, user_id, watch_day_id, match_day_id, place_id):
         watch_day_info = self.get_watch_day_by_match_day_id(match_day_id)
-        # match_day_id = self.get_match_day_id_watch_day_id(watch_day_id)
         watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
         watch_day_table_name = f"match_day_{watch_day_date}"
 
@@ -183,7 +174,7 @@ class KznRedsPGManager:
 
         user_registration = self.get_user_watch_day_registration_info(user_id, watch_day_table_name)
 
-        print(user_registration)
+        print(f"{user_registration=}")
 
         if user_registration:
             command = f"UPDATE {watch_day_table_name} SET is_canceled = true WHERE user_id = {user_id}"
@@ -239,10 +230,6 @@ class KznRedsPGManager:
     @staticmethod
     def __convert_nearest_meetings(nearest_meetings):
         return [NearestMeetingsSchema(**nearest_meeting) for nearest_meeting in nearest_meetings]
-
-    @staticmethod
-    def __convert_user_info(user_info):
-        return UserRoleSchema(**user_info[0])
 
     @staticmethod
     def __convert_places(places):
