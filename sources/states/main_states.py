@@ -12,3 +12,7 @@ class MatchDayAddingStateGroup(StatesGroup):
 class WatchDayUserRegistrationStateGroup(StatesGroup):
     watch_day_id = State()
     user_id = State()
+
+
+class WatchDayInfoStateGroup(StatesGroup):
+    watch_day_id = State()

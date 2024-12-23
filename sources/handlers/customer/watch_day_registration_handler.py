@@ -27,7 +27,10 @@ match_day_manager = KznRedsPGManager()
 async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: MatchDayCallbackFactory, state: FSMContext
 ):
-    watch_day_by_id = match_day_manager.get_watch_day_by_id(callback_data.id)
+    watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(callback_data.id)
+    print(f"{callback_data.id=}")
+
+    print(f"{watch_day_by_id=}")
 
     nearest_match_day = (
         f"{watch_day_by_id[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
@@ -43,7 +46,9 @@ async def process_scheduled_match_days_filter(
     await callback.message.edit_text(
         text=nearest_match_day, reply_markup=watch_day_keyboard.approve_meeting_keyboard()
     )
-    await state.update_data(watch_day_id=callback_data.id)
+    await state.update_data(
+        watch_day_id=watch_day_by_id[0].watch_day_id, match_day_id=callback_data.id, place_id=watch_day_by_id[0].place_id
+    )
     await callback.answer()
 
 
@@ -55,12 +60,15 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     print(user_id)
     try:
-        match_day_manager.register_user_to_watch(user_id, state_data['watch_day_id'])
+        match_day_manager.register_user_to_watch(
+            user_id, state_data['watch_day_id'], state_data['match_day_id'], state_data['place_id']
+        )
 
         await callback.message.edit_text(
             text="Вы зарегистрировались на матч", reply_markup=main_keyboard.main_keyboard()
         )
     except Exception as e:
+        print(f"{e=}")
         await callback.message.edit_text(
             text="Вы уже зарегистрировались на матч, ждем вас", reply_markup=main_keyboard.main_keyboard()
         )

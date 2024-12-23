@@ -1,16 +1,24 @@
 import logging
-from aiogram.types import Message, CallbackQuery
 
 from aiogram import F, Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, CallbackQuery
 
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory
+from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
+from keyboards.keyboard_generator import KeyboardGenerator
+from states.create_place_state import CreatePlaceStateGroup
 
 logger = logging.getLogger(__name__)
 
 router = Router()
 
+match_day_manager = KznRedsPGManager()
+
 admin_keyboard = AdminKeyboard()
+keyboard_generator = KeyboardGenerator()
 
 
 @router.message(Command(commands='admin'))
@@ -23,24 +31,58 @@ async def process_admin_command(message: Message):
 
 @router.callback_query(F.data == "show_users")
 async def show_users(callback: CallbackQuery):
+    users = match_day_manager.get_users()
+
+    users_string = []
+
+    for user in users:
+        users_string.append(f"@{user.username} -- {user.user_role}\n")
+
     await callback.message.edit_text(
-        text="Тут будет список пользователей", reply_markup=admin_keyboard.main_admin_keyboard()
+        text="".join(users_string), reply_markup=admin_keyboard.main_admin_keyboard()
     )
 
     await callback.answer()
 
 
 @router.callback_query(F.data == "show_nearest_watching_days")
-async def show_nearest_watching_days(callback: CallbackQuery):
+async def process_nearest_meetings(callback: CallbackQuery):
+    nearest_match_day_context = match_day_manager.get_nearest_meetings()
+    data_factories = [
+        AdminMatchDayCallbackFactory(
+            id=context.match_day_id
+        ) for context in nearest_match_day_context
+    ]
+    reply_keyboard = keyboard_generator.admin_watch_day_keyboard(
+        data_factories, nearest_match_day_context, add_watch_day=True
+    )
     await callback.message.edit_text(
-        text="Тут будут кнопки с ближайшими просмотрами, клавиатура с кнопками"
+        # TODO: add relevant text
+        text="Some text",
+        reply_markup=reply_keyboard
     )
     await callback.answer()
 
 
-@router.callback_query(F.data == "back_to_main_menu")
-async def back_to_main_menu(callback: CallbackQuery):
+
+@router.callback_query(F.data == "add_watching_place")
+async def add_watching_place(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(CreatePlaceStateGroup.start_state)
     await callback.message.edit_text(
-        text="Base admin command processing", reply_markup=admin_keyboard.main_admin_keyboard()
+        text="Добавление места"
     )
     await callback.answer()
+
+
+@router.callback_query(F.data == "show_places")
+async def show_places(callback: CallbackQuery):
+    places = match_day_manager.get_places()
+    places_string = "<b>Места просмотров:</b>\n"
+    for place in places:
+        places_string += f"{place.place_name}\n{place.address}\n"
+
+    await callback.message.edit_text(
+        text=places_string, reply_markup=admin_keyboard.main_admin_keyboard()
+    )
+    await callback.answer()
+
