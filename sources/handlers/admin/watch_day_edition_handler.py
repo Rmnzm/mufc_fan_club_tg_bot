@@ -8,6 +8,7 @@ from callback_factory.callback_factory import AdminMatchDayCallbackFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
+from states.main_states import WatchDayInfoStateGroup
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ async def process_scheduled_match_days_filter(
     )
 
     # await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
+    await state.set_state(WatchDayInfoStateGroup.watch_day_id)
+    await state.update_data(watch_day_by_id=watch_day_by_id)
 
     await callback.message.edit_text(
         text=nearest_match_day, reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard()
@@ -44,7 +47,9 @@ async def process_scheduled_match_days_filter(
 
 
 @router.callback_query(F.data == "edit_place")
-async def process_go_button(callback: CallbackQuery):
+async def process_go_button(callback: CallbackQuery, state: FSMContext):
+    watch_day_state_data = await state.get_data()
+    watch_day_info = watch_day_state_data['watch_day_by_id']
     # TODO: Добавить функционал
     await callback.message.edit_text(
         text="Изменено", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
@@ -53,11 +58,28 @@ async def process_go_button(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "cancel_meeting")
-async def process_not_go_button(callback: CallbackQuery):
+async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
+    watch_day_state_data = await state.get_data()
+    watch_day_info = watch_day_state_data['watch_day_by_id']
     # TODO: Добавить функционал
     await callback.message.edit_text(
         text="Встреча отменена.", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
     )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "show_visitors")
+async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
+    watch_day_state_data = await state.get_data()
+    watch_day_info = watch_day_state_data['watch_day_by_id']
+    watch_day_table = f'watch_day_{watch_day_info[0].meeting_date.strftime("%d_%m_%Y")}'
+
+    print(watch_day_table)
+
+    await callback.message.edit_text(
+        text="Показаны участники встречи", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+    )
+
     await callback.answer()
 
 

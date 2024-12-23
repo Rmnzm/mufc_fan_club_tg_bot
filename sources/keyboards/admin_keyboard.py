@@ -43,12 +43,16 @@ class AdminKeyboard:
         cancel_meeting = InlineKeyboardButton(
             text="Отменить встречу", callback_data="cancel_meeting"
         )
+        show_visitors = InlineKeyboardButton(
+            text="Показать учатсников", callback_data="show_visitors"
+        )
         back_to_main_menu = InlineKeyboardButton(
             text="Назад в меню", callback_data="back_to_main_menu"
         )
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [edit_place, cancel_meeting],
+                [show_visitors],
                 [back_to_main_menu],
             ],
             resize_keyboard=True,
