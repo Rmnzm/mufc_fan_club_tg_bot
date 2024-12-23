@@ -62,15 +62,29 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(e)
 
-    def add_user_info(self, user_id: int, user_name: str):
+    def add_user_info(self, user_id: int, user_name: str, first_name: str = None, last_name: str = None):
         try:
-            command = f"""
-                        INSERT INTO public.users (
-                        username, user_tg_id, user_role
-                        )
-                        VALUES ('{user_name}', '{user_id}', '{UserRoleEnum.USER.value}')
-                        ON CONFLICT ON CONSTRAINT username_userid_unique DO NOTHING
-            """
+            command = "INSERT INTO public.users (username, user_tg_id, user_role"
+
+            if first_name:
+                command += ", first_name"
+            if last_name:
+                command += ", last_name"
+
+            command += f") VALUES ('{user_name}', '{user_id}', '{UserRoleEnum.USER.value}'"
+
+            if first_name:
+                command += f", '{first_name}'"
+            if last_name:
+                command += f", '{last_name}'"
+
+            command += ") ON CONFLICT (user_tg_id) DO UPDATE SET username = EXCLUDED.username"
+
+            if first_name:
+                command += ", first_name = EXCLUDED.first_name"
+            if last_name:
+                command += ", last_name = EXCLUDED.last_name"
+
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
             logger.error(e)
