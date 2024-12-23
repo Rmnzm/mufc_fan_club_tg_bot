@@ -36,7 +36,12 @@ async def show_users(callback: CallbackQuery):
     users_string = []
 
     for user in users:
-        users_string.append(f"@{user.username} -- {user.user_role}\n")
+        users_string.append(
+            f"{user.first_name if user.first_name else ''} "
+            f"{user.last_name if user.last_name else ''} -- "
+            f"@{user.username} -- "
+            f"{user.user_role}\n"
+        )
 
     await callback.message.edit_text(
         text="".join(users_string), reply_markup=admin_keyboard.main_admin_keyboard()

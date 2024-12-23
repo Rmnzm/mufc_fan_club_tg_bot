@@ -48,6 +48,8 @@ class NearestMeetingsSchema(BaseModel):
 class UsersSchema(BaseModel):
     username: str
     user_role: str
+    first_name: str | None
+    last_name: str | None
 
 
 class PlacesSchema(BaseModel):
