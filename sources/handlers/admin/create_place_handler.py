@@ -23,7 +23,7 @@ async def input_place_name(message: Message, state: FSMContext):
     await state.set_state(CreatePlaceStateGroup.add_place_state)
     await state.set_data(dict(add_place_state=message.text))
 
-    await message.answer(text=f"Название добавлено: {message.text}")
+    await message.answer(text=f"Введено название: {message.text}\n\nВведите адрес места сбора...")
 
 
 @router.message(CreatePlaceStateGroup.add_place_state)
@@ -37,8 +37,9 @@ async def input_place_address(message: Message, state: FSMContext):
             place_name=current_state_data['add_place_state'],
             place_address=message.text
         )
+        msg = f"Место сбора добавлено.\nНазвание - {current_state_data['add_place_state']}\nАдрес - {message.text}"
 
         await message.answer(
-            text=f"Место сбора добавлено", reply_markup=admin_keyboard.main_admin_keyboard())
+            text=msg, reply_markup=admin_keyboard.main_admin_keyboard())
     except Exception as e:
         raise e

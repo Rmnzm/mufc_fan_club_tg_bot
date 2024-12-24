@@ -24,8 +24,7 @@ keyboard_generator = KeyboardGenerator()
 @router.message(Command(commands='admin'))
 async def process_admin_command(message: Message):
     await message.answer(
-        # TODO: rewrite message text
-        text="Base admin command processing", reply_markup=admin_keyboard.main_admin_keyboard()
+        text="Главное меню управления ботом.\n\nВыберите интересующую функцию.", reply_markup=admin_keyboard.main_admin_keyboard()
     )
 
 
@@ -74,7 +73,7 @@ async def process_nearest_meetings(callback: CallbackQuery):
 async def add_watching_place(callback: CallbackQuery, state: FSMContext):
     await state.set_state(CreatePlaceStateGroup.start_state)
     await callback.message.edit_text(
-        text="Добавление места"
+        text="Введите название места сбора ..."
     )
     await callback.answer()
 
