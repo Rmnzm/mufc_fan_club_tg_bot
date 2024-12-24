@@ -3,7 +3,7 @@ from typing import List
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from callback_factory.callback_factory import MatchDayCallbackFactory, AdminMatchDayCallbackFactory, \
-    AdminCreateWatchDayCallbackFactory, PlacesFactory
+    AdminCreateWatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory
 from schemes.scheme import NearestMeetingsSchema, MatchDaySchema, PlacesSchema
 
 
@@ -63,6 +63,15 @@ class KeyboardGenerator:
         return keyboard
 
 
+    def places_editor_keyboard(self, data_factories: List[PlacesEditorFactory], buttons_info: List[PlacesSchema]):
+        inline_keyboard = [[self.__place_button(factory_data, buttons_info)] for factory_data in data_factories]
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=inline_keyboard,
+            resize_keyboard=True
+        )
+        return keyboard
+
+
     @staticmethod
     def __button(
             callback_data: MatchDayCallbackFactory | AdminMatchDayCallbackFactory,
@@ -97,6 +106,22 @@ class KeyboardGenerator:
     @staticmethod
     def __button_3(
             callback_data: PlacesFactory,
+            button_data: list[PlacesSchema]
+    ) -> InlineKeyboardButton:
+        try:
+            btn_data = list(filter(lambda i: callback_data.id == i.id, button_data))
+            button_name = f"{btn_data[0].place_name} {btn_data[0].address}"
+            button = InlineKeyboardButton(
+                text=button_name, callback_data=callback_data.pack()
+            )
+            return button
+        except ValueError:
+            raise
+
+
+    @staticmethod
+    def __place_button(
+            callback_data: PlacesEditorFactory,
             button_data: list[PlacesSchema]
     ) -> InlineKeyboardButton:
         try:

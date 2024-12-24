@@ -86,6 +86,7 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "back_to_main_menu")
 async def process_menu_button(callback: CallbackQuery):
     await callback.message.edit_text(
-        text="Вернулись", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        text="Главное меню управления ботом.\n\nВыберите интересующую функцию.",
+        reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
     )
     await callback.answer()

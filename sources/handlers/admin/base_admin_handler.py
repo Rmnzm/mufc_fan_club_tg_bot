@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -80,13 +80,18 @@ async def add_watching_place(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "show_places")
 async def show_places(callback: CallbackQuery):
+    places_string = "<b>Места просмотров</b>\n"
     places = match_day_manager.get_places()
-    places_string = "<b>Места просмотров:</b>\n"
-    for place in places:
-        places_string += f"{place.place_name}\n{place.address}\n"
+
+    data_factories = [
+        PlacesEditorFactory(id=context.id) for context in places
+    ]
+    reply_keyboard = keyboard_generator.places_editor_keyboard(
+        data_factories, places
+    )
 
     await callback.message.edit_text(
-        text=places_string, reply_markup=admin_keyboard.main_admin_keyboard()
+        text=places_string, reply_markup=reply_keyboard
     )
     await callback.answer()
 
