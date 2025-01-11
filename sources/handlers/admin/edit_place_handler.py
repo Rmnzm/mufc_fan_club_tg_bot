@@ -1,17 +1,14 @@
 import logging
-from tkinter import Place
 
 from aiogram import F, Router
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory
+from callback_factory.callback_factory import PlacesEditorFactory
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
-from states.create_place_state import CreatePlaceStateGroup
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +22,10 @@ keyboard_generator = KeyboardGenerator()
 
 class PlaceState(StatesGroup):
     place_id = State()
+    delete_place = State()
     edit_name = State()
     edit_address = State()
+    approve_changes = State()
 
 
 @router.callback_query(PlacesEditorFactory.filter())
@@ -34,25 +33,69 @@ async def edit_place_process(
     callback: CallbackQuery, callback_data: PlacesEditorFactory, state: FSMContext
 ):
     place_id = callback_data.id
-    await state.set_state(PlaceState.edit_name)
+    await state.set_state(PlaceState.place_id)
     await state.update_data(place_id=place_id)
 
     await callback.message.edit_text(
-        text="Выберите действие с выбранным местом", reply_markup=admin_keyboard.edit_place_keyboard()
+        text="Выберите действие с выбранным местом",
+        reply_markup=admin_keyboard.edit_place_keyboard(name=True, address=True)
+    )
+    await callback.answer()
+
+@router.callback_query(F.data == "edit_name")
+async def edit_place_name_process(
+    callback: CallbackQuery, state: FSMContext
+):
+    await state.set_state(PlaceState.edit_name)
+    await callback.message.answer(
+        text="Введите название места"
     )
     await callback.answer()
 
 
+@router.message(PlaceState.edit_name)
+async def edit_place_name(message: Message, state: FSMContext):
+    place_state_data = await state.get_data()
+    place_id = place_state_data['place_id']
+    new_place_name = message.text
 
-@router.callback_query(PlaceState.edit_name)
-async def edit_place_name_process(
+    # TODO: Добавить функционал изменения названия места
+
+    await message.answer(
+        text=f"Изменено место по {place_id=}", reply_markup=admin_keyboard.edit_place_keyboard(address=True)
+    )
+
+@router.callback_query(F.data == "edit_address")
+async def edit_address_place_process(
     callback: CallbackQuery, state: FSMContext
 ):
-    pass
+    await state.set_state(PlaceState.edit_address)
+    await callback.message.answer(
+        text="Введите адрес места"
+    )
+    await callback.answer()
 
+@router.message(PlaceState.edit_address)
+async def edit_place_address(message: Message, state: FSMContext):
+    place_state_data = await state.get_data()
+    place_id = place_state_data['place_id']
+    new_place_address = message.text
 
-@router.callback_query(PlaceState.edit_address)
-async def edit_place_address_process(
-    callback: CallbackQuery, state: FSMContext
-):
-    pass
+    # TODO: Добавить функционал изменения адреса
+
+    await message.answer(
+        text=f"Изменен адрес по {place_id=}", reply_markup=admin_keyboard.edit_place_keyboard(name=True)
+    )
+
+@router.callback_query(F.data == "delete_place")
+async def delete_place(callback: CallbackQuery, state: FSMContext):
+    place_state_data = await state.get_data()
+    place_id = place_state_data['place_id']
+
+    # TODO: Добавить функционал удаления
+
+    await callback.message.answer(
+        text=f"Место удалено {place_id=}", reply_markup=admin_keyboard.main_admin_keyboard()
+    )
+    await callback.answer()
+
