@@ -228,6 +228,30 @@ class KznRedsPGManager:
             logger.error(e)
 
 
+    def delete_place(self, place_id: int):
+        try:
+            command = f"DELETE FROM public.places WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "deleted", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def change_place_name(self, place_id: int, new_place_name: str):
+        try:
+            command = f"UPDATE public.places SET place_name = {new_place_name} WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def change_place_address(self, place_id: int, new_place_address: str):
+        try:
+            command = f"UPDATE public.places SET address = {new_place_address} WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
     @staticmethod
     def __convert_users_info(users):
         return [UsersSchema(**user) for user in users]
