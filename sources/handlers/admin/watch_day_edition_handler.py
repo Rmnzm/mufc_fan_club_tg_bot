@@ -2,12 +2,14 @@ import logging
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesEditorFactory, WatchPlaceChangeFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
+from keyboards.keyboard_generator import KeyboardGenerator
 from states.main_states import WatchDayInfoStateGroup
 
 logger = logging.getLogger(__name__)
@@ -16,8 +18,14 @@ settings = get_settings()
 
 router = Router()
 admin_watch_day_keyboard = AdminKeyboard()
+places_keyboard = KeyboardGenerator()
 
 match_day_manager = KznRedsPGManager()
+
+class PlaceState(StatesGroup):
+    watch_day_id = State()
+    delete_watch_day = State()
+    edit_watch_place = State()
 
 
 @router.callback_query(AdminMatchDayCallbackFactory.filter())
@@ -46,25 +54,73 @@ async def process_scheduled_match_days_filter(
     await callback.answer()
 
 
-@router.callback_query(F.data == "edit_place")
+@router.callback_query(F.data == "edit_watch_place")
 async def process_go_button(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(PlaceState.edit_watch_place)
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
-    # TODO: Добавить функционал
-    await callback.message.edit_text(
-        text="Изменено", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+    print(f"{watch_day_info=}")
+    watch_day_id = watch_day_info[0].watch_day_id
+
+    await state.update_data(watch_day_id=watch_day_id)
+
+    places_string = "<b>Выберите новое место просмотра</b>\n"
+    places = match_day_manager.get_places()
+
+    data_factories = [
+        WatchPlaceChangeFactory(id=context.id) for context in places
+    ]
+    reply_keyboard = places_keyboard.places_editor_keyboard(
+        data_factories, places
     )
+    await callback.message.edit_text(
+        text=places_string, reply_markup=reply_keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(WatchPlaceChangeFactory.filter(), PlaceState.edit_watch_place)
+async def change_watch_place_process(
+        callback: CallbackQuery, callback_data: WatchPlaceChangeFactory, state: FSMContext
+):
+    place_id = callback_data.id
+    watch_day_state_data = await state.get_data()
+    watch_day_id = watch_day_state_data['watch_day_id']
+
+    try:
+        match_day_manager.change_watch_day_place(watch_day_id=watch_day_id, place_id=place_id)
+        await callback.message.edit_text(
+            text=f"Место для встречи изменено, {place_id=}, {watch_day_id=}",
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        )
+    except Exception:
+        await callback.message.edit_text(
+            text="Не удалось изменить место встречи",
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        )
     await callback.answer()
 
 
 @router.callback_query(F.data == "cancel_meeting")
 async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
-    watch_day_info = watch_day_state_data['watch_day_by_id']
-    # TODO: Добавить функционал
-    await callback.message.edit_text(
-        text="Встреча отменена.", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
-    )
+    watch_day_info = watch_day_state_data['watch_day_by_id'][0]
+    watch_day_id = watch_day_info.watch_day_id
+    watch_day_datetime = watch_day_info.meeting_date.strftime('%d_%m_%Y')
+
+    watch_day_table = f"match_day_{watch_day_datetime}"
+
+    print(f"{watch_day_info=}")
+    try:
+        match_day_manager.delete_watch_day(watch_day_id=watch_day_id, watch_day_table=watch_day_table)
+        await callback.message.edit_text(
+            text="Встреча отменена.", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        )
+    except Exception:
+        await callback.message.edit_text(
+            text="Не удалось отменить встречу",
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        )
     await callback.answer()
 
 
@@ -72,13 +128,23 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
 async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
-    watch_day_table = f'watch_day_{watch_day_info[0].meeting_date.strftime("%d_%m_%Y")}'
+    watch_day_table = f'match_day_{watch_day_info[0].meeting_date.strftime("%d_%m_%Y")}'
 
     print(watch_day_table)
 
-    await callback.message.edit_text(
-        text="Показаны участники встречи", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
-    )
+    try:
+        users = match_day_manager.show_visitors(watch_day_table=watch_day_table)
+
+        users_string = "\n".join([f"@{user.username} - {user.user_role}" for user in users])
+
+        await callback.message.edit_text(
+            text=f"Показаны участники встречи\n{users_string}", reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        )
+    except Exception:
+        await callback.message.edit_text(
+            text="Участники встречи не найдены",
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        )
 
     await callback.answer()
 

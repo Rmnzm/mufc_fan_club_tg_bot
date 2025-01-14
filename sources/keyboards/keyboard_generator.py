@@ -3,7 +3,7 @@ from typing import List
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from callback_factory.callback_factory import MatchDayCallbackFactory, AdminMatchDayCallbackFactory, \
-    AdminCreateWatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory
+    AdminCreateWatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory, WatchPlaceChangeFactory
 from schemes.scheme import NearestMeetingsSchema, MatchDaySchema, PlacesSchema
 
 
@@ -71,7 +71,7 @@ class KeyboardGenerator:
         return keyboard
 
 
-    def places_editor_keyboard(self, data_factories: List[PlacesEditorFactory], buttons_info: List[PlacesSchema]):
+    def places_editor_keyboard(self, data_factories: List[PlacesEditorFactory | WatchPlaceChangeFactory], buttons_info: List[PlacesSchema]):
         inline_keyboard = [
             [self.__place_button(factory_data, buttons_info)] for factory_data in data_factories
         ]

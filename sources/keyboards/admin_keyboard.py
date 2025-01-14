@@ -38,7 +38,7 @@ class AdminKeyboard:
     @staticmethod
     def edit_meeting_keyboard():
         edit_place = InlineKeyboardButton(
-            text="Изменить место", callback_data="edit_place"
+            text="Изменить место", callback_data="edit_watch_place"
         )
         cancel_meeting = InlineKeyboardButton(
             text="Отменить встречу", callback_data="cancel_meeting"
