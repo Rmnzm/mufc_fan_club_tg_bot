@@ -59,3 +59,33 @@ class AdminKeyboard:
         )
 
         return keyboard
+
+    @staticmethod
+    def edit_place_keyboard(name=False, address=False):
+        edit_name = InlineKeyboardButton(
+            text="Изменить название", callback_data="edit_name"
+        )
+        edit_address = InlineKeyboardButton(
+            text="Изменить адрес", callback_data="edit_address"
+        )
+        delete_place = InlineKeyboardButton(
+            text="Удалить", callback_data="delete_place"
+        )
+        back_to_main_menu = InlineKeyboardButton(
+            text="Назад в меню", callback_data="back_to_main_menu"
+        )
+        btns = []
+        if name:
+            btns.append(edit_name)
+        if address:
+            btns.append(edit_address)
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [delete_place],
+                btns,
+                [back_to_main_menu],
+            ],
+            resize_keyboard=True,
+        )
+
+        return keyboard

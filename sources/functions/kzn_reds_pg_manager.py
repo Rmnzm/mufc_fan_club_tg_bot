@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
-from schemes.scheme import MatchDaySchema, UserRoleSchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema, \
+from schemes.scheme import MatchDaySchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema, \
     PlacesSchema
 
 logger = logging.getLogger(__name__)
@@ -224,6 +224,31 @@ class KznRedsPGManager:
         try:
             command = f"INSERT INTO public.places (place_name, address) VALUES ('{place_name}', '{place_address}')"
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def delete_place(self, place_id: int):
+        try:
+            command = f"DELETE FROM public.places WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "deleted", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def change_place_name(self, place_id: int, new_place_name: str):
+        try:
+            new_place_name = new_place_name.replace("'", "''")
+            command = f"UPDATE public.places SET place_name = '{new_place_name}' WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def change_place_address(self, place_id: int, new_place_address: str):
+        try:
+            command = f"UPDATE public.places SET address = '{new_place_address}' WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
         except Exception as e:
             logger.error(e)
 

@@ -13,3 +13,7 @@ class AdminCreateWatchDayCallbackFactory(CallbackData, prefix='admin_watch_days_
 
 class PlacesFactory(CallbackData, prefix="places"):
     id: int
+
+
+class PlacesEditorFactory(CallbackData, prefix="places_editor"):
+    id: int
