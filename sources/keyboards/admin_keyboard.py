@@ -81,7 +81,7 @@ class AdminKeyboard:
             btns.append(edit_address)
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                delete_place,
+                [delete_place],
                 btns,
                 [back_to_main_menu],
             ],

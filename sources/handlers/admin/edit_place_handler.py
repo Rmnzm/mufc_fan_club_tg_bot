@@ -59,11 +59,19 @@ async def edit_place_name(message: Message, state: FSMContext):
     place_id = place_state_data['place_id']
     new_place_name = message.text
 
-    # TODO: Добавить функционал изменения названия места
-
-    await message.answer(
-        text=f"Изменено место по {place_id=}", reply_markup=admin_keyboard.edit_place_keyboard(address=True)
-    )
+    try:
+        match_day_manager.change_place_name(
+            place_id=place_id,
+            new_place_name=new_place_name
+        )
+        await message.answer(
+            text=f"Изменено место по {place_id=}", reply_markup=admin_keyboard.edit_place_keyboard(address=True)
+        )
+    except Exception:
+        await message.answer(
+            text="Не удалось изменить название места",
+            reply_markup=admin_keyboard.main_admin_keyboard()
+        )
 
 @router.callback_query(F.data == "edit_address")
 async def edit_address_place_process(
@@ -81,21 +89,37 @@ async def edit_place_address(message: Message, state: FSMContext):
     place_id = place_state_data['place_id']
     new_place_address = message.text
 
-    # TODO: Добавить функционал изменения адреса
+    try:
+        match_day_manager.change_place_address(
+            place_id=place_id,
+            new_place_address=new_place_address
+        )
+        await message.answer(
+            text=f"Изменен адрес по {place_id=}",
+            reply_markup=admin_keyboard.edit_place_keyboard(name=True)
+        )
+    except Exception:
+        await message.answer(
+            text="Не удалось изменить адрес",
+            reply_markup=admin_keyboard.main_admin_keyboard()
+        )
 
-    await message.answer(
-        text=f"Изменен адрес по {place_id=}", reply_markup=admin_keyboard.edit_place_keyboard(name=True)
-    )
 
 @router.callback_query(F.data == "delete_place")
 async def delete_place(callback: CallbackQuery, state: FSMContext):
     place_state_data = await state.get_data()
     place_id = place_state_data['place_id']
 
-    # TODO: Добавить функционал удаления
-
-    await callback.message.answer(
-        text=f"Место удалено {place_id=}", reply_markup=admin_keyboard.main_admin_keyboard()
-    )
+    try:
+        match_day_manager.delete_place(place_id=place_id)
+        await callback.message.answer(
+            text=f"Место удалено {place_id=}",
+            reply_markup=admin_keyboard.main_admin_keyboard()
+        )
+    except Exception:
+        await callback.message.answer(
+            text="Не удалось удалить место",
+            reply_markup=admin_keyboard.main_admin_keyboard()
+        )
     await callback.answer()
 
