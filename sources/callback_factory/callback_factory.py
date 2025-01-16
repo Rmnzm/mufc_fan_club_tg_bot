@@ -17,3 +17,6 @@ class PlacesFactory(CallbackData, prefix="places"):
 
 class PlacesEditorFactory(CallbackData, prefix="places_editor"):
     id: int
+
+class WatchPlaceChangeFactory(CallbackData, prefix="places_editor"):
+    id: int

@@ -252,6 +252,31 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(e)
 
+    def change_watch_day_place(self, watch_day_id: int, place_id: int):
+        try:
+            command = f"UPDATE public.watch_day SET place_id = {place_id} WHERE id = {watch_day_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def delete_watch_day(self, watch_day_id: int, watch_day_table):
+        try:
+            command = f"BEGIN;DROP TABLE {watch_day_table};DELETE FROM public.watch_day WHERE id = {watch_day_id};END;"
+            self.kzn_reds_pg_connector.execute_command(command, "deleted", "failed")
+        except Exception as e:
+            logger.error(e)
+
+    def show_visitors(self, watch_day_table):
+        try:
+            command = f"SELECT u.username, u.user_role, u.first_name, u.last_name FROM public.{watch_day_table} JOIN public.users as u ON public.{watch_day_table}.user_id = u.user_tg_id"
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+            converted_result = self.__convert_users_info(command_result)
+            return converted_result
+        except Exception as e:
+            logger.error(e)
+
 
     @staticmethod
     def __convert_users_info(users):
