@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config.config import get_settings
-from handlers import main_handler
+from handlers import main_handler, poll_task_handler
 from handlers.admin import base_admin_handler
 from handlers.customer import watch_day_registration_handler
 from handlers.admin import watch_day_edition_handler
@@ -30,6 +30,7 @@ async def main():
     dispatcher = Dispatcher()
 
     dispatcher.include_router(main_handler.router)
+    dispatcher.include_router(poll_task_handler.router)
     dispatcher.include_router(base_admin_handler.router)
     dispatcher.include_router(watch_day_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
