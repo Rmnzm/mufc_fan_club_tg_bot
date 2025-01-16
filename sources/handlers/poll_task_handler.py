@@ -41,14 +41,24 @@ async def poll_task_creator(message: Message):
         is_closed=True
     )
 
-    await message.answer_poll(
-        question=poll.question, options=["Python", "Java"]
+    sent_poll = await message.answer_poll(
+        question=poll.question, options=["Python", "Java"],
+        is_anonymous=poll.is_anonymous,
+        type=poll.type,
+        allows_multiple_answers=poll.allows_multiple_answers
     )
 
 @router.poll_answer()
 async def handle_poll_answer(poll_answer: PollAnswer):
     user_id = poll_answer.user.id
+    username = poll_answer.user.username
+    user_first_name = poll_answer.user.first_name
+    user_last_name = poll_answer.user.last_name
     poll_id = poll_answer.poll_id
     option_ids = ','.join(map(str, poll_answer.option_ids))
 
-    print(f"User {user_id} voted in poll {poll_id} with options {option_ids}")
+    print(
+        f"User info = {username=}, {user_first_name=}, {user_last_name}",
+        f"User {user_id} voted in poll {poll_id} with options {option_ids}",
+        sep="\n"
+    )
