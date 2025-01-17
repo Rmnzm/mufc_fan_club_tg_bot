@@ -46,11 +46,15 @@ class AdminKeyboard:
         show_visitors = InlineKeyboardButton(
             text="Показать учатсников", callback_data="show_visitors"
         )
+        start_meeting_poll = InlineKeyboardButton(
+            text="Запустить предварительный опрос", callback_data="start_meeting_poll"
+        )
         back_to_main_menu = InlineKeyboardButton(
             text="Назад в меню", callback_data="back_to_main_menu"
         )
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
+                [start_meeting_poll],
                 [edit_place, cancel_meeting],
                 [show_visitors],
                 [back_to_main_menu],

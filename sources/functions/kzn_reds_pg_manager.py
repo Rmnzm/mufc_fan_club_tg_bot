@@ -278,6 +278,30 @@ class KznRedsPGManager:
             logger.error(e)
 
 
+    def register_user(self, user_tg_id: int, user_schema: UsersSchema):
+        try:
+            if not self.__is_user_already_registered(user_tg_id=user_tg_id):
+                command = (f"INSERT INTO public.users (user_tg_id, username, first_name, last_name, role) VALUES "
+                           f"({user_tg_id}, "
+                           f"{user_schema.username}, "
+                           f"{user_schema.first_name}, "
+                           f"{user_schema.last_name}, "
+                           f"{user_schema.user_role})")
+                self.kzn_reds_pg_connector.execute_command(command, "created", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def __is_user_already_registered(self, user_tg_id: int):
+        try:
+            command = f"SELECT * FROM public.users WHERE user_tg_id = {user_tg_id}"
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+            return command_result
+        except Exception as e:
+            logger.error(e)
+
+
     @staticmethod
     def __convert_users_info(users):
         return [UsersSchema(**user) for user in users]

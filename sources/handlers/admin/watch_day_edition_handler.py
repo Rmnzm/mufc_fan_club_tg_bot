@@ -3,6 +3,7 @@ import logging
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message, Poll, PollAnswer, PollOption
 from aiogram.types import CallbackQuery
 
 from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesEditorFactory, WatchPlaceChangeFactory
@@ -52,6 +53,61 @@ async def process_scheduled_match_days_filter(
     )
     # await state.update_data(watch_day_id=callback_data.id)
     await callback.answer()
+
+
+@router.callback_query(F.data == "start_meeting_poll")
+async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
+    watch_day_state_data = await state.get_data()
+    watch_day_info = watch_day_state_data['watch_day_by_id']
+    print(f"{watch_day_info=}")
+    watch_day_id = watch_day_info[0].watch_day_id
+    tournament_name = watch_day_info[0].tournament_name
+    located_match_day_name = watch_day_info[0].localed_match_day_name
+    meeting_date = watch_day_info[0].meeting_date
+    place_name = watch_day_info[0].place_name
+    address = watch_day_info[0].address
+    question = (f"СРОЧНОСБОР\n"
+                f"{tournament_name}\n"
+                f"{located_match_day_name}\n"
+                f"\n"
+                f"{meeting_date.strftime('%a, %d %b %H:%M')}"
+                f"{place_name} - {address}")
+    options = [
+        PollOption(text="Иду", voter_count=0),
+        PollOption(text="Не иду", voter_count=0)
+    ]
+    poll = Poll(
+        id="1",
+        question=question,
+        options=options,
+        is_anonymous=False,
+        type='regular',
+        allows_multiple_answers=False,
+        total_voter_count=0,
+        is_closed=True
+    )
+
+    # TODO: Придумать как убирать предыдущее сообщение
+
+    await callback.bot.send_poll(
+        chat_id=-1002374530977,
+        question=question,
+        options=["Иду", "Не иду"],
+        is_anonymous=poll.is_anonymous
+    )
+
+    await callback.message.answer(
+        text="Опрос отправлен",
+        reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+    )
+
+    await callback.answer()
+
+    # await callback.message.se(
+    #     question=poll.question, options=["Иду", "Не иду"],
+    #     is_anonymous=poll.is_anonymous,
+    # )
+
 
 
 @router.callback_query(F.data == "edit_watch_place")

@@ -41,11 +41,9 @@ async def poll_task_creator(message: Message):
         is_closed=True
     )
 
-    sent_poll = await message.answer_poll(
+    await message.answer_poll(
         question=poll.question, options=["Python", "Java"],
         is_anonymous=poll.is_anonymous,
-        type=poll.type,
-        allows_multiple_answers=poll.allows_multiple_answers
     )
 
 @router.poll_answer()
