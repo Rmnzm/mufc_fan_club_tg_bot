@@ -3,10 +3,10 @@ import logging
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message, Poll, PollAnswer, PollOption
 from aiogram.types import CallbackQuery
+from aiogram.types import Poll, PollAnswer, PollOption
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesEditorFactory, WatchPlaceChangeFactory
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory, WatchPlaceChangeFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
@@ -48,14 +48,13 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
-    # await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
     await state.set_state(WatchDayInfoStateGroup.watch_day_id)
     await state.update_data(watch_day_by_id=watch_day_by_id)
 
     await callback.message.edit_text(
         text=nearest_match_day, reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard()
     )
-    # await state.update_data(watch_day_id=callback_data.id)
+
     await callback.answer()
 
 
