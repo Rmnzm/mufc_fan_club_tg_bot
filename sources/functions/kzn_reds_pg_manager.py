@@ -124,6 +124,9 @@ class KznRedsPGManager:
                           public.{table_name}
                         ADD
                           CONSTRAINT {table_name}_pkey PRIMARY KEY (id);
+                          
+                        CREATE UNIQUE INDEX user_id_unique ON public.{table_name} (user_id);
+                        
             """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
@@ -310,22 +313,30 @@ class KznRedsPGManager:
 
     def register_user(self, user_tg_id: int, user_schema: UsersSchema):
         try:
-            if not self.__is_user_already_registered(user_tg_id=user_tg_id):
-                command = (f"INSERT INTO public.users (user_tg_id, username, first_name, last_name, role) VALUES "
+            if not self.__is_user_already_registered(user_tg_id=user_tg_id, user_schema=user_schema):
+                command = (f"INSERT INTO public.users (user_tg_id, username, first_name, last_name, user_role) VALUES "
                            f"({user_tg_id}, "
-                           f"{user_schema.username}, "
-                           f"{user_schema.first_name}, "
-                           f"{user_schema.last_name}, "
-                           f"{user_schema.user_role})")
+                           f"'{user_schema.username}', "
+                           f"'{user_schema.first_name}', "
+                           f"'{user_schema.last_name}', "
+                           f"'{user_schema.user_role}')")
                 self.kzn_reds_pg_connector.execute_command(command, "created", "failed")
         except Exception as e:
             logger.error(e)
 
 
-    def __is_user_already_registered(self, user_tg_id: int):
+    def __is_user_already_registered(self, user_tg_id: int, user_schema: UsersSchema):
         try:
             command = f"SELECT * FROM public.users WHERE user_tg_id = {user_tg_id}"
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+            print(f"{command_result=}")
+
+            if command_result:
+                command = (f"UPDATE public.users SET "
+                            f"username = '{user_schema.username}', first_name = '{user_schema.first_name}', "
+                           f"last_name = '{user_schema.last_name}' WHERE user_tg_id = {user_tg_id}")
+                self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
 
             return command_result
         except Exception as e:

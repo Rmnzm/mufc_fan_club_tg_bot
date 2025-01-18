@@ -11,6 +11,7 @@ from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
+from schemes.scheme import UsersSchema
 from states.main_states import WatchDayInfoStateGroup
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
                 f"{tournament_name}\n"
                 f"{located_match_day_name}\n"
                 f"\n"
-                f"{meeting_date.strftime('%a, %d %b %H:%M')}"
+                f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
                 f"{place_name} - {address}")
 
     await state.set_state(PollStates.watch_day_info)
@@ -122,6 +123,12 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
     user_last_name = poll_answer.user.last_name
     poll_id = poll_answer.poll_id
     option_ids = ','.join(map(str, poll_answer.option_ids))
+    user_schema = UsersSchema(
+        username=username,
+        user_role="USER",
+        first_name=user_first_name if user_first_name else None,
+        last_name=user_last_name if user_last_name else None
+    )
 
     print(
         f"User info = {username=}, {user_first_name=}, {user_last_name}",
@@ -130,6 +137,16 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
     )
 
     print(f"{watch_day_info=}")
+
+    match_day_manager.register_user(user_tg_id=user_id, user_schema=user_schema)
+
+    if option_ids == "0":
+        match_day_manager.register_user_to_watch(
+            user_id=user_id,
+            watch_day_id=watch_day_info[0].watch_day_id,
+            match_day_id=watch_day_info[0].match_day_id,
+            place_id=watch_day_info[0].place_id
+        )
 
 
 @router.callback_query(F.data == "edit_watch_place")
