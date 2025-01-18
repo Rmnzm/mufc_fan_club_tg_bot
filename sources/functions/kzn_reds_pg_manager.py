@@ -171,9 +171,7 @@ class KznRedsPGManager:
         return watch_day_by_id
 
     def register_user_to_watch(self, user_id, watch_day_id, match_day_id, place_id):
-        watch_day_info = self.get_watch_day_by_match_day_id(match_day_id)
-        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
-        watch_day_table_name = f"match_day_{watch_day_date}"
+        watch_day_table_name = self.__get_watch_day_table_name(match_day_id=match_day_id)
 
         command = (f"INSERT INTO public.{watch_day_table_name} (user_id, watch_day_id, match_day_id, place_id) "
                    f"VALUES ({user_id}, {watch_day_id}, {match_day_id}, {place_id})")
@@ -181,12 +179,36 @@ class KznRedsPGManager:
         self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
 
+    def finish_registration(self, user_id: int, match_day_id, is_approved: bool = True, is_canceled: bool = False):
+        watch_day_table_name = self.__get_watch_day_table_name(match_day_id=match_day_id)
+        user_registration = self.__get_user_watch_day_registration_info(user_id=user_id, table_name=watch_day_table_name)
+
+        if user_registration:
+            if is_canceled:
+                command = f"UPDATE public.{watch_day_table_name} SET is_canceled = {is_canceled} WHERE user_id = {user_id}"
+            else:
+                command = f"UPDATE public.{watch_day_table_name} SET is_approved = {is_approved} WHERE user_id = {user_id}"
+
+            self.kzn_reds_pg_connector.execute_command(
+                command, "registration finished", "registration failed"
+            )
+        else:
+            logger.warning(f"Пользователь {user_id=} не зарегистрирован на событие")
+
+
+    def __get_watch_day_table_name(self, match_day_id: int):
+        watch_day_info = self.get_watch_day_by_match_day_id(match_day_id)
+        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
+        watch_day_table_name = f"match_day_{watch_day_date}"
+
+        return watch_day_table_name
+
     def cancel_registration_to_watch(self, user_id, watch_day_id):
         watch_day_info = self.get_watch_day_by_match_day_id(watch_day_id)
         watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
         watch_day_table_name = f"match_day_{watch_day_date}"
 
-        user_registration = self.get_user_watch_day_registration_info(user_id, watch_day_table_name)
+        user_registration = self.__get_user_watch_day_registration_info(user_id, watch_day_table_name)
 
         print(f"{user_registration=}")
 
@@ -195,7 +217,7 @@ class KznRedsPGManager:
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
 
-    def get_user_watch_day_registration_info(self, user_id, table_name):
+    def __get_user_watch_day_registration_info(self, user_id, table_name):
         command = f"SELECT * FROM {table_name} WHERE user_id = {user_id}"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
 

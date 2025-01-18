@@ -96,18 +96,12 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
         is_anonymous=poll.is_anonymous
     )
 
-    await callback.message.answer(
+    await callback.message.edit_text(
         text="Опрос отправлен",
         reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
     )
 
     await callback.answer()
-
-    # await callback.message.se(
-    #     question=poll.question, options=["Иду", "Не иду"],
-    #     is_anonymous=poll.is_anonymous,
-    # )
-
 
 
 @router.callback_query(F.data == "edit_watch_place")
