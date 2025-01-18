@@ -29,6 +29,10 @@ class PlaceState(StatesGroup):
     edit_watch_place = State()
 
 
+class PollStates(StatesGroup):
+    watch_day_info = State()
+
+
 @router.callback_query(AdminMatchDayCallbackFactory.filter())
 async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: AdminMatchDayCallbackFactory, state: FSMContext
@@ -72,6 +76,10 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
                 f"\n"
                 f"{meeting_date.strftime('%a, %d %b %H:%M')}"
                 f"{place_name} - {address}")
+
+    await state.set_state(PollStates.watch_day_info)
+    await state.update_data(watch_day_info=watch_day_info)
+
     options = [
         PollOption(text="Иду", voter_count=0),
         PollOption(text="Не иду", voter_count=0)
@@ -102,6 +110,27 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
     )
 
     await callback.answer()
+
+
+@router.poll_answer(PollStates.watch_day_info)
+async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
+    state_data = await state.get_data()
+    watch_day_info = state_data["watch_day_info"]
+
+    user_id = poll_answer.user.id
+    username = poll_answer.user.username
+    user_first_name = poll_answer.user.first_name
+    user_last_name = poll_answer.user.last_name
+    poll_id = poll_answer.poll_id
+    option_ids = ','.join(map(str, poll_answer.option_ids))
+
+    print(
+        f"User info = {username=}, {user_first_name=}, {user_last_name}",
+        f"User {user_id} voted in poll {poll_id} with options {option_ids}",
+        sep="\n"
+    )
+
+    print(f"{watch_day_info=}")
 
 
 @router.callback_query(F.data == "edit_watch_place")

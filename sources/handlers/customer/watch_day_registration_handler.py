@@ -57,7 +57,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 
     try:
         match_day_manager.finish_registration(
-            user_id=user_id, match_day_id=state_data['watch_day_id'], is_approved=True
+            user_id=user_id, match_day_id=state_data['match_day_id'], is_approved=True
         )
 
         await callback.message.edit_text(

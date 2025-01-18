@@ -30,7 +30,7 @@ async def main():
     dispatcher = Dispatcher()
 
     dispatcher.include_router(main_handler.router)
-    dispatcher.include_router(poll_task_handler.router)
+    # dispatcher.include_router(poll_task_handler.router)
     dispatcher.include_router(base_admin_handler.router)
     dispatcher.include_router(watch_day_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
