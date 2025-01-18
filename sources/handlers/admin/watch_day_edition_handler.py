@@ -80,6 +80,11 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PollStates.watch_day_info)
     await state.update_data(watch_day_info=watch_day_info)
 
+    current_state = await state.get_state()
+    print(f"{current_state=}")
+    current_state_data = await state.get_data()
+    print(current_state_data)
+
     options = [
         PollOption(text="Иду", voter_count=0),
         PollOption(text="Не иду", voter_count=0)
@@ -115,7 +120,12 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
 @router.poll_answer(PollStates.watch_day_info)
 async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
     state_data = await state.get_data()
-    watch_day_info = state_data["watch_day_info"]
+    watch_day_info = state_data.get("watch_day_info")
+
+    current_state = await state.get_state()
+    print(f"{current_state=}")
+    current_state_data = await state.get_data()
+    print(current_state_data)
 
     user_id = poll_answer.user.id
     username = poll_answer.user.username

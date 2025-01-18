@@ -124,11 +124,14 @@ class KznRedsPGManager:
                           public.{table_name}
                         ADD
                           CONSTRAINT {table_name}_pkey PRIMARY KEY (id);
-                          
-                        CREATE UNIQUE INDEX user_id_unique ON public.{table_name} (user_id);
                         
             """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+            print(f"Table {table_name} successfully created")
+
+            command = f"CREATE UNIQUE INDEX {table_name}_user_id_unique ON public.{table_name}(user_id);"
+            self.kzn_reds_pg_connector.execute_command(command, "index created", "failed")
+            print(f"Created unique index on table {table_name}")
         except Exception as e:
             logger.error(e)
 
