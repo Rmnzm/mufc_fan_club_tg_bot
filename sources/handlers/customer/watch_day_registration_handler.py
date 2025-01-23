@@ -39,6 +39,12 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
+    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+    for watch_day in watch_day_by_id_dict:
+        watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+
+    print(f"watch_day_registration_handler - {watch_day_by_id_dict=}")
+
     await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
 
     await callback.message.edit_text(

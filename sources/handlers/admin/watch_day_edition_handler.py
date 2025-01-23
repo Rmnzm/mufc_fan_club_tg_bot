@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from aiogram import F, Router
@@ -49,8 +50,12 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
+    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+    for watch_day in watch_day_by_id_dict:
+        watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+
     await state.set_state(WatchDayInfoStateGroup.watch_day_id)
-    await state.update_data(watch_day_by_id=watch_day_by_id)
+    await state.update_data(watch_day_by_id=watch_day_by_id_dict)
 
     await callback.message.edit_text(
         text=nearest_match_day, reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard()
@@ -58,23 +63,26 @@ async def process_scheduled_match_days_filter(
 
     await callback.answer()
 
+#
 
 @router.callback_query(F.data == "start_meeting_poll")
 async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
     print(f"{watch_day_info=}")
-    watch_day_id = watch_day_info[0].watch_day_id
-    tournament_name = watch_day_info[0].tournament_name
-    located_match_day_name = watch_day_info[0].localed_match_day_name
-    meeting_date = watch_day_info[0].meeting_date
-    place_name = watch_day_info[0].place_name
-    address = watch_day_info[0].address
+
+    watch_day_id = watch_day_info[0].get("watch_day_id")
+    tournament_name = watch_day_info[0].get("tournament_name")
+    located_match_day_name = watch_day_info[0].get("localed_match_day_name")
+    meeting_date = watch_day_info[0].get("meeting_date")
+    place_name = watch_day_info[0].get("place_name")
+    address = watch_day_info[0].get("address")
     question = (f"СРОЧНОСБОР\n"
                 f"{tournament_name}\n"
                 f"{located_match_day_name}\n"
                 f"\n"
-                f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
+                f"{meeting_date}\n"
+                # f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
                 f"{place_name} - {address}")
 
     await state.set_state(PollStates.watch_day_info)
@@ -86,8 +94,8 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
     print(current_state_data)
 
     options = [
-        PollOption(text="Иду", voter_count=0),
-        PollOption(text="Не иду", voter_count=0)
+        PollOption(text="Иду", voter_count=0, watch_day_id=watch_day_id),
+        PollOption(text="Не иду", voter_count=0, watch_day_id=watch_day_id)
     ]
     poll = Poll(
         id="1",
@@ -117,8 +125,10 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.poll_answer(PollStates.watch_day_info)
+@router.poll_answer()
 async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
+    print(f"poll_answer={poll_answer.__dict__}")
+
     state_data = await state.get_data()
     watch_day_info = state_data.get("watch_day_info")
 
@@ -233,7 +243,11 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
 async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
-    watch_day_table = f'match_day_{watch_day_info[0].meeting_date.strftime("%d_%m_%Y")}'
+
+    print(f"show visitors - {watch_day_info=}")
+    watch_day_datetime = datetime.datetime.strptime(watch_day_info[0]["meeting_date"], '%Y-%m-%dT%H:%M:%S')
+
+    watch_day_table = f'match_day_{watch_day_datetime.strftime("%d_%m_%Y")}'
 
     print(watch_day_table)
 
