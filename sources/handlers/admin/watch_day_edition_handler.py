@@ -1,15 +1,18 @@
+import datetime
 import logging
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
+from aiogram.types import Poll, PollAnswer, PollOption
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesEditorFactory, WatchPlaceChangeFactory
+from callback_factory.callback_factory import AdminMatchDayCallbackFactory, WatchPlaceChangeFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
+from schemes.scheme import UsersSchema
 from states.main_states import WatchDayInfoStateGroup
 
 logger = logging.getLogger(__name__)
@@ -28,6 +31,10 @@ class PlaceState(StatesGroup):
     edit_watch_place = State()
 
 
+class PollStates(StatesGroup):
+    watch_day_info = State()
+
+
 @router.callback_query(AdminMatchDayCallbackFactory.filter())
 async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: AdminMatchDayCallbackFactory, state: FSMContext
@@ -43,15 +50,123 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
-    # await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
+    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+    for watch_day in watch_day_by_id_dict:
+        watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+
     await state.set_state(WatchDayInfoStateGroup.watch_day_id)
-    await state.update_data(watch_day_by_id=watch_day_by_id)
+    await state.update_data(watch_day_by_id=watch_day_by_id_dict)
 
     await callback.message.edit_text(
         text=nearest_match_day, reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard()
     )
-    # await state.update_data(watch_day_id=callback_data.id)
+
     await callback.answer()
+
+#
+
+@router.callback_query(F.data == "start_meeting_poll")
+async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
+    watch_day_state_data = await state.get_data()
+    watch_day_info = watch_day_state_data['watch_day_by_id']
+    print(f"{watch_day_info=}")
+
+    watch_day_id = watch_day_info[0].get("watch_day_id")
+    tournament_name = watch_day_info[0].get("tournament_name")
+    located_match_day_name = watch_day_info[0].get("localed_match_day_name")
+    meeting_date = watch_day_info[0].get("meeting_date")
+    place_name = watch_day_info[0].get("place_name")
+    address = watch_day_info[0].get("address")
+    question = (f"СРОЧНОСБОР\n"
+                f"{tournament_name}\n"
+                f"{located_match_day_name}\n"
+                f"\n"
+                f"{meeting_date}\n"
+                # f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
+                f"{place_name} - {address}")
+
+    await state.set_state(PollStates.watch_day_info)
+    await state.update_data(watch_day_info=watch_day_info)
+
+    current_state = await state.get_state()
+    print(f"{current_state=}")
+    current_state_data = await state.get_data()
+    print(current_state_data)
+
+    options = [
+        PollOption(text="Иду", voter_count=0, watch_day_id=watch_day_id),
+        PollOption(text="Не иду", voter_count=0, watch_day_id=watch_day_id)
+    ]
+    poll = Poll(
+        id="1",
+        question=question,
+        options=options,
+        is_anonymous=False,
+        type='regular',
+        allows_multiple_answers=False,
+        total_voter_count=0,
+        is_closed=True
+    )
+
+    # TODO: Придумать как убирать предыдущее сообщение
+
+    await callback.bot.send_poll(
+        chat_id=-1002374530977,
+        question=question,
+        options=["Иду", "Не иду"],
+        is_anonymous=poll.is_anonymous
+    )
+
+    await callback.message.edit_text(
+        text="Опрос отправлен",
+        reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+    )
+
+    await callback.answer()
+
+
+@router.poll_answer()
+async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
+    print(f"poll_answer={poll_answer.__dict__}")
+
+    state_data = await state.get_data()
+    watch_day_info = state_data.get("watch_day_info")
+
+    current_state = await state.get_state()
+    print(f"{current_state=}")
+    current_state_data = await state.get_data()
+    print(current_state_data)
+
+    user_id = poll_answer.user.id
+    username = poll_answer.user.username
+    user_first_name = poll_answer.user.first_name
+    user_last_name = poll_answer.user.last_name
+    poll_id = poll_answer.poll_id
+    option_ids = ','.join(map(str, poll_answer.option_ids))
+    user_schema = UsersSchema(
+        username=username,
+        user_role="USER",
+        first_name=user_first_name if user_first_name else None,
+        last_name=user_last_name if user_last_name else None
+    )
+
+    print(
+        f"User info = {username=}, {user_first_name=}, {user_last_name}",
+        f"User {user_id} voted in poll {poll_id} with options {option_ids}",
+        sep="\n"
+    )
+
+    print(f"{watch_day_info=}")
+
+    match_day_manager.register_user(user_tg_id=user_id, user_schema=user_schema)
+
+    if option_ids == "0":
+        match_day_manager.register_user_to_watch(
+            user_id=user_id,
+            watch_day_id=watch_day_info[0].watch_day_id,
+            match_day_id=watch_day_info[0].match_day_id,
+            place_id=watch_day_info[0].place_id
+        )
 
 
 @router.callback_query(F.data == "edit_watch_place")
@@ -128,7 +243,11 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
 async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
-    watch_day_table = f'match_day_{watch_day_info[0].meeting_date.strftime("%d_%m_%Y")}'
+
+    print(f"show visitors - {watch_day_info=}")
+    watch_day_datetime = datetime.datetime.strptime(watch_day_info[0]["meeting_date"], '%Y-%m-%dT%H:%M:%S')
+
+    watch_day_table = f'match_day_{watch_day_datetime.strftime("%d_%m_%Y")}'
 
     print(watch_day_table)
 

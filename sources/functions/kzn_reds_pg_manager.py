@@ -124,8 +124,14 @@ class KznRedsPGManager:
                           public.{table_name}
                         ADD
                           CONSTRAINT {table_name}_pkey PRIMARY KEY (id);
+                        
             """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+            print(f"Table {table_name} successfully created")
+
+            command = f"CREATE UNIQUE INDEX {table_name}_user_id_unique ON public.{table_name}(user_id);"
+            self.kzn_reds_pg_connector.execute_command(command, "index created", "failed")
+            print(f"Created unique index on table {table_name}")
         except Exception as e:
             logger.error(e)
 
@@ -165,15 +171,14 @@ class KznRedsPGManager:
                    f"JOIN public.match_day ON public.watch_day.match_day_id = public.match_day.id "
                    f"JOIN public.places ON public.watch_day.place_id = public.places.id "
                    f"WHERE public.match_day.id = {match_day_id}")
+        print(f"{match_day_id=}\n{command=}")
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
 
         watch_day_by_id = self.__convert_nearest_meetings(command_result)
         return watch_day_by_id
 
     def register_user_to_watch(self, user_id, watch_day_id, match_day_id, place_id):
-        watch_day_info = self.get_watch_day_by_match_day_id(match_day_id)
-        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
-        watch_day_table_name = f"match_day_{watch_day_date}"
+        watch_day_table_name = self.__get_watch_day_table_name(match_day_id=match_day_id)
 
         command = (f"INSERT INTO public.{watch_day_table_name} (user_id, watch_day_id, match_day_id, place_id) "
                    f"VALUES ({user_id}, {watch_day_id}, {match_day_id}, {place_id})")
@@ -181,12 +186,43 @@ class KznRedsPGManager:
         self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
 
+    def finish_registration(self, user_id: int, match_day_id, is_approved: bool = True, is_canceled: bool = False):
+        watch_day_table_name = self.__get_watch_day_table_name(match_day_id=match_day_id)
+        user_registration = self.__get_user_watch_day_registration_info(
+            user_id=user_id, table_name=watch_day_table_name
+        )
+        print(f"{watch_day_table_name=}")
+        print(f"{user_registration=}")
+
+        if user_registration:
+            if is_canceled:
+                command = f"UPDATE public.{watch_day_table_name} SET is_canceled = {is_canceled} WHERE user_id = {user_id}"
+            else:
+                command = (f"UPDATE public.{watch_day_table_name} "
+                           f"SET is_approved = {is_approved}, is_canceled = {is_canceled} "
+                           f"WHERE user_id = {user_id}")
+
+            self.kzn_reds_pg_connector.execute_command(
+                command, "registration finished", "registration failed"
+            )
+        else:
+            logger.warning(f"Пользователь {user_id=} не зарегистрирован на событие")
+
+
+    def __get_watch_day_table_name(self, match_day_id: int):
+        watch_day_info = self.get_watch_day_by_match_day_id(match_day_id)
+        print(f"{watch_day_info=}")
+        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
+        watch_day_table_name = f"match_day_{watch_day_date}"
+
+        return watch_day_table_name
+
     def cancel_registration_to_watch(self, user_id, watch_day_id):
         watch_day_info = self.get_watch_day_by_match_day_id(watch_day_id)
         watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
         watch_day_table_name = f"match_day_{watch_day_date}"
 
-        user_registration = self.get_user_watch_day_registration_info(user_id, watch_day_table_name)
+        user_registration = self.__get_user_watch_day_registration_info(user_id, watch_day_table_name)
 
         print(f"{user_registration=}")
 
@@ -195,7 +231,7 @@ class KznRedsPGManager:
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
 
-    def get_user_watch_day_registration_info(self, user_id, table_name):
+    def __get_user_watch_day_registration_info(self, user_id, table_name):
         command = f"SELECT * FROM {table_name} WHERE user_id = {user_id}"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
 
@@ -274,6 +310,38 @@ class KznRedsPGManager:
 
             converted_result = self.__convert_users_info(command_result)
             return converted_result
+        except Exception as e:
+            logger.error(e)
+
+
+    def register_user(self, user_tg_id: int, user_schema: UsersSchema):
+        try:
+            if not self.__is_user_already_registered(user_tg_id=user_tg_id, user_schema=user_schema):
+                command = (f"INSERT INTO public.users (user_tg_id, username, first_name, last_name, user_role) VALUES "
+                           f"({user_tg_id}, "
+                           f"'{user_schema.username}', "
+                           f"'{user_schema.first_name}', "
+                           f"'{user_schema.last_name}', "
+                           f"'{user_schema.user_role}')")
+                self.kzn_reds_pg_connector.execute_command(command, "created", "failed")
+        except Exception as e:
+            logger.error(e)
+
+
+    def __is_user_already_registered(self, user_tg_id: int, user_schema: UsersSchema):
+        try:
+            command = f"SELECT * FROM public.users WHERE user_tg_id = {user_tg_id}"
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+            print(f"{command_result=}")
+
+            if command_result:
+                command = (f"UPDATE public.users SET "
+                            f"username = '{user_schema.username}', first_name = '{user_schema.first_name}', "
+                           f"last_name = '{user_schema.last_name}' WHERE user_tg_id = {user_tg_id}")
+                self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+
+            return command_result
         except Exception as e:
             logger.error(e)
 

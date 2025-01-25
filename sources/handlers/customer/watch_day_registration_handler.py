@@ -39,6 +39,12 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
+    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+    for watch_day in watch_day_by_id_dict:
+        watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+
+    print(f"watch_day_registration_handler - {watch_day_by_id_dict=}")
+
     await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
 
     await callback.message.edit_text(
@@ -56,8 +62,8 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
 
     try:
-        match_day_manager.register_user_to_watch(
-            user_id, state_data['watch_day_id'], state_data['match_day_id'], state_data['place_id']
+        match_day_manager.finish_registration(
+            user_id=user_id, match_day_id=state_data['match_day_id'], is_approved=True
         )
 
         await callback.message.edit_text(
@@ -77,7 +83,9 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
 
     user_id = callback.from_user.id
 
-    match_day_manager.cancel_registration_to_watch(user_id, state_data['match_day_id'])
+    match_day_manager.finish_registration(
+        user_id=user_id, match_day_id=state_data['match_day_id'], is_canceled=True
+    )
     await callback.message.edit_text(
         text="Жаль...\nУвидимся в следующий раз!", reply_markup=main_keyboard.main_keyboard()
     )

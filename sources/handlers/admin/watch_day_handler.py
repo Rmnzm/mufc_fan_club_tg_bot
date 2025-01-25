@@ -13,6 +13,7 @@ from handlers.admin.base_admin_handler import admin_keyboard
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
 from keyboards.watch_day_keyboard import WatchDayKeyboard
+from schemes.scheme import MatchDaySchema
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +58,17 @@ async def choose_place(
     callback: CallbackQuery, callback_data: AdminCreateWatchDayCallbackFactory, state: FSMContext
 ):
     match_day_by_id = match_day_manager.get_match_day_by_id(callback_data.id)
+
+    print(f"choose_place - {match_day_by_id=}")
+
+    match_day_by_id_dict = match_day_by_id.model_dump()
+    match_day_by_id_dict['start_timestamp'] = match_day_by_id_dict['start_timestamp'].isoformat()
+    match_day_by_id_dict['match_status'] = match_day_by_id_dict['match_status'].value
+
+    print(f"choose_place - {match_day_by_id_dict=}")
+
     await state.set_state(WatchDay.choose_place)
-    await state.update_data(match_day_by_id=match_day_by_id)
+    await state.update_data(match_day_by_id=match_day_by_id_dict)
 
     places = match_day_manager.get_places()
 
@@ -82,8 +92,9 @@ async def registrate_meeting(
     place_id = callback_data.id
 
     try:
-        match_day_manager.add_watch_day(current_state_data['match_day_by_id'], place_id)
-        match_day_manager.create_watch_day_table(current_state_data['match_day_by_id'])
+        match_day_data = MatchDaySchema(**current_state_data['match_day_by_id'])
+        match_day_manager.add_watch_day(match_day_data, place_id)
+        match_day_manager.create_watch_day_table(match_day_data)
         await callback.message.edit_text(
             text=f"Встреча добавлена", reply_markup=admin_keyboard.main_admin_keyboard()
         )

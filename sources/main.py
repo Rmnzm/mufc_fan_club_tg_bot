@@ -2,10 +2,12 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage
+from redis.asyncio import Redis
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config.config import get_settings
-from handlers import main_handler
+from handlers import main_handler, poll_task_handler
 from handlers.admin import base_admin_handler
 from handlers.customer import watch_day_registration_handler
 from handlers.admin import watch_day_edition_handler
@@ -17,6 +19,12 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
+redis = Redis(host='localhost')
+
+print(f"Redis here - {redis}")
+
+redis_storage = RedisStorage(redis=redis)
+
 
 async def main():
     logging.basicConfig(level=logging.INFO,
@@ -27,9 +35,11 @@ async def main():
 
     bot = Bot(token=settings.tg_token,
               default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dispatcher = Dispatcher()
+    # dispatcher = Dispatcher()
+    dispatcher = Dispatcher(storage=redis_storage)
 
     dispatcher.include_router(main_handler.router)
+    # dispatcher.include_router(poll_task_handler.router)
     dispatcher.include_router(base_admin_handler.router)
     dispatcher.include_router(watch_day_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
