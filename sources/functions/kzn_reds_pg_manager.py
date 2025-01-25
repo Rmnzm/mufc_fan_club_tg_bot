@@ -28,6 +28,52 @@ class KznRedsPGManager:
 
         return return_string if return_string else "Нет ближайших матчей"
 
+    def get_match_day_by_id(self, event_id: int):
+        try:
+            command = f"""SELECT * FROM public.match_day WHERE event_id = {event_id}"""
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            if command_result:
+                return MatchDaySchema(**command_result)
+        except Exception as e:
+            logger.error(e)
+
+    def update_match_day_by_event_id(self, event_id, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
+                      tournament_name_slug, localed_match_day_name):
+        try:
+            command = f"""UPDATE public.match_day 
+            SET start_timestamp = '{start_timestamp}', 
+            match_status = '{match_status}', 
+            opponent_name = '{opponent_name}', 
+            opponent_name_slug = '{opponent_name_slug}', 
+            tournament_name = '{tournament_name}', 
+            tournament_name_slug = '{tournament_name_slug}', 
+            localed_match_day_name = '{localed_match_day_name}'
+            WHERE event_id = {event_id}"""
+
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+
+        except Exception as e:
+            logger.error(e)
+
+    def rename_watch_day_table_name(self, old_name, new_name):
+        try:
+            command = f"""ALTER TABLE '{old_name}'
+                            RENAME TO '{new_name}'"""
+
+            self.kzn_reds_pg_connector.execute_command(command, "renamed", "failed")
+
+        except Exception as e:
+            logger.error(e)
+
+    def update_meeting_date(self, new_date, match_id):
+        try:
+            command = f"""UPDATE public.watch_day SET meeting_date = '{new_date}' WHERE match_day_id = {match_id}"""
+
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+
+        except Exception as e:
+            logger.error(e)
+
     def get_nearest_match_day(self):
         current_date = datetime.now()
         command = f"""
@@ -47,15 +93,15 @@ class KznRedsPGManager:
         return self.__convert_places(command_result)
 
     def add_match_day(self, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
-                      tournament_name_slug, localed_match_day_name):
+                      tournament_name_slug, localed_match_day_name, event_id):
         try:
             command = f"""
                         INSERT INTO public.match_day (
                         start_timestamp, match_status, opponent_name, opponent_name_slug, 
-                        tournament_name, tournament_name_slug, localed_match_day_name) 
+                        tournament_name, tournament_name_slug, localed_match_day_name, event_id) 
                         VALUES ('{datetime.fromtimestamp(start_timestamp)}', '{match_status}', 
                         '{opponent_name}', '{opponent_name_slug}', '{tournament_name}', 
-                        '{tournament_name_slug}', '{localed_match_day_name}')
+                        '{tournament_name_slug}', '{localed_match_day_name}', {event_id})
                         ON CONFLICT ON CONSTRAINT match_day_pk DO NOTHING;
                         """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")

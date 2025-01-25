@@ -7,6 +7,7 @@ from redis.asyncio import Redis
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from config.config import get_settings
+from functions.season_matches_manager import SeasonMatchesManager
 from handlers import main_handler, poll_task_handler
 from handlers.admin import base_admin_handler
 from handlers.customer import watch_day_registration_handler
@@ -24,6 +25,13 @@ redis = Redis(host='localhost')
 print(f"Redis here - {redis}")
 
 redis_storage = RedisStorage(redis=redis)
+season_manager = SeasonMatchesManager()
+
+
+async def my_task():
+    while True:
+        print("Выполняется задача...")
+        await asyncio.sleep(10)
 
 
 async def main():
@@ -32,6 +40,8 @@ async def main():
                                '%(lineno)d - %(name)s - %(message)s')
 
     logger.info("Starting bot...")
+
+    # TODO: Сделать таску, которая добавляет/обновляет матчи, запрашивая их по апи
 
     bot = Bot(token=settings.tg_token,
               default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -47,10 +57,16 @@ async def main():
     dispatcher.include_router(create_place_handler.router)
     dispatcher.include_router(edit_place_handler.router)
 
+    # TODO: Сделать таску обновления последнего прошедшего матча
+
+    # task = asyncio.create_task(my_task())
+
     logger.info("Bot started.")
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dispatcher.start_polling(bot)
+
+    # await task
 
 
 asyncio.run(main())
