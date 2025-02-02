@@ -102,7 +102,9 @@ class KznRedsPGManager:
                         VALUES ('{datetime.fromtimestamp(start_timestamp)}', '{match_status}', 
                         '{opponent_name}', '{opponent_name_slug}', '{tournament_name}', 
                         '{tournament_name_slug}', '{localed_match_day_name}', {event_id})
-                        ON CONFLICT ON CONSTRAINT match_day_pk DO NOTHING;
+                        ON CONFLICT (event_id) DO UPDATE SET 
+                        start_timestamp = '{datetime.fromtimestamp(start_timestamp)}',
+                        match_status = '{match_status}';
                         """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
@@ -210,7 +212,7 @@ class KznRedsPGManager:
 
         match_day_by_id = self.__convert_match_day_info(command_result)
 
-        return match_day_by_id[0]
+        return match_day_by_id
 
     def get_watch_day_by_match_day_id(self, match_day_id: int) -> list[NearestMeetingsSchema]:
         command = (f"SELECT public.watch_day.id as watch_day_id, * FROM public.watch_day "
