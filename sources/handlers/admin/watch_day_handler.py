@@ -61,7 +61,7 @@ async def choose_place(
 
     print(f"choose_place - {match_day_by_id=}")
 
-    match_day_by_id_dict = match_day_by_id.model_dump()
+    match_day_by_id_dict = match_day_by_id[0].model_dump()
     match_day_by_id_dict['start_timestamp'] = match_day_by_id_dict['start_timestamp'].isoformat()
     match_day_by_id_dict['match_status'] = match_day_by_id_dict['match_status'].value
 

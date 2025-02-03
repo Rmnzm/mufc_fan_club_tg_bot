@@ -28,10 +28,25 @@ redis_storage = RedisStorage(redis=redis)
 season_manager = SeasonMatchesManager()
 
 
-async def my_task():
+async def create_or_update_matches_task():
     while True:
-        print("Выполняется задача...")
-        await asyncio.sleep(10)
+        print("Выполняется задача обновления/добавления будущих матчей...")
+        try:
+            update_test = SeasonMatchesManager().get_next_matches()
+            SeasonMatchesManager().update_next_matches(update_test)
+        except Exception as e:
+            logger.error(e)
+        await asyncio.sleep(3600)
+
+async def update_last_passed_match_task():
+    while True:
+        print("Выполняется задача обновления прошедших матчей")
+        try:
+            update_test = SeasonMatchesManager().get_nearest_events()
+            SeasonMatchesManager().update_last_passed_match(update_test)
+        except Exception as e:
+            logger.error(e)
+        await asyncio.sleep(3600)
 
 
 async def main():
@@ -59,14 +74,16 @@ async def main():
 
     # TODO: Сделать таску обновления последнего прошедшего матча
 
-    # task = asyncio.create_task(my_task())
+    create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
+    update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
 
     logger.info("Bot started.")
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dispatcher.start_polling(bot)
 
-    # await task
+    await create_or_update_matches_job
+    await update_last_passed_match_job
 
 
 asyncio.run(main())

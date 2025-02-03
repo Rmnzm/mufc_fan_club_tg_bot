@@ -18,7 +18,7 @@ class SeasonMatchesManager:
         pass
 
     def update_next_matches(self, next_matches: MatchDayDTO):
-
+        logger.info(f"Received {len(next_matches.events)} matches to create or update")
         for num, event in enumerate(next_matches.events):
             match_day = match_day_manager.get_match_day_by_id(event.id)
             start_timestamp = event.startTimestamp
@@ -27,9 +27,7 @@ class SeasonMatchesManager:
             tournament_name = event.tournament.name
             tournament_name_slug = event.tournament.slug
             localed_match_day_name = self.__get_localed_match_day_name(event)
-            # TODO: remove 0
             if not match_day:
-                if num == 0:
                     match_day_manager.add_match_day(
                         start_timestamp=start_timestamp,
                         match_status=match_status,
@@ -41,7 +39,7 @@ class SeasonMatchesManager:
                         event_id=event.id
                     )
             else:
-                match_day_manager.update_match_day_by_event_id(
+                update_match_day_table_command = match_day_manager.get_update_match_day_table_command(
                     event_id=event.id,
                     start_timestamp=start_timestamp,
                     match_status=match_status,
@@ -51,14 +49,18 @@ class SeasonMatchesManager:
                     tournament_name_slug=tournament_name_slug,
                     localed_match_day_name=localed_match_day_name
                 )
-                match_day_manager.update_meeting_date(
+                update_meeting_date_command = match_day_manager.get_update_meeting_date_command(
                     match_id=match_day.id, new_date=datetime.fromtimestamp(start_timestamp) - timedelta(minutes=30)
                 )
-                old_date = datetime.fromtimestamp(start_timestamp).date().strftime("%d_%m_%Y")
+                old_date = match_day.start_timestamp.strftime("%d_%m_%Y")
                 new_date = datetime.fromtimestamp(event.startTimestamp).date().strftime("%d_%m_%Y")
-                match_day_manager.rename_watch_day_table_name(
+                rename_watch_day_table_command = match_day_manager.rename_watch_day_table_name(
                     old_name=f"match_day_{old_date}", new_name=f"match_day_{new_date}"
                 )
+
+                fully_command = update_match_day_table_command + update_meeting_date_command + rename_watch_day_table_command
+
+                match_day_manager.update_match_day_info(command=fully_command)
 
 
     def update_last_passed_match(self, nearest_events: NearestEventsDTO):

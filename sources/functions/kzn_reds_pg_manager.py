@@ -37,8 +37,9 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(e)
 
-    def update_match_day_by_event_id(self, event_id, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
-                      tournament_name_slug, localed_match_day_name):
+    @staticmethod
+    def get_update_match_day_table_command(event_id, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
+                                           tournament_name_slug, localed_match_day_name):
         try:
             command = f"""UPDATE public.match_day 
             SET start_timestamp = '{start_timestamp}', 
@@ -48,29 +49,36 @@ class KznRedsPGManager:
             tournament_name = '{tournament_name}', 
             tournament_name_slug = '{tournament_name_slug}', 
             localed_match_day_name = '{localed_match_day_name}'
-            WHERE event_id = {event_id}"""
+            WHERE event_id = {event_id};"""
 
-            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+            return command
 
         except Exception as e:
             logger.error(e)
 
-    def rename_watch_day_table_name(self, old_name, new_name):
+    @staticmethod
+    def rename_watch_day_table_name(old_name, new_name):
         try:
             command = f"""ALTER TABLE '{old_name}'
                             RENAME TO '{new_name}'"""
 
-            self.kzn_reds_pg_connector.execute_command(command, "renamed", "failed")
-
+            return command
         except Exception as e:
             logger.error(e)
 
-    def update_meeting_date(self, new_date, match_id):
+
+    def update_match_day_info(self, command):
+        try:
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+    @staticmethod
+    def get_update_meeting_date_command(new_date, match_id):
         try:
             command = f"""UPDATE public.watch_day SET meeting_date = '{new_date}' WHERE match_day_id = {match_id}"""
 
-            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
-
+            return command
         except Exception as e:
             logger.error(e)
 
