@@ -16,6 +16,7 @@ class MatchDaySchema(BaseModel):
     tournament_name: str
     tournament_name_slug: str
     localed_match_day_name: str
+    event_id: Optional[int]
 
 
 class UserRoleSchema(BaseModel):

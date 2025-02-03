@@ -30,7 +30,7 @@ season_manager = SeasonMatchesManager()
 
 async def create_or_update_matches_task():
     while True:
-        print("Выполняется задача обновления/добавления будущих матчей...")
+        logger.info("Выполняется задача обновления/добавления будущих матчей...")
         try:
             update_test = SeasonMatchesManager().get_next_matches()
             SeasonMatchesManager().update_next_matches(update_test)
@@ -40,7 +40,7 @@ async def create_or_update_matches_task():
 
 async def update_last_passed_match_task():
     while True:
-        print("Выполняется задача обновления прошедших матчей")
+        logger.info("Выполняется задача обновления прошедших матчей")
         try:
             update_test = SeasonMatchesManager().get_nearest_events()
             SeasonMatchesManager().update_last_passed_match(update_test)
@@ -60,19 +60,16 @@ async def main():
 
     bot = Bot(token=settings.tg_token,
               default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    # dispatcher = Dispatcher()
+
     dispatcher = Dispatcher(storage=redis_storage)
 
     dispatcher.include_router(main_handler.router)
-    # dispatcher.include_router(poll_task_handler.router)
     dispatcher.include_router(base_admin_handler.router)
     dispatcher.include_router(watch_day_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
     dispatcher.include_router(watch_day_edition_handler.router)
     dispatcher.include_router(create_place_handler.router)
     dispatcher.include_router(edit_place_handler.router)
-
-    # TODO: Сделать таску обновления последнего прошедшего матча
 
     create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
     update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())

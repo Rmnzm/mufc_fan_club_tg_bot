@@ -67,6 +67,7 @@ async def edit_place_name(message: Message, state: FSMContext):
         await message.answer(
             text=f"Изменено место по {place_id=}", reply_markup=admin_keyboard.edit_place_keyboard(address=True)
         )
+        await state.clear()
     except Exception:
         await message.answer(
             text="Не удалось изменить название места",
@@ -116,6 +117,8 @@ async def delete_place(callback: CallbackQuery, state: FSMContext):
             text=f"Место удалено {place_id=}",
             reply_markup=admin_keyboard.main_admin_keyboard()
         )
+
+        await state.clear()
     except Exception:
         await callback.message.answer(
             text="Не удалось удалить место",

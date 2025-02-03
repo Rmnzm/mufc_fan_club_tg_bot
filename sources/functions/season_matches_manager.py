@@ -6,6 +6,7 @@ import requests
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from schemes.matchday_dto import MatchDayDTO, NearestEventsDTO, EventDTO
 from config.config import get_settings
+from schemes.scheme import MatchDaySchema
 
 settings = get_settings()
 
@@ -39,46 +40,56 @@ class SeasonMatchesManager:
                         event_id=event.id
                     )
             else:
-                update_match_day_table_command = match_day_manager.get_update_match_day_table_command(
-                    event_id=event.id,
-                    start_timestamp=start_timestamp,
-                    match_status=match_status,
-                    opponent_name=opponent_name,
-                    opponent_name_slug=opponent_name_slug,
-                    tournament_name=tournament_name,
-                    tournament_name_slug=tournament_name_slug,
-                    localed_match_day_name=localed_match_day_name
-                )
-                update_meeting_date_command = match_day_manager.get_update_meeting_date_command(
-                    match_id=match_day.id, new_date=datetime.fromtimestamp(start_timestamp) - timedelta(minutes=30)
-                )
-                old_date = match_day.start_timestamp.strftime("%d_%m_%Y")
-                new_date = datetime.fromtimestamp(event.startTimestamp).date().strftime("%d_%m_%Y")
-                rename_watch_day_table_command = match_day_manager.rename_watch_day_table_name(
-                    old_name=f"match_day_{old_date}", new_name=f"match_day_{new_date}"
-                )
+                if not self.__check_match_day_has_changes(event, match_day[0]):
+                    update_match_day_table_command = match_day_manager.get_update_match_day_table_command(
+                        event_id=event.id,
+                        start_timestamp=start_timestamp,
+                        match_status=match_status,
+                        opponent_name=opponent_name,
+                        opponent_name_slug=opponent_name_slug,
+                        tournament_name=tournament_name,
+                        tournament_name_slug=tournament_name_slug,
+                        localed_match_day_name=localed_match_day_name
+                    )
+                    update_meeting_date_command = match_day_manager.get_update_meeting_date_command(
+                        match_id=match_day[0].id, new_date=datetime.fromtimestamp(start_timestamp) - timedelta(minutes=30)
+                    )
+                    old_date = match_day[0].start_timestamp.strftime("%d_%m_%Y")
+                    new_date = datetime.fromtimestamp(event.startTimestamp).date().strftime("%d_%m_%Y")
+                    rename_watch_day_table_command = match_day_manager.rename_watch_day_table_name(
+                        old_name=f"match_day_{old_date}", new_name=f"match_day_{new_date}"
+                    )
 
-                fully_command = update_match_day_table_command + update_meeting_date_command + rename_watch_day_table_command
+                    fully_command = update_match_day_table_command + update_meeting_date_command + rename_watch_day_table_command
 
-                match_day_manager.update_match_day_info(command=fully_command)
+                    match_day_manager.update_match_day_info(command=fully_command)
+                else:
+                    logger.info("Events has no changes")
+
+    @staticmethod
+    def __check_match_day_has_changes(event: EventDTO, match_day_schema: MatchDaySchema) -> bool:
+        try:
+            # TODO: add more checks
+            assert datetime.fromtimestamp(event.startTimestamp) == match_day_schema.start_timestamp
+            assert event.id == match_day_schema.event_id
+            return True
+        except AssertionError:
+            return False
 
 
     def update_last_passed_match(self, nearest_events: NearestEventsDTO):
-        start_timestamp = nearest_events.nextEvent.startTimestamp
-        match_status = nearest_events.nextEvent.status.type
-        opponent_name, opponent_name_slug = self.__get_opponent_names(nearest_events.nextEvent)
-        tournament_name = nearest_events.nextEvent.tournament.name
-        tournament_name_slug = nearest_events.nextEvent.tournament.slug
-        localed_match_day_name = self.__get_localed_match_day_name(nearest_events.nextEvent)
-        match_day_manager.add_match_day(
+        start_timestamp = datetime.fromtimestamp(nearest_events.previousEvent.startTimestamp)
+        match_status = nearest_events.previousEvent.status.type
+        localed_match_day_name = self.__get_localed_match_day_name(nearest_events.previousEvent)
+        match_day_manager.update_passed_match_day(
             start_timestamp=start_timestamp,
             match_status=match_status,
-            opponent_name=opponent_name,
-            opponent_name_slug=opponent_name_slug,
-            tournament_name=tournament_name,
-            tournament_name_slug=tournament_name_slug,
-            localed_match_day_name=localed_match_day_name,
-            event_id=nearest_events.nextEvent.id
+            event_id=nearest_events.previousEvent.id
+        )
+
+        logger.info(
+            f"Updated passed on {start_timestamp.date().strftime('%d_%m_%Y')} match day "
+            f"{localed_match_day_name} with changing status to {match_status}"
         )
 
     def get_next_matches(self):

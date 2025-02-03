@@ -100,6 +100,8 @@ async def registrate_meeting(
         )
         await callback.answer()
 
+        await state.clear()
+
     except Exception as e:
         raise e
 
