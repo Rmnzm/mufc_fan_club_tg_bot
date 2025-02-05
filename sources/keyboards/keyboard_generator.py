@@ -64,6 +64,10 @@ class KeyboardGenerator:
 
     def places_keyboard(self, data_factories: List[PlacesFactory], buttons_info: List[PlacesSchema]):
         inline_keyboard = [[self.__button_3(factory_data, buttons_info)] for factory_data in data_factories]
+        back_to_main_menu = InlineKeyboardButton(
+            text="Назад в меню", callback_data="back_to_main_menu"
+        )
+        inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=inline_keyboard,
             resize_keyboard=True
@@ -75,6 +79,10 @@ class KeyboardGenerator:
         inline_keyboard = [
             [self.__place_button(factory_data, buttons_info)] for factory_data in data_factories
         ]
+        back_to_main_menu = InlineKeyboardButton(
+            text="Назад в меню", callback_data="back_to_main_menu"
+        )
+        inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=inline_keyboard,
             resize_keyboard=True

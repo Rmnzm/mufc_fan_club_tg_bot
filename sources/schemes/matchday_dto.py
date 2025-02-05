@@ -49,3 +49,8 @@ class EventDTO(BaseModel):
 
 class MatchDayDTO(BaseModel):
     events: List[EventDTO]
+
+
+class NearestEventsDTO(BaseModel):
+    previousEvent: EventDTO
+    nextEvent: EventDTO

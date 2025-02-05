@@ -41,5 +41,7 @@ async def input_place_address(message: Message, state: FSMContext):
 
         await message.answer(
             text=msg, reply_markup=admin_keyboard.main_admin_keyboard())
+
+        await state.clear()
     except Exception as e:
         raise e

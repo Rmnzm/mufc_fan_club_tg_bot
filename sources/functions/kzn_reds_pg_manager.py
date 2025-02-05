@@ -17,7 +17,7 @@ class KznRedsPGManager:
     def get_match_days(self):
         current_date = datetime.now()
         command = f"""SELECT * FROM public.match_day 
-        WHERE match_status = 'notstarted' and start_timestamp > '{current_date}'"""
+        WHERE match_status = 'notstarted' and start_timestamp > '{current_date}' ORDER BY start_timestamp ASC LIMIT 5;"""
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         match_days = self.__convert_match_day_info(command_result)
         return_string = "\n".join(
@@ -28,12 +28,75 @@ class KznRedsPGManager:
 
         return return_string if return_string else "Нет ближайших матчей"
 
+    def get_match_day_by_id(self, event_id: int):
+        try:
+            command = f"""SELECT * FROM public.match_day WHERE event_id = {event_id} ORDER BY start_timestamp ASC LIMIT 5;"""
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            print(command_result, type(command_result))
+            if command_result:
+                return self.__convert_match_day_info(command_result)
+        except Exception as e:
+            logger.error(e)
+
+    def update_passed_match_day(self, event_id, start_timestamp, match_status):
+        try:
+            command = f"""UPDATE public.match_day SET start_timestamp = '{start_timestamp}', match_status = '{match_status}' WHERE event_id = {event_id};"""
+
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+    @staticmethod
+    def get_update_match_day_table_command(event_id, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
+                                           tournament_name_slug, localed_match_day_name):
+        try:
+            command = f"""UPDATE public.match_day 
+            SET start_timestamp = '{datetime.fromtimestamp(start_timestamp)}', 
+            match_status = '{match_status}', 
+            opponent_name = '{opponent_name}', 
+            opponent_name_slug = '{opponent_name_slug}', 
+            tournament_name = '{tournament_name}', 
+            tournament_name_slug = '{tournament_name_slug}', 
+            localed_match_day_name = '{localed_match_day_name}'
+            WHERE event_id = {event_id};"""
+
+            return command
+
+        except Exception as e:
+            logger.error(e)
+
+    @staticmethod
+    def rename_watch_day_table_name(old_name, new_name):
+        try:
+            command = f"""ALTER TABLE {old_name}
+                            RENAME TO {new_name};"""
+
+            return command
+        except Exception as e:
+            logger.error(e)
+
+
+    def update_match_day_info(self, command):
+        try:
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+    @staticmethod
+    def get_update_meeting_date_command(new_date, match_id):
+        try:
+            command = f"""UPDATE public.watch_day SET meeting_date = '{new_date}' WHERE match_day_id = {match_id};"""
+
+            return command
+        except Exception as e:
+            logger.error(e)
+
     def get_nearest_match_day(self):
         current_date = datetime.now()
         command = f"""
                     SELECT * FROM public.match_day 
                     WHERE match_status = 'notstarted' and start_timestamp > '{current_date}' 
-                    ORDER BY start_timestamp DESC
+                    ORDER BY start_timestamp ASC LIMIT 5;
         """
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         match_days = self.__convert_match_day_info(command_result)
@@ -47,16 +110,18 @@ class KznRedsPGManager:
         return self.__convert_places(command_result)
 
     def add_match_day(self, start_timestamp, match_status, opponent_name, opponent_name_slug, tournament_name,
-                      tournament_name_slug, localed_match_day_name):
+                      tournament_name_slug, localed_match_day_name, event_id):
         try:
             command = f"""
                         INSERT INTO public.match_day (
                         start_timestamp, match_status, opponent_name, opponent_name_slug, 
-                        tournament_name, tournament_name_slug, localed_match_day_name) 
+                        tournament_name, tournament_name_slug, localed_match_day_name, event_id) 
                         VALUES ('{datetime.fromtimestamp(start_timestamp)}', '{match_status}', 
                         '{opponent_name}', '{opponent_name_slug}', '{tournament_name}', 
-                        '{tournament_name_slug}', '{localed_match_day_name}')
-                        ON CONFLICT ON CONSTRAINT match_day_pk DO NOTHING;
+                        '{tournament_name_slug}', '{localed_match_day_name}', {event_id})
+                        ON CONFLICT (event_id) DO UPDATE SET 
+                        start_timestamp = '{datetime.fromtimestamp(start_timestamp)}',
+                        match_status = '{match_status}';
                         """
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
@@ -152,19 +217,12 @@ class KznRedsPGManager:
                         JOIN public.places ON public.watch_day.place_id = public.places.id 
                         WHERE public.watch_day.watch_status = 'notstarted' and 
                         public.match_day.match_status = 'notstarted' and 
-                        public.watch_day.meeting_date > '{current_date}'"""
+                        public.watch_day.meeting_date > '{current_date}'
+                        LIMIT 5;"""
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         print(command_result)
         nearest_meetings = self.__convert_nearest_meetings(command_result)
         return nearest_meetings
-
-    def get_match_day_by_id(self, match_day_id):
-        command = f"SELECT * FROM public.match_day WHERE id = {match_day_id}"
-        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-
-        match_day_by_id = self.__convert_match_day_info(command_result)
-
-        return match_day_by_id[0]
 
     def get_watch_day_by_match_day_id(self, match_day_id: int) -> list[NearestMeetingsSchema]:
         command = (f"SELECT public.watch_day.id as watch_day_id, * FROM public.watch_day "
