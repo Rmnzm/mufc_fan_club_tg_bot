@@ -7,6 +7,7 @@ from aiogram.types import Message, CallbackQuery
 
 from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory
 from functions.kzn_reds_pg_manager import KznRedsPGManager
+from functions.meeting_invites_manager import Form
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
 from states.create_place_state import CreatePlaceStateGroup
@@ -95,3 +96,21 @@ async def show_places(callback: CallbackQuery):
     )
     await callback.answer()
 
+
+@router.callback_query(Form.waiting_for_button_press)
+async def process_button_press(call: CallbackQuery, state: FSMContext):
+    state_context = await state.get_data()
+    print(state_context.get("context"))
+    button_text = call.data
+    await call.message.answer(f"Вы нажали: {button_text}")
+    await state.clear()
+
+
+
+# @router.callback_query(F.data == "button1")
+# async def process_button_press(call: CallbackQuery, state: FSMContext):
+#     state_context = await state.get_data()
+#     print(state_context.get("context"))
+#     button_text = call.data
+#     await call.message.answer(f"Вы нажали: {button_text}")
+#     await state.clear()
