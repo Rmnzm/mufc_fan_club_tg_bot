@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
 from schemes.scheme import MatchDaySchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema, \
-    PlacesSchema
+    PlacesSchema, UserRegistrationSchema
+from tools.helpers import CommonHelpers
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class KznRedsPGManager:
 
         return return_string if return_string else "Нет ближайших матчей"
 
-    def get_match_day_by_id(self, event_id: int):
+    def get_match_day_by_event_id(self, event_id: int):
         try:
             command = f"""SELECT * FROM public.match_day WHERE event_id = {event_id} ORDER BY start_timestamp ASC LIMIT 5;"""
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
@@ -404,6 +405,24 @@ class KznRedsPGManager:
             logger.error(e)
 
 
+    def get_users_to_send_invitations(self, match_day_id):
+        match_day_info = self.get_watch_day_by_match_day_id(match_day_id=match_day_id)
+        table_name = CommonHelpers.table_name_by_date(match_day_info[0].meeting_date)
+        try:
+            return self.__get_users_to_match_day(table_name, match_day_id)
+        except Exception as e:
+            logger.error(e)
+
+    def __get_users_to_match_day(self, table_name: str, match_day_id: int):
+        try:
+            command = f"""SELECT user_id, is_approved, is_canceled 
+                            FROM public.{table_name} 
+                            WHERE is_canceled = false and match_day_id = {match_day_id}"""
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            return self.__convert_users_registration(command_result)
+        except Exception as e:
+            logger.error(e)
+
     @staticmethod
     def __convert_users_info(users):
         return [UsersSchema(**user) for user in users]
@@ -424,3 +443,7 @@ class KznRedsPGManager:
     @staticmethod
     def __convert_places(places):
         return [PlacesSchema(**place) for place in places]
+
+    @staticmethod
+    def __convert_users_registration(users):
+        return [UserRegistrationSchema(**user) for user in users]

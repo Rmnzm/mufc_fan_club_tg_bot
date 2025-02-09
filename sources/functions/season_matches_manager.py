@@ -21,7 +21,7 @@ class SeasonMatchesManager:
     def update_next_matches(self, next_matches: MatchDayDTO):
         logger.info(f"Received {len(next_matches.events)} matches to create or update")
         for num, event in enumerate(next_matches.events):
-            match_day = match_day_manager.get_match_day_by_id(event.id)
+            match_day = match_day_manager.get_match_day_by_event_id(event.id)
             start_timestamp = event.startTimestamp
             match_status = event.status.type
             opponent_name, opponent_name_slug = self.__get_opponent_names(event)

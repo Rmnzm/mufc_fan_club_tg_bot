@@ -57,7 +57,7 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
 async def choose_place(
     callback: CallbackQuery, callback_data: AdminCreateWatchDayCallbackFactory, state: FSMContext
 ):
-    match_day_by_id = match_day_manager.get_match_day_by_id(callback_data.id)
+    match_day_by_id = match_day_manager.get_match_day_by_event_id(callback_data.id)
 
     print(f"choose_place - {match_day_by_id=}")
 

@@ -57,3 +57,9 @@ class PlacesSchema(BaseModel):
     id: int
     place_name: str
     address: str
+
+
+class UserRegistrationSchema(BaseModel):
+    user_id: int
+    is_approved: bool
+    is_canceled: bool

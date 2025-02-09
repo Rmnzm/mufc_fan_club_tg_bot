@@ -58,8 +58,9 @@ async def send_invites(bot):
         logger.info("Отправляется сообщение пользователю: ...")
         try:
             user_id = 715078441
+            # TODO: Добавить поиск матчей по которым отправлять сообщения за сутки примерно
             state = FSMContext(storage=redis_storage, key=StorageKey(user_id=user_id, bot_id=5182705497, chat_id=user_id))
-            await MeetingInvitesManager(bot).send_message(state=state, context={"a": "b"})
+            await MeetingInvitesManager(bot).send_message(state=state, context={"a": "b"}, match_day_id=5)
         except Exception as e:
             logger.error(e)
         await asyncio.sleep(360)

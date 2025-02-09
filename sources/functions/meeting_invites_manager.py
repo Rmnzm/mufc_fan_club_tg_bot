@@ -2,9 +2,12 @@ from aiogram import Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
+from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.meeting_approvement_keyboard import MeetingApprovementKeyboard
 
 invitation_keyboard = MeetingApprovementKeyboard().main_approvement_keyboard()
+
+kzn_reds_pg_manager = KznRedsPGManager()
 
 class Form(StatesGroup):
     waiting_for_button_press = State()
@@ -18,10 +21,14 @@ class MeetingInvitesManager:
     async def send_message(
             self,
             state: FSMContext,
-            context
+            context,
+            match_day_id
     ):
         text = "Приветв"
         user_id = 715078441
+        users_to_send = kzn_reds_pg_manager.get_users_to_send_invitations(
+            match_day_id=match_day_id
+        )
 
         print(f"Current state = {state}")
         await state.set_state(Form.waiting_for_button_press)
