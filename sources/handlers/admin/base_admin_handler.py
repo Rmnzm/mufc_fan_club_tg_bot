@@ -95,22 +95,3 @@ async def show_places(callback: CallbackQuery):
         text=places_string, reply_markup=reply_keyboard
     )
     await callback.answer()
-
-
-@router.callback_query(Form.waiting_for_button_press)
-async def process_button_press(call: CallbackQuery, state: FSMContext):
-    state_context = await state.get_data()
-    print(state_context.get("context"))
-    button_text = call.data
-    await call.message.answer(f"Вы нажали: {button_text}")
-    await state.clear()
-
-
-
-# @router.callback_query(F.data == "button1")
-# async def process_button_press(call: CallbackQuery, state: FSMContext):
-#     state_context = await state.get_data()
-#     print(state_context.get("context"))
-#     button_text = call.data
-#     await call.message.answer(f"Вы нажали: {button_text}")
-#     await state.clear()

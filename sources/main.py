@@ -18,6 +18,7 @@ from handlers.admin import watch_day_edition_handler
 from handlers.admin import create_place_handler
 from handlers.admin import watch_day_handler
 from handlers.admin import edit_place_handler
+from handlers.customer import meeting_approvement_handler
 
 settings = get_settings()
 
@@ -85,6 +86,7 @@ async def main():
     dispatcher.include_router(watch_day_edition_handler.router)
     dispatcher.include_router(create_place_handler.router)
     dispatcher.include_router(edit_place_handler.router)
+    dispatcher.include_router(meeting_approvement_handler.router)
 
     # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
     # update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
