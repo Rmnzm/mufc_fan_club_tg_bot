@@ -6,7 +6,8 @@ import requests
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from schemes.matchday_dto import MatchDayDTO, NearestEventsDTO, EventDTO
 from config.config import get_settings
-from schemes.scheme import MatchDaySchema
+from schemes.scheme import MatchDaySchema, InvitationContextSchema
+from tools.helpers import CommonHelpers
 
 settings = get_settings()
 
@@ -65,6 +66,28 @@ class SeasonMatchesManager:
                     match_day_manager.update_match_day_info(command=fully_command)
                 else:
                     logger.info("Events has no changes")
+
+    @staticmethod
+    def create_context_to_send_invitations() -> (list[dict], list[InvitationContextSchema]):
+        context = match_day_manager.get_nearest_watching_day()
+        table_name = CommonHelpers.table_name_by_date(context[0].meeting_date)
+
+        meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
+
+        users = match_day_manager.get_users_by_watch_day_table(table_name=table_name)
+        match_day_name = match_day_manager.get_match_day_name_by_id(context[0].match_day_id)
+        place_info = match_day_manager.get_place_by_id(context[0].place_id)
+
+        match_day_info = {
+            "match_day_id": context[0].match_day_id,
+            "table_name": table_name,
+            "match_day_name": match_day_name,
+            "place_name": place_info[0].place_name,
+            "address": place_info[0].address,
+            "meeting_date": meeting_date
+        }
+
+        return users, match_day_info
 
     @staticmethod
     def __check_match_day_has_changes(event: EventDTO, match_day_schema: MatchDaySchema) -> bool:

@@ -63,3 +63,9 @@ class UserRegistrationSchema(BaseModel):
     user_id: int
     is_approved: bool
     is_canceled: bool
+
+
+class InvitationContextSchema(BaseModel):
+    meeting_date: datetime.datetime
+    match_day_id: int
+    place_id: int

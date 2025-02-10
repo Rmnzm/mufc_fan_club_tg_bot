@@ -20,8 +20,18 @@ async def process_button_press(callback: CallbackQuery, state: FSMContext):
     state_context = await state.get_data()
     print(state_context.get("context"))
     print(f"{callback}")
-    button_text = callback.data
-    await callback.message.edit_text(f"Вы нажали: {button_text}")
+    context = state_context.get("context")
+
+    try:
+        match_day_manager.approve_watch_day_by_user_invitation_info(
+            context.get("table_name"),
+            callback.from_user.id,
+            context.get("match_day_id")
+        )
+        await callback.message.edit_text("Супер! Ждем\nGG MU!")
+    except Exception as e:
+        await callback.message.edit_text("Не получилось зарегистировать на просмотр. Повторите позднее или обратитесь к организаторам")
+
     await callback.answer()
     await state.clear()
 
@@ -31,7 +41,16 @@ async def process_button_press(callback: CallbackQuery, state: FSMContext):
     state_context = await state.get_data()
     print(state_context.get("context"))
     print(f"{callback}")
-    button_text = callback.data
-    await callback.message.edit_text(f"Вы нажали: {button_text}")
+    context = state_context.get("context")
+    try:
+        match_day_manager.cancel_watch_day_by_user_invitation_info(
+            context.get("table_name"),
+            callback.from_user.id,
+            context.get("match_day_id")
+        )
+        await callback.message.edit_text("Очень жаль. Увидимся в следующий раз")
+    except Exception as e:
+        await callback.message.edit_text("Не получилось отменить регистрацию на просмотр. Повторите позднее или обратитесь к организаторам")
+
     await callback.answer()
     await state.clear()
