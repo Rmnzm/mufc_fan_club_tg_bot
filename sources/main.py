@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime, timezone, timedelta
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.context import FSMContext, StorageKey
@@ -40,7 +41,7 @@ async def create_or_update_matches_task():
             SeasonMatchesManager().update_next_matches(update_test)
         except Exception as e:
             logger.error(e)
-        await asyncio.sleep(3600)
+        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
 async def update_last_passed_match_task():
     while True:
@@ -50,15 +51,16 @@ async def update_last_passed_match_task():
             SeasonMatchesManager().update_last_passed_match(update_test)
         except Exception as e:
             logger.error(e)
-        await asyncio.sleep(3600)
+        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
 async def send_invites(bot):
     while True:
-        logger.info("Отправляется сообщение пользователю: ...")
+        logger.info("Проверяем можно ли отправлять сообщения пользователям ...")
         try:
             users, match_day_context = SeasonMatchesManager().create_context_to_send_invitations()
-            if users:
+            is_time_so_send = __is_time_to_send(match_day_context.get("meeting_date"))
+            if users and is_time_so_send:
                 for user in users:
                     user_id = user.get("user_id")
                     if user_id:
@@ -73,7 +75,22 @@ async def send_invites(bot):
                         )
         except Exception as e:
             logger.error(e)
-        await asyncio.sleep(360)
+            raise
+        await asyncio.sleep(int(settings.send_job_timeout_in_sec))
+
+def __is_time_to_send(match_day_time):
+    if match_day_time.tzinfo is None:
+        match_day_time = match_day_time.replace(tzinfo=timezone.utc) + timedelta(hours=3)
+    current_time = datetime.now(timezone.utc) + timedelta(hours=3)
+    print(datetime.now(timezone.utc) + timedelta(hours=3))
+    meeting_timedelta = match_day_time - current_time + timedelta(hours=4)
+    meeting_delta_hours = meeting_timedelta.total_seconds() // 3600
+    print(meeting_delta_hours)
+    if meeting_delta_hours <= int(settings.timedelta_to_start_sending_in_hours):
+        logger.info("Время рассылки пришло. Рассылаем ...")
+        return True
+    logger.info(f"Еще рано, позже разошлем .. До ближайшего матча еще {meeting_delta_hours} часов")
+
 
 
 async def main():
@@ -99,8 +116,8 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
-    # update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
+    create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
+    update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
     send_inviters_job = asyncio.create_task(send_invites(bot=bot))
 
     logger.info("Bot started.")
@@ -108,9 +125,10 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dispatcher.start_polling(bot)
 
-    # await create_or_update_matches_job
-    # await update_last_passed_match_job
+
+    await update_last_passed_match_job
     await send_inviters_job
+    await create_or_update_matches_job
 
 
 asyncio.run(main())

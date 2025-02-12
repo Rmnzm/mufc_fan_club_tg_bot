@@ -43,7 +43,7 @@ class KznRedsPGManager:
         try:
             command = ("SELECT meeting_date, match_day_id, place_id "
                        "FROM public.watch_day "
-                       "ORDER BY meeting_date DESC "
+                       "ORDER BY meeting_date ASC "
                        "LIMIT 1")
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
             if command_result:

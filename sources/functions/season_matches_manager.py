@@ -72,7 +72,7 @@ class SeasonMatchesManager:
         context = match_day_manager.get_nearest_watching_day()
         table_name = CommonHelpers.table_name_by_date(context[0].meeting_date)
 
-        meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
+        # meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
 
         users = match_day_manager.get_users_by_watch_day_table(table_name=table_name)
         match_day_name = match_day_manager.get_match_day_name_by_id(context[0].match_day_id)
@@ -84,7 +84,7 @@ class SeasonMatchesManager:
             "match_day_name": match_day_name,
             "place_name": place_info[0].place_name,
             "address": place_info[0].address,
-            "meeting_date": meeting_date
+            "meeting_date": context[0].meeting_date
         }
 
         return users, match_day_info
@@ -117,7 +117,7 @@ class SeasonMatchesManager:
 
     def get_next_matches(self):
         response = requests.get(
-            f"{settings.sofascore_rapidapi_url}/teams/get-next-matches?teamId={settings.team_id}&pageIndex=0",
+            f"{settings.sofascore_rapidapi_url}/teams/get-next-matches?teamId={settings.sofascore_team_id}&pageIndex=0",
             headers={
                 "x-rapidapi-host": settings.x_rapidapi_host,
                 "x-rapidapi-key": settings.x_rapidapi_key,
@@ -133,7 +133,7 @@ class SeasonMatchesManager:
 
     def get_nearest_events(self):
         response = requests.get(
-            f"{settings.sofascore_rapidapi_url}/teams/get-near-events?teamId={settings.team_id}",
+            f"{settings.sofascore_rapidapi_url}/teams/get-near-events?teamId={settings.sofascore_team_id}",
             headers={
                 "x-rapidapi-host": settings.x_rapidapi_host,
                 "x-rapidapi-key": settings.x_rapidapi_key

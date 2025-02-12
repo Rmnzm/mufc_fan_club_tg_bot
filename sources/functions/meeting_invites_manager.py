@@ -39,7 +39,7 @@ class MeetingInvitesManager:
         match_name = context.get("match_day_name")
         place_name = context.get("place_name")
         address = context.get("address")
-        meeting_date = context.get("meeting_date")
+        meeting_date = context.get("meeting_date").strftime("%a, %d %b %H:%M")
 
         return (f"Матч\n"
                 f"{match_name} \n"

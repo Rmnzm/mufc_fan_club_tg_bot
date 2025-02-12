@@ -8,12 +8,16 @@ class Settings(BaseSettings):
     sofascore_rapidapi_url: str
     x_rapidapi_host: str
     x_rapidapi_key: str
-    team_id: int = 35
+    sofascore_team_id: str = "35"
     database: str
     login: str
     password: str
     host: str
     port: str
+    timedelta_to_start_sending_in_hours: str = "28"
+    send_job_timeout_in_sec: str = "300"
+    update_match_job_timeout_in_sec: str = "3600"
+
 
     class Config:
         env_file = '.env'
