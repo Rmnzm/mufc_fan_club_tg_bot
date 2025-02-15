@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     password: str
     host: str
     port: str
+    admin_ids: list[str]
     timedelta_to_start_sending_in_hours: str = "28"
     send_job_timeout_in_sec: str = "300"
     update_match_job_timeout_in_sec: str = "3600"

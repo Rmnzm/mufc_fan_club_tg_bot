@@ -59,9 +59,13 @@ class SeasonMatchesManager:
                     new_date = datetime.fromtimestamp(event.startTimestamp).date().strftime("%d_%m_%Y")
                     rename_watch_day_table_command = match_day_manager.rename_watch_day_table_name(
                         old_name=f"match_day_{old_date}", new_name=f"match_day_{new_date}"
-                    )
+                    ) if match_day_manager.check_is_table_exists(f"match_day_{old_date}") else ""
 
-                    fully_command = update_match_day_table_command + update_meeting_date_command + rename_watch_day_table_command
+                    fully_command = (
+                            update_match_day_table_command +
+                            update_meeting_date_command +
+                            rename_watch_day_table_command
+                    )
 
                     match_day_manager.update_match_day_info(command=fully_command)
                 else:
@@ -88,6 +92,11 @@ class SeasonMatchesManager:
         }
 
         return users, match_day_info
+
+    @staticmethod
+    def update_message_sent_status(context, user_id: int):
+        table_name = context.get("table_name")
+        match_day_manager.update_message_sent_status(table_name=table_name, user_id=user_id)
 
     @staticmethod
     def __check_match_day_has_changes(event: EventDTO, match_day_schema: MatchDaySchema) -> bool:

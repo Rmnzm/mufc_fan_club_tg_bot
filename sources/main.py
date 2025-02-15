@@ -73,6 +73,7 @@ async def send_invites(bot):
                         await MeetingInvitesManager(bot).send_message(
                             state=state, context=match_day_context, user_id=user_id
                         )
+                        SeasonMatchesManager().update_message_sent_status(match_day_context, user_id)
         except Exception as e:
             logger.error(e)
             raise

@@ -39,6 +39,21 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(e)
 
+    def check_is_table_exists(self, table_name: str):
+        try:
+            command = f"""SELECT EXISTS(
+                            SELECT *
+                            FROM information_schema.tables
+                            WHERE
+                              table_schema = 'public' AND
+                              table_name = '{table_name}'
+                        );
+                        """
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            return command_result[0].get("exists")
+        except Exception as e:
+            logger.error(e)
+
     def get_nearest_watching_day(self):
         try:
             command = ("SELECT meeting_date, match_day_id, place_id "
@@ -52,9 +67,18 @@ class KznRedsPGManager:
             logger.error(e)
 
 
+    def update_message_sent_status(self, table_name, user_id):
+        try:
+            command = f"UPDATE public.{table_name} SET is_message_sent = true WHERE user_id = {user_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "message_status_updated", "message_status_update_failed")
+
+        except Exception as e:
+            logger.error(e)
+
+
     def get_users_by_watch_day_table(self, table_name):
         try:
-            command = f"SELECT user_id FROM public.{table_name}"
+            command = f"SELECT user_id FROM public.{table_name} WHERE is_message_sent = false;"
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
 
             if command_result:
@@ -213,7 +237,8 @@ class KznRedsPGManager:
                             is_canceled boolean NOT NULL DEFAULT false,
                             watch_day_id integer NOT NULL REFERENCES watch_day (id),
                             match_day_id integer NOT NULL REFERENCES match_day (id),
-                            place_id integer NOT NULL REFERENCES places (id)
+                            place_id integer NOT NULL REFERENCES places (id),
+                            is_message_sent boolean NOT NULL DEFAULT false
                           );
                         
                         ALTER TABLE

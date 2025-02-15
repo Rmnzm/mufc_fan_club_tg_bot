@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery
 from callback_factory.callback_factory import AdminCreateWatchDayCallbackFactory, \
     PlacesFactory
 from config.config import get_settings
+from functions.admin_checker import admin_required
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from handlers.admin.base_admin_handler import admin_keyboard
 from keyboards.admin_keyboard import AdminKeyboard
@@ -34,6 +35,7 @@ class WatchDay(StatesGroup):
 
 
 @router.callback_query(F.data == "add_watch_day")
+@admin_required
 async def watch_day_register(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WatchDay.choose_match_day)
     nearest_matches = match_day_manager.get_nearest_match_day()
@@ -54,6 +56,7 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminCreateWatchDayCallbackFactory.filter())
+@admin_required
 async def choose_place(
     callback: CallbackQuery, callback_data: AdminCreateWatchDayCallbackFactory, state: FSMContext
 ):
@@ -86,6 +89,7 @@ async def choose_place(
 
 
 @router.callback_query(PlacesFactory.filter(), WatchDay.choose_place)
+@admin_required
 async def registrate_meeting(
         callback: CallbackQuery, callback_data: PlacesFactory, state: FSMContext
 ):

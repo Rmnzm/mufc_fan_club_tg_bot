@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from callback_factory.callback_factory import AdminMatchDayCallbackFactory, PlacesFactory, PlacesEditorFactory
+from functions.admin_checker import admin_required
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from functions.meeting_invites_manager import Form
 from keyboards.admin_keyboard import AdminKeyboard
@@ -23,13 +24,16 @@ keyboard_generator = KeyboardGenerator()
 
 
 @router.message(Command(commands='admin'))
+@admin_required
 async def process_admin_command(message: Message):
     await message.answer(
-        text="Главное меню управления ботом.\n\nВыберите интересующую функцию.", reply_markup=admin_keyboard.main_admin_keyboard()
+        text="Главное меню управления ботом.\n\nВыберите интересующую функцию.",
+        reply_markup=admin_keyboard.main_admin_keyboard()
     )
 
 
 @router.callback_query(F.data == "show_users")
+@admin_required
 async def show_users(callback: CallbackQuery):
     users = match_day_manager.get_users()
 
@@ -51,6 +55,7 @@ async def show_users(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "show_nearest_watching_days")
+@admin_required
 async def process_nearest_meetings(callback: CallbackQuery):
     nearest_match_day_context = match_day_manager.get_nearest_meetings()
     data_factories = [
@@ -71,6 +76,7 @@ async def process_nearest_meetings(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == "add_watching_place")
+@admin_required
 async def add_watching_place(callback: CallbackQuery, state: FSMContext):
     await state.set_state(CreatePlaceStateGroup.start_state)
     await callback.message.edit_text(
@@ -80,6 +86,7 @@ async def add_watching_place(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "show_places")
+@admin_required
 async def show_places(callback: CallbackQuery):
     places_string = "<b>Места просмотров</b>\n"
     places = match_day_manager.get_places()
