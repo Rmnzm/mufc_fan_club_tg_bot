@@ -12,7 +12,7 @@ from aiogram.enums import ParseMode
 from config.config import get_settings
 from functions.meeting_invites_manager import MeetingInvitesManager
 from functions.season_matches_manager import SeasonMatchesManager
-from handlers import main_handler, poll_task_handler
+from handlers import main_handler
 from handlers.admin import base_admin_handler
 from handlers.customer import watch_day_registration_handler
 from handlers.admin import watch_day_edition_handler
