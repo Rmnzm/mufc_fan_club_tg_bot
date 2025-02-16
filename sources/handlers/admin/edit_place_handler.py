@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 
 from callback_factory.callback_factory import PlacesEditorFactory
-from functions.admin_checker import admin_required
+from functions.admin_checker import admin_required, AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -29,8 +29,7 @@ class PlaceState(StatesGroup):
     approve_changes = State()
 
 
-@router.callback_query(PlacesEditorFactory.filter())
-@admin_required
+@router.callback_query(PlacesEditorFactory.filter(), AdminFilter())
 async def edit_place_process(
     callback: CallbackQuery, callback_data: PlacesEditorFactory, state: FSMContext
 ):
@@ -44,8 +43,7 @@ async def edit_place_process(
     )
     await callback.answer()
 
-@router.callback_query(F.data == "edit_name")
-@admin_required
+@router.callback_query(F.data == "edit_name", AdminFilter())
 async def edit_place_name_process(
     callback: CallbackQuery, state: FSMContext
 ):
@@ -56,8 +54,7 @@ async def edit_place_name_process(
     await callback.answer()
 
 
-@router.message(PlaceState.edit_name)
-@admin_required
+@router.message(PlaceState.edit_name, AdminFilter())
 async def edit_place_name(message: Message, state: FSMContext):
     place_state_data = await state.get_data()
     place_id = place_state_data['place_id']
@@ -78,8 +75,7 @@ async def edit_place_name(message: Message, state: FSMContext):
             reply_markup=admin_keyboard.main_admin_keyboard()
         )
 
-@router.callback_query(F.data == "edit_address")
-@admin_required
+@router.callback_query(F.data == "edit_address", AdminFilter())
 async def edit_address_place_process(
     callback: CallbackQuery, state: FSMContext
 ):
@@ -89,8 +85,7 @@ async def edit_address_place_process(
     )
     await callback.answer()
 
-@router.message(PlaceState.edit_address)
-@admin_required
+@router.message(PlaceState.edit_address, AdminFilter())
 async def edit_place_address(message: Message, state: FSMContext):
     place_state_data = await state.get_data()
     place_id = place_state_data['place_id']
@@ -112,8 +107,7 @@ async def edit_place_address(message: Message, state: FSMContext):
         )
 
 
-@router.callback_query(F.data == "delete_place")
-@admin_required
+@router.callback_query(F.data == "delete_place", AdminFilter())
 async def delete_place(callback: CallbackQuery, state: FSMContext):
     place_state_data = await state.get_data()
     place_id = place_state_data['place_id']
