@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery
 from callback_factory.callback_factory import AdminCreateWatchDayCallbackFactory, \
     PlacesFactory
 from config.config import get_settings
+from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from handlers.admin.base_admin_handler import admin_keyboard
 from keyboards.admin_keyboard import AdminKeyboard
@@ -33,14 +34,14 @@ class WatchDay(StatesGroup):
     choose_place = State()
 
 
-@router.callback_query(F.data == "add_watch_day")
+@router.callback_query(F.data == "add_watch_day", AdminFilter())
 async def watch_day_register(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WatchDay.choose_match_day)
     nearest_matches = match_day_manager.get_nearest_match_day()
 
     data_factories = [
         AdminCreateWatchDayCallbackFactory(
-            id=context.id
+            id=context.event_id
         ) for context in nearest_matches
     ]
     reply_keyboard = keyboard_generator.admin_create_watch_day_keyboard(
@@ -53,11 +54,12 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.callback_query(AdminCreateWatchDayCallbackFactory.filter())
+@router.callback_query(AdminCreateWatchDayCallbackFactory.filter(), AdminFilter())
 async def choose_place(
     callback: CallbackQuery, callback_data: AdminCreateWatchDayCallbackFactory, state: FSMContext
 ):
-    match_day_by_id = match_day_manager.get_match_day_by_id(callback_data.id)
+    print(f"{callback_data.id=}")
+    match_day_by_id = match_day_manager.get_match_day_by_event_id(callback_data.id)
 
     print(f"choose_place - {match_day_by_id=}")
 
@@ -84,7 +86,7 @@ async def choose_place(
     await callback.answer()
 
 
-@router.callback_query(PlacesFactory.filter(), WatchDay.choose_place)
+@router.callback_query(PlacesFactory.filter(), WatchDay.choose_place, AdminFilter())
 async def registrate_meeting(
         callback: CallbackQuery, callback_data: PlacesFactory, state: FSMContext
 ):

@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
 from schemes.scheme import MatchDaySchema, WatchDaySchema, NearestMeetingsSchema, UsersSchema, \
-    PlacesSchema
+    PlacesSchema, UserRegistrationSchema, InvitationContextSchema
+from tools.helpers import CommonHelpers
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class KznRedsPGManager:
 
         return return_string if return_string else "Нет ближайших матчей"
 
-    def get_match_day_by_id(self, event_id: int):
+    def get_match_day_by_event_id(self, event_id: int):
         try:
             command = f"""SELECT * FROM public.match_day WHERE event_id = {event_id} ORDER BY start_timestamp ASC LIMIT 5;"""
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
@@ -37,6 +38,54 @@ class KznRedsPGManager:
                 return self.__convert_match_day_info(command_result)
         except Exception as e:
             logger.error(e)
+
+    def check_is_table_exists(self, table_name: str):
+        try:
+            command = f"""SELECT EXISTS(
+                            SELECT *
+                            FROM information_schema.tables
+                            WHERE
+                              table_schema = 'public' AND
+                              table_name = '{table_name}'
+                        );
+                        """
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            return command_result[0].get("exists")
+        except Exception as e:
+            logger.error(e)
+
+    def get_nearest_watching_day(self):
+        try:
+            command = ("SELECT meeting_date, match_day_id, place_id "
+                       "FROM public.watch_day "
+                       "ORDER BY meeting_date ASC "
+                       "LIMIT 1")
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            if command_result:
+                return self.__convert_invitations_context(command_result)
+        except Exception as e:
+            logger.error(e)
+
+
+    def update_message_sent_status(self, table_name, user_id):
+        try:
+            command = f"UPDATE public.{table_name} SET is_message_sent = true WHERE user_id = {user_id}"
+            self.kzn_reds_pg_connector.execute_command(command, "message_status_updated", "message_status_update_failed")
+
+        except Exception as e:
+            logger.error(e)
+
+
+    def get_users_by_watch_day_table(self, table_name):
+        try:
+            command = f"SELECT user_id FROM public.{table_name} WHERE is_message_sent = false;"
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+            if command_result:
+                return command_result
+        except Exception as e:
+            logger.error(e)
+
 
     def update_passed_match_day(self, event_id, start_timestamp, match_status):
         try:
@@ -105,6 +154,12 @@ class KznRedsPGManager:
 
     def get_places(self):
         command = "SELECT * FROM public.places"
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+        return self.__convert_places(command_result)
+
+    def get_place_by_id(self, place_id: int):
+        command = f"SELECT * FROM public.places WHERE id = {place_id}"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
 
         return self.__convert_places(command_result)
@@ -182,7 +237,8 @@ class KznRedsPGManager:
                             is_canceled boolean NOT NULL DEFAULT false,
                             watch_day_id integer NOT NULL REFERENCES watch_day (id),
                             match_day_id integer NOT NULL REFERENCES match_day (id),
-                            place_id integer NOT NULL REFERENCES places (id)
+                            place_id integer NOT NULL REFERENCES places (id),
+                            is_message_sent boolean NOT NULL DEFAULT false
                           );
                         
                         ALTER TABLE
@@ -305,6 +361,12 @@ class KznRedsPGManager:
 
         return int(command_result[0]['match_day_id'])
 
+    def get_match_day_name_by_id(self, match_day_id: int):
+        command = f"SELECT localed_match_day_name FROM public.match_day WHERE id = {match_day_id}"
+        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+
+        return command_result[0].get("localed_match_day_name")
+
 
     def get_users(self):
         command = "SELECT * FROM users"
@@ -313,6 +375,23 @@ class KznRedsPGManager:
         users = self.__convert_users_info(command_result)
 
         return users
+
+    def approve_watch_day_by_user_invitation_info(self, table_name, user_id, match_day_id):
+        try:
+            command = f"""UPDATE public.{table_name} SET is_approved = true, is_canceled = false WHERE user_id = {user_id} and match_day_id = {match_day_id}"""
+
+            print(command)
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
+
+    def cancel_watch_day_by_user_invitation_info(self, table_name, user_id, match_day_id):
+        try:
+            command = f"""UPDATE public.{table_name} SET is_canceled = true, is_approved = false WHERE user_id = {user_id} and match_day_id = {match_day_id}"""
+            print(command)
+            self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
+        except Exception as e:
+            logger.error(e)
 
     def add_watch_place(self, place_name: str, place_address: str):
         try:
@@ -404,6 +483,24 @@ class KznRedsPGManager:
             logger.error(e)
 
 
+    def get_users_to_send_invitations(self, match_day_id):
+        match_day_info = self.get_watch_day_by_match_day_id(match_day_id=match_day_id)
+        table_name = CommonHelpers.table_name_by_date(match_day_info[0].meeting_date)
+        try:
+            return self.__get_users_to_match_day(table_name, match_day_id)
+        except Exception as e:
+            logger.error(e)
+
+    def __get_users_to_match_day(self, table_name: str, match_day_id: int):
+        try:
+            command = f"""SELECT user_id, is_approved, is_canceled 
+                            FROM public.{table_name} 
+                            WHERE is_canceled = false and match_day_id = {match_day_id}"""
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            return self.__convert_users_registration(command_result)
+        except Exception as e:
+            logger.error(e)
+
     @staticmethod
     def __convert_users_info(users):
         return [UsersSchema(**user) for user in users]
@@ -424,3 +521,11 @@ class KznRedsPGManager:
     @staticmethod
     def __convert_places(places):
         return [PlacesSchema(**place) for place in places]
+
+    @staticmethod
+    def __convert_users_registration(users):
+        return [UserRegistrationSchema(**user) for user in users]
+
+    @staticmethod
+    def __convert_invitations_context(invitations):
+        return [InvitationContextSchema(**context) for context in invitations]

@@ -9,6 +9,7 @@ from aiogram.types import Poll, PollAnswer, PollOption
 
 from callback_factory.callback_factory import AdminMatchDayCallbackFactory, WatchPlaceChangeFactory
 from config.config import get_settings
+from functions.admin_checker import admin_required, AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -35,7 +36,7 @@ class PollStates(StatesGroup):
     watch_day_info = State()
 
 
-@router.callback_query(AdminMatchDayCallbackFactory.filter())
+@router.callback_query(AdminMatchDayCallbackFactory.filter(), AdminFilter())
 async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: AdminMatchDayCallbackFactory, state: FSMContext
 ):
@@ -63,9 +64,8 @@ async def process_scheduled_match_days_filter(
 
     await callback.answer()
 
-#
 
-@router.callback_query(F.data == "start_meeting_poll")
+@router.callback_query(F.data == "start_meeting_poll", AdminFilter())
 async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
@@ -169,7 +169,7 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
         )
 
 
-@router.callback_query(F.data == "edit_watch_place")
+@router.callback_query(F.data == "edit_watch_place", AdminFilter())
 async def process_go_button(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PlaceState.edit_watch_place)
     watch_day_state_data = await state.get_data()
@@ -194,7 +194,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.callback_query(WatchPlaceChangeFactory.filter(), PlaceState.edit_watch_place)
+@router.callback_query(WatchPlaceChangeFactory.filter(), PlaceState.edit_watch_place, AdminFilter())
 async def change_watch_place_process(
         callback: CallbackQuery, callback_data: WatchPlaceChangeFactory, state: FSMContext
 ):
@@ -216,8 +216,8 @@ async def change_watch_place_process(
     await callback.answer()
 
 
-@router.callback_query(F.data == "cancel_meeting")
-async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == "cancel_meeting", AdminFilter())
+async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id'][0]
     watch_day_id = watch_day_info.watch_day_id
@@ -239,7 +239,7 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.callback_query(F.data == "show_visitors")
+@router.callback_query(F.data == "show_visitors", AdminFilter())
 async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
@@ -268,7 +268,7 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.callback_query(F.data == "back_to_main_menu")
+@router.callback_query(F.data == "back_to_main_menu", AdminFilter())
 async def process_menu_button(callback: CallbackQuery):
     await callback.message.edit_text(
         text="Главное меню управления ботом.\n\nВыберите интересующую функцию.",
