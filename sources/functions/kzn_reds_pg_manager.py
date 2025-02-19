@@ -257,15 +257,6 @@ class KznRedsPGManager:
             logger.error(e)
 
 
-    def get_nearest_watch_day(self):
-        current_date = datetime.now()
-        command = f"""SELECT * FROM public.watch_day 
-                WHERE watch_status = 'notstarted' and meeting_date > '{current_date}'"""
-        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        watch_days = self.__convert_watch_day_info(command_result)
-
-        return watch_days
-
     def get_nearest_meetings(self):
         current_date = datetime.now()
         command = f"""SELECT public.watch_day.id as watch_day_id, * FROM public.watch_day 
@@ -330,19 +321,6 @@ class KznRedsPGManager:
         watch_day_table_name = f"match_day_{watch_day_date}"
 
         return watch_day_table_name
-
-    def cancel_registration_to_watch(self, user_id, watch_day_id):
-        watch_day_info = self.get_watch_day_by_match_day_id(watch_day_id)
-        watch_day_date = watch_day_info[0].meeting_date.strftime('%d_%m_%Y')
-        watch_day_table_name = f"match_day_{watch_day_date}"
-
-        user_registration = self.__get_user_watch_day_registration_info(user_id, watch_day_table_name)
-
-        print(f"{user_registration=}")
-
-        if user_registration:
-            command = f"UPDATE {watch_day_table_name} SET is_canceled = true WHERE user_id = {user_id}"
-            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
 
 
     def __get_user_watch_day_registration_info(self, user_id, table_name):
