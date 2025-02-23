@@ -9,7 +9,9 @@ from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
-from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
+from lexicon.base_lexicon_ru import BASE_LEXICON_RU
+from lexicon.customer_lexicon_ru import CUSTOMER_LEXICON_RU, CUSTOMER_ERROR_LEXICON_RU
+from schemes.scheme import NearestMeetingsSchema
 from states.main_states import WatchDayUserRegistrationStateGroup
 
 logger = logging.getLogger(__name__)
@@ -28,8 +30,89 @@ match_day_manager = KznRedsPGManager()
 async def process_scheduled_match_days_filter(
         callback: CallbackQuery, callback_data: MatchDayCallbackFactory, state: FSMContext
 ):
-    watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(callback_data.id)
+    try:
+        logger.debug(f"Step MatchDayCallbackFactory with context = {callback_data}")
+        watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(callback_data.id)
 
+        watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+        for watch_day in watch_day_by_id_dict:
+            watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+
+        logger.debug(f"watch_day_registration_handler - {watch_day_by_id_dict=}")
+
+        await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
+
+        await callback.message.edit_text(
+            text=__fetched_scheduled_match_day(watch_day_by_id),
+            reply_markup=watch_day_keyboard.approve_meeting_keyboard()
+        )
+        await state.update_data(
+            watch_day_id=watch_day_by_id[0].watch_day_id,
+            match_day_id=callback_data.id,
+            place_id=watch_day_by_id[0].place_id
+        )
+    except Exception as e:
+        logger.error(f"Error due fetching scheduled match day by id = {callback_data.id}. Err: {e}")
+        await callback.message.edit_text(
+            text=CUSTOMER_ERROR_LEXICON_RU["error_fetching_scheduled_match_days"],
+            reply_markup=main_keyboard.main_keyboard()
+        )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
+async def process_go_button(callback: CallbackQuery, state: FSMContext):
+    try:
+        state_data = await state.get_data()
+        user_id = callback.from_user.id
+        logger.debug(f"Step {F.data=} by {user_id}")
+
+        match_day_manager.finish_registration(
+            user_id=user_id, match_day_id=state_data['match_day_id'], is_approved=True
+        )
+
+        await callback.message.edit_text(
+            text=CUSTOMER_LEXICON_RU["first_approve_invitation"], reply_markup=main_keyboard.main_keyboard()
+        )
+    except Exception as e:
+        logger.error(f"Erro due first approving meeting. Err: {e}")
+        await callback.message.edit_text(
+            text=CUSTOMER_ERROR_LEXICON_RU["error_first_approve_invitation"], reply_markup=main_keyboard.main_keyboard()
+        )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "not_go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
+async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
+    try:
+        state_data = await state.get_data()
+        user_id = callback.from_user.id
+        logger.debug(f"Step {F.data=} by {user_id=}")
+
+        match_day_manager.finish_registration(
+            user_id=user_id, match_day_id=state_data['match_day_id'], is_canceled=True
+        )
+        await callback.message.edit_text(
+            text=CUSTOMER_LEXICON_RU["first_cancel_invitation"], reply_markup=main_keyboard.main_keyboard()
+        )
+    except Exception as e:
+        logger.error(f"Error due canceling meeting. Err: {e}")
+        await callback.message.edit_text(
+            text=CUSTOMER_ERROR_LEXICON_RU["error_first_cancel_invitation"], reply_markup=main_keyboard.main_keyboard()
+        )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu_button", WatchDayUserRegistrationStateGroup.watch_day_id)
+async def process_menu_button(callback: CallbackQuery):
+    logger.debug(f"Step {F.data=} with context = {WatchDayUserRegistrationStateGroup.watch_day_id}")
+    await callback.message.edit_text(
+        text=BASE_LEXICON_RU['/start'], reply_markup=main_keyboard.main_keyboard()
+    )
+    await callback.answer()
+
+
+def __fetched_scheduled_match_day(watch_day_by_id: list[NearestMeetingsSchema]):
     nearest_match_day = (
         f"{watch_day_by_id[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
         f"{watch_day_by_id[0].tournament_name}\n"
@@ -39,62 +122,4 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
-    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
-    for watch_day in watch_day_by_id_dict:
-        watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
-
-    print(f"watch_day_registration_handler - {watch_day_by_id_dict=}")
-
-    await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
-
-    await callback.message.edit_text(
-        text=nearest_match_day, reply_markup=watch_day_keyboard.approve_meeting_keyboard()
-    )
-    await state.update_data(
-        watch_day_id=watch_day_by_id[0].watch_day_id, match_day_id=callback_data.id, place_id=watch_day_by_id[0].place_id
-    )
-    await callback.answer()
-
-
-@router.callback_query(F.data == "go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
-async def process_go_button(callback: CallbackQuery, state: FSMContext):
-    state_data = await state.get_data()
-    user_id = callback.from_user.id
-
-    try:
-        match_day_manager.finish_registration(
-            user_id=user_id, match_day_id=state_data['match_day_id'], is_approved=True
-        )
-
-        await callback.message.edit_text(
-            text="Вы зарегистрировались на матч", reply_markup=main_keyboard.main_keyboard()
-        )
-    except Exception as e:
-        print(f"{e=}")
-        await callback.message.edit_text(
-            text="Вы уже зарегистрировались на матч, ждем вас", reply_markup=main_keyboard.main_keyboard()
-        )
-    await callback.answer()
-
-
-@router.callback_query(F.data == "not_go_button", WatchDayUserRegistrationStateGroup.watch_day_id)
-async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
-    state_data = await state.get_data()
-
-    user_id = callback.from_user.id
-
-    match_day_manager.finish_registration(
-        user_id=user_id, match_day_id=state_data['match_day_id'], is_canceled=True
-    )
-    await callback.message.edit_text(
-        text="Жаль...\nУвидимся в следующий раз!", reply_markup=main_keyboard.main_keyboard()
-    )
-    await callback.answer()
-
-
-@router.callback_query(F.data == "menu_button", WatchDayUserRegistrationStateGroup.watch_day_id)
-async def process_menu_button(callback: CallbackQuery):
-    await callback.message.edit_text(
-        text=BASE_LEXICON_RU['/start'], reply_markup=main_keyboard.main_keyboard()
-    )
-    await callback.answer()
+    return nearest_match_day

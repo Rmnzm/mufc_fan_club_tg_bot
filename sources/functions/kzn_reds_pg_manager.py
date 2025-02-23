@@ -17,21 +17,20 @@ class KznRedsPGManager:
     def __init__(self):
         self.kzn_reds_pg_connector = KznRedsPgConnector()
 
-    def get_match_days(self) -> str:
-        current_date = datetime.now()
-        command = f"""
-        SELECT * FROM public.match_day
-        WHERE match_status = 'notstarted' AND start_timestamp > '{current_date}'
-        ORDER BY start_timestamp ASC LIMIT 5;
-        """
-        command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        match_days = self.__convert_match_day_info(command_result)
-        return_string = "\n".join(
-            f"{match_day.start_timestamp.strftime('%a, %d %b %H:%M')}\n"
-            f"{match_day.tournament_name}\n{match_day.localed_match_day_name}\n"
-            for match_day in match_days
-        )
-        return return_string if return_string else "Нет ближайших матчей"
+    def get_match_days(self) -> list[MatchDaySchema]:
+        try:
+            current_date = datetime.now()
+            command = f"""
+            SELECT * FROM public.match_day
+            WHERE match_status = 'notstarted' AND start_timestamp > '{current_date}'
+            ORDER BY start_timestamp ASC LIMIT 5;
+            """
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
+            match_days = self.__convert_match_day_info(command_result)
+            return match_days
+        except Exception as e:
+            logger.error(f"Error fetching match days")
+            raise
 
     def get_match_day_by_event_id(self, event_id: int) -> List[MatchDaySchema]:
         try:
@@ -376,16 +375,16 @@ class KznRedsPGManager:
 
     def add_watch_place(self, place_name: str, place_address: str):
         try:
-            command = "INSERT INTO public.places (place_name, address) VALUES (%s, %s)"
-            self.kzn_reds_pg_connector.execute_command(command, (place_name, place_address), "added", "failed")
+            command = f"INSERT INTO public.places (place_name, address) VALUES ('{place_name}', '{place_address}')"
+            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
             logger.error(f"Error adding watch place: {e}")
             raise
 
     def delete_place(self, place_id: int):
         try:
-            command = "DELETE FROM public.places WHERE id = %s"
-            self.kzn_reds_pg_connector.execute_command(command, (place_id,), "deleted", "failed")
+            command = f"DELETE FROM public.places WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(command, f"deleted {place_id=}", "failed")
         except Exception as e:
             logger.error(f"Error deleting place with ID {place_id}: {e}")
             raise
@@ -393,32 +392,40 @@ class KznRedsPGManager:
     def change_place_name(self, place_id: int, new_place_name: str):
         try:
             new_place_name = new_place_name.replace("'", "''")
-            command = "UPDATE public.places SET place_name = %s WHERE id = %s"
-            self.kzn_reds_pg_connector.execute_command(command, (new_place_name, place_id), "updated", "failed")
+            command = f"UPDATE public.places SET place_name = '{new_place_name}' WHERE id = '{place_id}'"
+            self.kzn_reds_pg_connector.execute_command(
+                command, f"updated place_name to {new_place_name}", "failed"
+            )
         except Exception as e:
             logger.error(f"Error changing place name for place ID {place_id}: {e}")
             raise
 
     def change_place_address(self, place_id: int, new_place_address: str):
         try:
-            command = "UPDATE public.places SET address = %s WHERE id = %s"
-            self.kzn_reds_pg_connector.execute_command(command, (new_place_address, place_id), "updated", "failed")
+            command = f"UPDATE public.places SET address = '{new_place_address}' WHERE id = {place_id}"
+            self.kzn_reds_pg_connector.execute_command(
+                command,  f"updated address name to {new_place_address}", "failed"
+            )
         except Exception as e:
             logger.error(f"Error changing place address for place ID {place_id}: {e}")
             raise
 
     def change_watch_day_place(self, watch_day_id: int, place_id: int):
         try:
-            command = "UPDATE public.watch_day SET place_id = %s WHERE id = %s"
-            self.kzn_reds_pg_connector.execute_command(command, (place_id, watch_day_id), "updated", "failed")
+            command = f"UPDATE public.watch_day SET place_id = {place_id} WHERE id = {watch_day_id}"
+            self.kzn_reds_pg_connector.execute_command(
+                command,  f"updated {watch_day_id=} on setting {place_id=}", "failed"
+            )
         except Exception as e:
             logger.error(f"Error changing watch day place for watch day ID {watch_day_id}: {e}")
             raise
 
     def delete_watch_day(self, watch_day_id: int, watch_day_table: str):
         try:
-            command = f"BEGIN;DROP TABLE {watch_day_table};DELETE FROM public.watch_day WHERE id = %s;END;"
-            self.kzn_reds_pg_connector.execute_command(command, (watch_day_id,), "deleted", "failed")
+            command = f"BEGIN;DROP TABLE {watch_day_table};DELETE FROM public.watch_day WHERE id = {watch_day_id};END;"
+            self.kzn_reds_pg_connector.execute_command(
+                command,  f"deleted {watch_day_table=}", "failed"
+            )
         except Exception as e:
             logger.error(f"Error deleting watch day with ID {watch_day_id}: {e}")
             raise
@@ -439,14 +446,19 @@ class KznRedsPGManager:
     def register_user(self, user_tg_id: int, user_schema: UsersSchema):
         try:
             if not self.__is_user_already_registered(user_tg_id, user_schema):
-                command = """
+                command = f"""
                 INSERT INTO public.users (user_tg_id, username, first_name, last_name, user_role)
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (
+                        {user_tg_id}, 
+                        '{user_schema.username}', 
+                        '{user_schema.first_name}', 
+                        '{user_schema.last_name}', 
+                        '{user_schema.user_role}'
+                        )
                 """
-                self.kzn_reds_pg_connector.execute_command(command, (
-                    user_tg_id, user_schema.username, user_schema.first_name,
-                    user_schema.last_name, user_schema.user_role
-                ), "created", "failed")
+                self.kzn_reds_pg_connector.execute_command(
+                    command, f"created user row on {user_tg_id=} with {user_schema.user_role=}", "failed"
+                )
         except Exception as e:
             logger.error(f"Error registering user with TG ID {user_tg_id}: {e}")
             raise
@@ -456,10 +468,10 @@ class KznRedsPGManager:
             command = f"SELECT * FROM public.users WHERE user_tg_id = {user_tg_id}"
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
             if command_result:
-                command = """
+                command = f"""
                 UPDATE public.users
-                SET username = %s, first_name = %s, last_name = %s
-                WHERE user_tg_id = %s
+                SET username = '{user_schema.username}', first_name = '{user_schema.first_name}', last_name = '{user_schema.last_name}'
+                WHERE user_tg_id = {user_tg_id}
                 """
                 self.kzn_reds_pg_connector.execute_command(command, (
                     f"updated {user_schema.username}, {user_schema.first_name}, "
@@ -480,9 +492,9 @@ class KznRedsPGManager:
             command = f"""
             SELECT user_id, is_approved, is_canceled
             FROM public.{table_name}
-            WHERE is_canceled = false AND match_day_id = %s
+            WHERE is_canceled = false AND match_day_id = {match_day_id}
             """
-            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command, (match_day_id,))
+            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
             return self.__convert_users_registration(command_result)
         except Exception as e:
             logger.error(f"Error fetching users to match day {match_day_id} in table {table_name}: {e}")

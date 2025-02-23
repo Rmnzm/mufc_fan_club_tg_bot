@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
+from lexicon.base_lexicon_ru import BASE_LEXICON_RU
 
 
 class MainKeyboard:

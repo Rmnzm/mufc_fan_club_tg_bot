@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from lexicon.WATCH_DAY_LEXICON_RU import WATCH_DAY_LEXICON_RU
+from lexicon.watch_day_lexicon_ru import WATCH_DAY_LEXICON_RU
 
 
 class WatchDayKeyboard:
