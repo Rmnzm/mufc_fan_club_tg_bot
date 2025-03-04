@@ -9,8 +9,12 @@ BASE_ADMIN_LEXICON_RU = {
     "edit_place_name": "Изменено место на {new_place_name}",
     "edit_address_place_process": "Введите новый адрес места",
     "edit_place_address": "Изменен адрес по new_place_address}",
-    "delete_place": "Место удалено"
-
+    "delete_place": "Место удалено",
+    "start_meeting_poll": "Опрос отправлен",
+    "process_go_button": "<b>Выберите новое место просмотра</b>\n",
+    "change_watch_place_process": "Место для встречи изменено",
+    "process_cancel_meeting": "Запланированная встреча успешно отменена!",
+    "process_show_visitors": "Показаны участники встречи\n{users_string}"
 }
 
 ERROR_ADMIN_LEXICON_RU = {
@@ -37,5 +41,22 @@ ERROR_ADMIN_LEXICON_RU = {
     "failed_edit_place_address":
         "Не удалось изменить адрес места. Повторте позднее или обратитесь к организаторам",
     "failed_delete_place":
-        "Не удалось удалить место встречи. Повторте позднее или обратитесь к организаторам"
+        "Не удалось удалить место встречи. Повторте позднее или обратитесь к организаторам",
+    "failed_process_scheduled_match_days_filter":
+        "Не удалось получить ближайшие матчи. Повторте позднее или обратитесь к организаторам",
+    "failed_start_meeting_poll":
+        "Не удалось запустить опрос. Повторте позднее или обратитесь к организаторам",
+    "failed_process_go_button":
+        "Не удалось обработать нажатие кнопки ИДУ. Повторте позднее или обратитесь к организаторам",
+    "failed_change_watch_place_process":
+        "Не удалось изменить место встречи. Повторте позднее или обратитесь к организаторам",
+    "failed_process_cancel_meeting":
+        "Не удалось отменить запланированную встречу. Повторте позднее или обратитесь к организаторам",
+    "failed_process_show_visitors":
+        "Не удалось получить зарегистрированных на встречу пользователей. Повторте позднее или обратитесь к организаторам"
+}
+
+ADMIN_MATCH_INVITE_POLL_OPTIONS = {
+    "agree": "Иду",
+    "cancel": "Не иду"
 }
