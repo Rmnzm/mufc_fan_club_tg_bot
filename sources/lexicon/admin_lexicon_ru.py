@@ -60,3 +60,17 @@ ADMIN_MATCH_INVITE_POLL_OPTIONS = {
     "agree": "Иду",
     "cancel": "Не иду"
 }
+
+
+ADMIN_WATCH_DAY_HANDLER_LEXICON_RU = {
+    "add_watch_day": "Выберите матч",
+    "choose_place": "Выберите место просмотра",
+    "registrate_meeting": "Встреча добавлена"
+}
+
+
+ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU = {
+    "add_watch_day_error": "",
+    "choose_place_error": "Выберите место просмотра",
+    "registrate_meeting_error": "Встреча добавлена"
+}

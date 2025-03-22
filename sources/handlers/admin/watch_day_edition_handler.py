@@ -245,12 +245,12 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
     watch_day_info = watch_day_state_data['watch_day_by_id']
 
-    print(f"show visitors - {watch_day_info=}")
+    logger.info(f"show visitors - {watch_day_info=}")
     watch_day_datetime = datetime.datetime.strptime(watch_day_info[0]["meeting_date"], '%Y-%m-%dT%H:%M:%S')
 
     watch_day_table = f'match_day_{watch_day_datetime.strftime("%d_%m_%Y")}'
 
-    print(watch_day_table)
+    logger.info(watch_day_table)
 
     try:
         logger.debug(f"Step process_show_visitors with context: {callback.data}")
