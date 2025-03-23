@@ -65,7 +65,7 @@ class KznRedsPgConnector(metaclass=SingletonWithParams):
                 with active_connection.cursor() as active_cursor:
                     active_cursor.execute(command)
                     active_connection.commit()
-                    logger.debug(lambda: debug_log)
+                    logger.debug(lambda: f"Step execute_command with {debug_log}")
             except Exception as error:
                 active_connection.rollback()
                 logger.exception(f"{exception_log}, Error: {error}")

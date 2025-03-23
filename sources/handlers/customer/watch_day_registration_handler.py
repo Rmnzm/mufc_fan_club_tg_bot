@@ -38,7 +38,9 @@ async def process_scheduled_match_days_filter(
         for watch_day in watch_day_by_id_dict:
             watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
 
-        logger.debug(f"watch_day_registration_handler - {watch_day_by_id_dict=}")
+        logger.debug(
+            f"Step process_scheduled_match_days_filter. watch_day_registration_handler - {watch_day_by_id_dict=}"
+        )
 
         await state.set_state(WatchDayUserRegistrationStateGroup.watch_day_id)
 

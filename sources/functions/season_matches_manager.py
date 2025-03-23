@@ -74,10 +74,10 @@ class SeasonMatchesManager:
     @staticmethod
     def create_context_to_send_invitations() -> (list[dict], list[InvitationContextSchema]):
         context = match_day_manager.get_nearest_watching_day()
-        logger.debug(f"Send invitations current context = {context}")
+        logger.info(f"Send invitations current context = {context}")
         table_name = CommonHelpers.table_name_by_date(context[0].meeting_date)
 
-        # meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
+        meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
 
         users = match_day_manager.get_users_by_watch_day_table(table_name=table_name)
         match_day_name = match_day_manager.get_match_day_name_by_id(context[0].match_day_id)
@@ -89,7 +89,7 @@ class SeasonMatchesManager:
             "match_day_name": match_day_name,
             "place_name": place_info[0].place_name,
             "address": place_info[0].address,
-            "meeting_date": context[0].meeting_date
+            "meeting_date": meeting_date
         }
 
         return users, match_day_info

@@ -39,7 +39,7 @@ class KznRedsPGManager:
             ORDER BY start_timestamp ASC LIMIT 5;
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-            logger.debug(f"Command result: {command_result}")
+            logger.debug(f"Step get_match_day_by_event_id. Command result: {command_result}")
             return self.__convert_match_day_info(command_result) if command_result else []
         except Exception as e:
             logger.error(f"Error fetching match day by event ID {event_id}: {e}")
@@ -188,7 +188,7 @@ class KznRedsPGManager:
             ON CONFLICT (event_id) DO UPDATE SET
                 start_timestamp = '{start_timestamp}', match_status = '{match_status}';
             """
-            logger.debug(f"Adding match day {command=}")
+            logger.debug(f"Step add_match_day. Adding match day {command=}")
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
             logger.error(f"Error adding match day: {e}")

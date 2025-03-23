@@ -1,9 +1,13 @@
+import logging
+
 from aiogram import Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.meeting_approvement_keyboard import MeetingApprovementKeyboard
+
+logger = logging.getLogger(__name__)
 
 invitation_keyboard = MeetingApprovementKeyboard().main_approvement_keyboard()
 
@@ -24,22 +28,23 @@ class MeetingInvitesManager:
             context,
             user_id
     ):
+        logger.debug(f"Step send_message.")
         message_text = self.__create_text_message(context=context)
 
-        print(f"Current state = {state}")
+        logger.debug(f"Step send_message. Current state = {state}")
         await state.set_state(Form.waiting_for_button_press)
         await state.update_data(context=context)
         await self.bot.send_message(chat_id=user_id, text=message_text, reply_markup=invitation_keyboard)
 
-        print(f"Current state = {await state.get_state()}")
-        print(f"Current state data = {await state.get_data()}")
+        logger.debug(f"Step send_message. Current state = {await state.get_state()}")
+        logger.debug(f"Step send_message. Current state data = {await state.get_data()}")
 
     @staticmethod
     def __create_text_message(context):
         match_name = context.get("match_day_name")
         place_name = context.get("place_name")
         address = context.get("address")
-        meeting_date = context.get("meeting_date").strftime("%a, %d %b %H:%M")
+        meeting_date = context.get("meeting_date")
 
         return (f"Матч\n"
                 f"{match_name} \n"

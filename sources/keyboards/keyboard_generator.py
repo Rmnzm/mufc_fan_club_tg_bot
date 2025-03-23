@@ -111,7 +111,6 @@ class KeyboardGenerator:
             button_data: list[MatchDaySchema]
     ) -> InlineKeyboardButton:
         try:
-            print(f"{button_data[0]=}")
             btn_data = list(filter(lambda i: callback_data.id == i.event_id, button_data))
             button_name = f"{btn_data[0].start_timestamp.strftime('%a, %d %b %H:%M')} {btn_data[0].localed_match_day_name}"
             button = InlineKeyboardButton(

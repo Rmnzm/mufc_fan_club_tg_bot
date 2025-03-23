@@ -92,10 +92,10 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
         options = _create_poll_options(watch_day_id)
         poll = _create_chat_poll_obj(question, options)
 
-        # TODO: Придумать как убирать предыдущее сообщение
+        # Aiogram/Telegram has no methods to delete previous messages older than 48 hours. It can EDIT current message
 
         await callback.bot.send_poll(
-            chat_id=-1002374530977,
+            chat_id=-int(settings.tg_kzn_reds_chat_id),
             question=question,
             options=[
                 ADMIN_MATCH_INVITE_POLL_OPTIONS["agree"],
@@ -124,15 +124,15 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
 async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
     try:
         logger.debug(f"Step poll_answer from user {poll_answer.user.id}")
-        logger.debug(f"poll_answer={poll_answer.__dict__}")
+        logger.debug(f"Step poll_answer={poll_answer.__dict__}")
 
         state_data = await state.get_data()
         watch_day_info = state_data.get("watch_day_info")
 
         current_state = await state.get_state()
-        logger.debug(f"{current_state=}")
+        logger.debug(f"Step poll_answers{current_state=}")
         current_state_data = await state.get_data()
-        logger.debug(current_state_data)
+        logger.debug(f"Step poll_answers {current_state_data=}")
 
         option_ids = ','.join(map(str, poll_answer.option_ids))
 
@@ -143,7 +143,7 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
             f"User {poll_answer.user.id} voted in poll {poll_answer.poll_id} with options {option_ids}",
         )
 
-        logger.debug(f"{watch_day_info=}")
+        logger.debug(f"Step poll_answers {watch_day_info=}")
 
         match_day_manager.register_user(user_tg_id=poll_answer.user.id, user_schema=user_schema)
 
@@ -161,7 +161,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
         await state.set_state(PlaceState.edit_watch_place)
         watch_day_state_data = await state.get_data()
         watch_day_info = watch_day_state_data['watch_day_by_id']
-        print(f"{watch_day_info=}")
+        logger.debug(f"Step process_go_button {watch_day_info=}")
         watch_day_id = watch_day_info[0].watch_day_id
 
         await state.update_data(watch_day_id=watch_day_id)
@@ -222,7 +222,7 @@ async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
 
     watch_day_table = f"match_day_{watch_day_datetime}"
 
-    print(f"{watch_day_info=}")
+    logger.debug(f"Step process_cancel_meeting {watch_day_info=}")
     try:
         logger.debug(f"Step process_cancel_meeting with context: {callback.data}")
         match_day_manager.delete_watch_day(watch_day_id=watch_day_id, watch_day_table=watch_day_table)
