@@ -47,7 +47,7 @@ class MatchInvitorManager:
         if match_day_time.tzinfo is None:
             match_day_time = match_day_time.replace(tzinfo=timezone.utc) + timedelta(hours=3)
         current_time = datetime.now(timezone.utc) + timedelta(hours=3)
-        logger.info(f"Checking current time {current_time=} ")
+        logger.info(f"Checking current time current_time={current_time.strftime('%a, %d %b %H:%M')} ")
         meeting_timedelta = match_day_time - current_time + timedelta(hours=4)
         meeting_delta_hours = meeting_timedelta.total_seconds() // 3600
 

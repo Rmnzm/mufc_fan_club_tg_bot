@@ -345,11 +345,12 @@ def _create_poll_answer_user_schema(poll_answer):
 
 def _register_user_poll_answer(poll_answer, watch_day_info):
     try:
+        watch_day_list = NearestMeetingsSchema(**watch_day_info[0])
         match_day_manager.register_user_to_watch(
             user_id=poll_answer.user.id,
-            watch_day_id=watch_day_info[0].watch_day_id,
-            match_day_id=watch_day_info[0].match_day_id,
-            place_id=watch_day_info[0].place_id
+            watch_day_id=watch_day_list.watch_day_id,
+            match_day_id=watch_day_list.match_day_id,
+            place_id=watch_day_list.place_id
         )
     except Exception as error:
         logger.exception(f"Failed to register user to watch. Err: {error}")

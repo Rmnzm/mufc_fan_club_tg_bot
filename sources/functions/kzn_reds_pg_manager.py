@@ -51,7 +51,7 @@ class KznRedsPGManager:
             SELECT EXISTS(
                 SELECT *
                 FROM information_schema.tables
-                WHERE table_schema = 'public' AND table_name = {table_name}
+                WHERE table_schema = 'public' AND table_name = '{table_name}'
             );
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
@@ -65,6 +65,7 @@ class KznRedsPGManager:
             command = """
             SELECT meeting_date, match_day_id, place_id
             FROM public.watch_day
+            WHERE meeting_date > CURRENT_DATE
             ORDER BY meeting_date ASC
             LIMIT 1
             """
@@ -135,6 +136,7 @@ class KznRedsPGManager:
 
     def update_match_day_info(self, command: str):
         try:
+            logger.info(f"Update match day info {command=}")
             self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
         except Exception as e:
             logger.error(f"Error updating match day info: {e}")
@@ -186,11 +188,8 @@ class KznRedsPGManager:
             ON CONFLICT (event_id) DO UPDATE SET
                 start_timestamp = '{start_timestamp}', match_status = '{match_status}';
             """
-            self.kzn_reds_pg_connector.execute_command(command, (
-                start_timestamp, match_status, opponent_name, opponent_name_slug,
-                tournament_name, tournament_name_slug, localed_match_day_name, event_id,
-                start_timestamp, match_status
-            ), "added", "failed")
+            logger.debug(f"Adding match day {command=}")
+            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
         except Exception as e:
             logger.error(f"Error adding match day: {e}")
             raise

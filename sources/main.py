@@ -84,9 +84,13 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
-    # update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
-    # send_inviters_job = asyncio.create_task(send_invites_task(redis=redis, bot=bot))
+    create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
+    update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
+    send_inviters_job = asyncio.create_task(
+        send_invites_task(
+            redis_client=redis, bot_client=bot
+        )
+    )
 
     logger.info("Bot started.")
 
@@ -94,9 +98,9 @@ async def main():
     await dispatcher.start_polling(bot)
 
 
-    # await update_last_passed_match_job
-    # await send_inviters_job
-    # await create_or_update_matches_job
+    await update_last_passed_match_job
+    await send_inviters_job
+    await create_or_update_matches_job
 
 
 asyncio.run(main())

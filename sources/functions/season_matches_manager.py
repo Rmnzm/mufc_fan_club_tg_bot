@@ -31,7 +31,7 @@ class SeasonMatchesManager:
             localed_match_day_name = self.__get_localed_match_day_name(event)
             if not match_day:
                     match_day_manager.add_match_day(
-                        start_timestamp=start_timestamp,
+                        start_timestamp=datetime.fromtimestamp(start_timestamp),
                         match_status=match_status,
                         opponent_name=opponent_name,
                         opponent_name_slug=opponent_name_slug,
@@ -44,7 +44,7 @@ class SeasonMatchesManager:
                 if not self.__check_match_day_has_changes(event, match_day[0]):
                     update_match_day_table_command = match_day_manager.get_update_match_day_table_command(
                         event_id=event.id,
-                        start_timestamp=start_timestamp,
+                        start_timestamp=datetime.fromtimestamp(start_timestamp),
                         match_status=match_status,
                         opponent_name=opponent_name,
                         opponent_name_slug=opponent_name_slug,
@@ -74,6 +74,7 @@ class SeasonMatchesManager:
     @staticmethod
     def create_context_to_send_invitations() -> (list[dict], list[InvitationContextSchema]):
         context = match_day_manager.get_nearest_watching_day()
+        logger.debug(f"Send invitations current context = {context}")
         table_name = CommonHelpers.table_name_by_date(context[0].meeting_date)
 
         # meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
