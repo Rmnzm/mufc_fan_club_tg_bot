@@ -27,8 +27,12 @@ async def input_place_name(message: Message, state: FSMContext):
         await state.set_state(CreatePlaceStateGroup.add_place_state)
         await state.set_data(dict(add_place_state=message.text))
 
-        await message.answer(text=f"Введено название: {message.text}\n\nВведите адрес места сбора...")
-        logger.info(f"Successfully processed place name with context={message.text} from user={message.from_user.id}")
+        await message.answer(
+            text=f"Введено название: {message.text}\n\nВведите адрес места сбора..."
+        )
+        logger.info(
+            f"Successfully processed place name with context={message.text} from user={message.from_user.id}"
+        )
     except Exception as e:
         logger.error(
             f"Failed to process place name inputting context={message.text} from user={message.from_user.id}. Err: {e}"
@@ -44,16 +48,19 @@ async def input_place_address(message: Message, state: FSMContext):
 
     try:
         match_day_manager.add_watch_place(
-            place_name=current_state_data['add_place_state'],
-            place_address=message.text
+            place_name=current_state_data["add_place_state"], place_address=message.text
         )
         msg = f"Место сбора добавлено.\nНазвание - {current_state_data['add_place_state']}\nАдрес - {message.text}"
 
         await message.answer(
             text=msg, reply_markup=admin_keyboard.main_admin_keyboard()
         )
-        logger.info(f"Successfully processed place address with context={current_state_data}")
+        logger.info(
+            f"Successfully processed place address with context={current_state_data}"
+        )
     except Exception as e:
-        logger.error(f"Failed to process place address inputting context={current_state_data}. Err: {e}")
+        logger.error(
+            f"Failed to process place address inputting context={current_state_data}. Err: {e}"
+        )
         await message.answer(text=ERROR_ADMIN_LEXICON_RU["error_input_place_address"])
     await state.clear()

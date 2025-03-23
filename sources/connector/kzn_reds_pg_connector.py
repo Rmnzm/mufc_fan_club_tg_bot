@@ -20,9 +20,9 @@ class KznRedsPgConnector(metaclass=SingletonWithParams):
     @property
     def connection(self) -> connection:
         if (
-                not self.instance_connection
-                or self.instance_connection.closed
-                or not self.is_connection_valid
+            not self.instance_connection
+            or self.instance_connection.closed
+            or not self.is_connection_valid
         ):
             try:
                 self.instance_connection = psycopg2.connect(
@@ -30,7 +30,7 @@ class KznRedsPgConnector(metaclass=SingletonWithParams):
                     user=settings.login,
                     password=settings.password,
                     host=settings.host,
-                    port=settings.port
+                    port=settings.port,
                 )
                 self.instance_connection.autocommit = False
             except Exception as error:

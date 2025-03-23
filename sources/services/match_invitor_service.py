@@ -34,21 +34,29 @@ class MatchInvitorManager:
                     state = FSMContext(
                         storage=self.redis,
                         key=StorageKey(
-                            user_id=user_id, bot_id=int(settings.tg_bot_id), chat_id=user_id
-                        )
+                            user_id=user_id,
+                            bot_id=int(settings.tg_bot_id),
+                            chat_id=user_id,
+                        ),
                     )
                     await MeetingInvitesManager(self.bot).send_message(
                         state=state, context=match_day_context, user_id=user_id
                     )
-                    season_manager.update_message_sent_status(match_day_context, user_id)
+                    season_manager.update_message_sent_status(
+                        match_day_context, user_id
+                    )
 
     @staticmethod
     def __is_time_to_send(match_day_time):
-        match_day_datetime = datetime.strptime(match_day_time, '%a, %d %b %H:%M')
+        match_day_datetime = datetime.strptime(match_day_time, "%a, %d %b %H:%M")
         if match_day_datetime.tzinfo is None:
-            match_day_datetime = match_day_datetime.replace(tzinfo=timezone.utc) + timedelta(hours=3)
+            match_day_datetime = match_day_datetime.replace(
+                tzinfo=timezone.utc
+            ) + timedelta(hours=3)
         current_time = datetime.now(timezone.utc) + timedelta(hours=3)
-        logger.info(f"Checking current time current_time={current_time.strftime('%a, %d %b %H:%M')} ")
+        logger.info(
+            f"Checking current time current_time={current_time.strftime('%a, %d %b %H:%M')} "
+        )
         meeting_timedelta = match_day_datetime - current_time + timedelta(hours=4)
         meeting_delta_hours = meeting_timedelta.total_seconds() // 3600
 
@@ -56,4 +64,6 @@ class MatchInvitorManager:
             logger.info("It's time to send. Sending ...")
             return True
 
-        logger.info(f"It's not time to send. Before next meeting {meeting_delta_hours} hours")
+        logger.info(
+            f"It's not time to send. Before next meeting {meeting_delta_hours} hours"
+        )

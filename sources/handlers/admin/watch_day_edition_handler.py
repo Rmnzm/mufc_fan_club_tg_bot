@@ -7,13 +7,20 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
 from aiogram.types import Poll, PollAnswer, PollOption
 
-from callback_factory.callback_factory import AdminMatchDayCallbackFactory, WatchPlaceChangeFactory
+from callback_factory.callback_factory import (
+    AdminMatchDayCallbackFactory,
+    WatchPlaceChangeFactory,
+)
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
-from lexicon.admin_lexicon_ru import ERROR_ADMIN_LEXICON_RU, BASE_ADMIN_LEXICON_RU, ADMIN_MATCH_INVITE_POLL_OPTIONS
+from lexicon.admin_lexicon_ru import (
+    ERROR_ADMIN_LEXICON_RU,
+    BASE_ADMIN_LEXICON_RU,
+    ADMIN_MATCH_INVITE_POLL_OPTIONS,
+)
 from schemes.scheme import UsersSchema, NearestMeetingsSchema
 from states.main_states import WatchDayInfoStateGroup
 
@@ -27,6 +34,7 @@ places_keyboard = KeyboardGenerator()
 
 match_day_manager = KznRedsPGManager()
 
+
 class PlaceState(StatesGroup):
     watch_day_id = State()
     delete_watch_day = State()
@@ -39,30 +47,39 @@ class PollStates(StatesGroup):
 
 @router.callback_query(AdminMatchDayCallbackFactory.filter(), AdminFilter())
 async def process_scheduled_match_days_filter(
-        callback: CallbackQuery, callback_data: AdminMatchDayCallbackFactory, state: FSMContext
+    callback: CallbackQuery,
+    callback_data: AdminMatchDayCallbackFactory,
+    state: FSMContext,
 ):
     try:
-        logger.debug(f"Step process_scheduled_match_days_filter with context: {callback_data}")
-        watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(callback_data.id)
+        logger.debug(
+            f"Step process_scheduled_match_days_filter with context: {callback_data}"
+        )
+        watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(
+            callback_data.id
+        )
 
         nearest_match_day_str = __simple_parse_nearest_matches(watch_day_by_id[0])
 
         watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
         for watch_day in watch_day_by_id_dict:
-            watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+            watch_day["meeting_date"] = watch_day["meeting_date"].isoformat()
 
         await state.set_state(WatchDayInfoStateGroup.watch_day_id)
         await state.update_data(watch_day_by_id=watch_day_by_id_dict)
 
         await callback.message.edit_text(
-            text=nearest_match_day_str, reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard()
+            text=nearest_match_day_str,
+            reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard(),
         )
-        logger.info(f"Successfully received scheduled match days. {nearest_match_day_str}")
+        logger.info(
+            f"Successfully received scheduled match days. {nearest_match_day_str}"
+        )
     except Exception as error:
         logger.error(f"Failed to fetch nearest match day. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_process_scheduled_match_days_filter"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
 
     await callback.answer()
@@ -74,7 +91,7 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
         logger.debug(f"Step start_meeting_poll with context: {callback.data}")
 
         watch_day_state_data = await state.get_data()
-        watch_day_info = watch_day_state_data['watch_day_by_id']
+        watch_day_info = watch_day_state_data["watch_day_by_id"]
         logger.info(f"{watch_day_info=}")
 
         watch_day_id = watch_day_info[0].get("watch_day_id")
@@ -99,14 +116,14 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
             question=question,
             options=[
                 ADMIN_MATCH_INVITE_POLL_OPTIONS["agree"],
-                ADMIN_MATCH_INVITE_POLL_OPTIONS["cancel"]
+                ADMIN_MATCH_INVITE_POLL_OPTIONS["cancel"],
             ],
-            is_anonymous=poll.is_anonymous
+            is_anonymous=poll.is_anonymous,
         )
 
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["start_meeting_poll"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
         logger.info(f"Meeting poll successfully sent on chat.")
 
@@ -114,7 +131,7 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
         logger.error(f"Failed to send meeting poll. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_start_meeting_poll"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
 
     await callback.answer()
@@ -134,7 +151,7 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
         current_state_data = await state.get_data()
         logger.debug(f"Step poll_answers {current_state_data=}")
 
-        option_ids = ','.join(map(str, poll_answer.option_ids))
+        option_ids = ",".join(map(str, poll_answer.option_ids))
 
         user_schema = _create_poll_answer_user_schema(poll_answer)
 
@@ -145,7 +162,9 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
 
         logger.debug(f"Step poll_answers {watch_day_info=}")
 
-        match_day_manager.register_user(user_tg_id=poll_answer.user.id, user_schema=user_schema)
+        match_day_manager.register_user(
+            user_tg_id=poll_answer.user.id, user_schema=user_schema
+        )
 
         if option_ids == "0":
             _register_user_poll_answer(poll_answer, watch_day_info)
@@ -160,7 +179,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
         logger.debug(f"Step process_go_button with context: {callback.data}")
         await state.set_state(PlaceState.edit_watch_place)
         watch_day_state_data = await state.get_data()
-        watch_day_info = watch_day_state_data['watch_day_by_id']
+        watch_day_info = watch_day_state_data["watch_day_by_id"]
         logger.debug(f"Step process_go_button {watch_day_info=}")
         watch_day_id = watch_day_info[0].watch_day_id
 
@@ -168,47 +187,46 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 
         places = match_day_manager.get_places()
 
-        data_factories = [
-            WatchPlaceChangeFactory(id=context.id) for context in places
-        ]
-        reply_keyboard = places_keyboard.places_editor_keyboard(
-            data_factories, places
-        )
+        data_factories = [WatchPlaceChangeFactory(id=context.id) for context in places]
+        reply_keyboard = places_keyboard.places_editor_keyboard(data_factories, places)
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["process_go_button"],
-            reply_markup=reply_keyboard
+            text=BASE_ADMIN_LEXICON_RU["process_go_button"], reply_markup=reply_keyboard
         )
         logger.info(f"Successfully processed go button")
     except Exception as error:
         logger.error(f"Failed to processing go button. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_process_go_button"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
 
 
-@router.callback_query(WatchPlaceChangeFactory.filter(), PlaceState.edit_watch_place, AdminFilter())
+@router.callback_query(
+    WatchPlaceChangeFactory.filter(), PlaceState.edit_watch_place, AdminFilter()
+)
 async def change_watch_place_process(
-        callback: CallbackQuery, callback_data: WatchPlaceChangeFactory, state: FSMContext
+    callback: CallbackQuery, callback_data: WatchPlaceChangeFactory, state: FSMContext
 ):
     place_id = callback_data.id
     watch_day_state_data = await state.get_data()
-    watch_day_id = watch_day_state_data['watch_day_id']
+    watch_day_id = watch_day_state_data["watch_day_id"]
 
     try:
         logger.debug(f"Step change_watch_place_process with context: {callback_data}")
-        match_day_manager.change_watch_day_place(watch_day_id=watch_day_id, place_id=place_id)
+        match_day_manager.change_watch_day_place(
+            watch_day_id=watch_day_id, place_id=place_id
+        )
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["change_watch_place_process"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
         logger.info(f"Successfully changed meeting place place on {watch_day_id=}")
     except Exception as error:
         logger.error(f"Failed to change meeting place. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_change_watch_place_process"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
 
@@ -216,26 +234,28 @@ async def change_watch_place_process(
 @router.callback_query(F.data == "cancel_meeting", AdminFilter())
 async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
-    watch_day_info = watch_day_state_data['watch_day_by_id'][0]
+    watch_day_info = watch_day_state_data["watch_day_by_id"][0]
     watch_day_id = watch_day_info.watch_day_id
-    watch_day_datetime = watch_day_info.meeting_date.strftime('%d_%m_%Y')
+    watch_day_datetime = watch_day_info.meeting_date.strftime("%d_%m_%Y")
 
     watch_day_table = f"match_day_{watch_day_datetime}"
 
     logger.debug(f"Step process_cancel_meeting {watch_day_info=}")
     try:
         logger.debug(f"Step process_cancel_meeting with context: {callback.data}")
-        match_day_manager.delete_watch_day(watch_day_id=watch_day_id, watch_day_table=watch_day_table)
+        match_day_manager.delete_watch_day(
+            watch_day_id=watch_day_id, watch_day_table=watch_day_table
+        )
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["process_cancel_meeting"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
         logger.info(f"Successfully canceled meeting with {watch_day_id=}")
     except Exception as error:
         logger.error(f"Failed to cancel meeting. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_process_cancel_meeting"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
 
@@ -243,10 +263,12 @@ async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "show_visitors", AdminFilter())
 async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     watch_day_state_data = await state.get_data()
-    watch_day_info = watch_day_state_data['watch_day_by_id']
+    watch_day_info = watch_day_state_data["watch_day_by_id"]
 
     logger.info(f"show visitors - {watch_day_info=}")
-    watch_day_datetime = datetime.datetime.strptime(watch_day_info[0]["meeting_date"], '%Y-%m-%dT%H:%M:%S')
+    watch_day_datetime = datetime.datetime.strptime(
+        watch_day_info[0]["meeting_date"], "%Y-%m-%dT%H:%M:%S"
+    )
 
     watch_day_table = f'match_day_{watch_day_datetime.strftime("%d_%m_%Y")}'
 
@@ -256,18 +278,22 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
         logger.debug(f"Step process_show_visitors with context: {callback.data}")
         users = match_day_manager.show_visitors(watch_day_table=watch_day_table)
 
-        users_string = "\n".join([f"@{user.username} - {user.user_role}" for user in users])
+        users_string = "\n".join(
+            [f"@{user.username} - {user.user_role}" for user in users]
+        )
 
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["process_show_visitors"].format(users_string=users_string),
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            text=BASE_ADMIN_LEXICON_RU["process_show_visitors"].format(
+                users_string=users_string
+            ),
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
         logger.info(f"Successfully received and showed approved users. {users_string=}")
     except Exception as error:
         logger.error(f"Failed to receive or show approved users. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_process_show_visitors"],
-            reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+            reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
 
     await callback.answer()
@@ -277,7 +303,7 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
 async def process_menu_button(callback: CallbackQuery):
     await callback.message.edit_text(
         text=BASE_ADMIN_LEXICON_RU["main_admin_menu"],
-        reply_markup=admin_watch_day_keyboard.main_admin_keyboard()
+        reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
     )
     await callback.answer()
 
@@ -293,32 +319,41 @@ def __simple_parse_nearest_matches(watch_day_by_id: NearestMeetingsSchema):
     )
     return nearest_match_day
 
+
 def _create_poll_question(watch_day_info):
     tournament_name = watch_day_info[0].get("tournament_name")
     located_match_day_name = watch_day_info[0].get("localed_match_day_name")
     meeting_date = watch_day_info[0].get("meeting_date")
     place_name = watch_day_info[0].get("place_name")
     address = watch_day_info[0].get("address")
-    question = (f"СРОЧНОСБОР\n"
-                f"{tournament_name}\n"
-                f"{located_match_day_name}\n"
-                f"\n"
-                f"{meeting_date}\n"
-                # f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
-                f"{place_name} - {address}")
+    question = (
+        f"СРОЧНОСБОР\n"
+        f"{tournament_name}\n"
+        f"{located_match_day_name}\n"
+        f"\n"
+        f"{meeting_date}\n"
+        # f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
+        f"{place_name} - {address}"
+    )
 
     return question
+
 
 def _create_poll_options(watch_day_id: int):
     options = [
         PollOption(
-            text=ADMIN_MATCH_INVITE_POLL_OPTIONS["agree"], voter_count=0, watch_day_id=watch_day_id
+            text=ADMIN_MATCH_INVITE_POLL_OPTIONS["agree"],
+            voter_count=0,
+            watch_day_id=watch_day_id,
         ),
         PollOption(
-            text=ADMIN_MATCH_INVITE_POLL_OPTIONS["cancel"], voter_count=0, watch_day_id=watch_day_id
-        )
+            text=ADMIN_MATCH_INVITE_POLL_OPTIONS["cancel"],
+            voter_count=0,
+            watch_day_id=watch_day_id,
+        ),
     ]
     return options
+
 
 def _create_chat_poll_obj(question, options):
     poll = Poll(
@@ -326,19 +361,20 @@ def _create_chat_poll_obj(question, options):
         question=question,
         options=options,
         is_anonymous=False,
-        type='regular',
+        type="regular",
         allows_multiple_answers=False,
         total_voter_count=0,
-        is_closed=True
+        is_closed=True,
     )
     return poll
+
 
 def _create_poll_answer_user_schema(poll_answer):
     user_schema = UsersSchema(
         username=poll_answer.user.username,
         user_role="USER",
         first_name=poll_answer.user.first_name if poll_answer.user.first_name else None,
-        last_name=poll_answer.user.last_name if poll_answer.user.last_name else None
+        last_name=poll_answer.user.last_name if poll_answer.user.last_name else None,
     )
     return user_schema
 
@@ -350,7 +386,7 @@ def _register_user_poll_answer(poll_answer, watch_day_info):
             user_id=poll_answer.user.id,
             watch_day_id=watch_day_list.watch_day_id,
             match_day_id=watch_day_list.match_day_id,
-            place_id=watch_day_list.place_id
+            place_id=watch_day_list.place_id,
         )
     except Exception as error:
         logger.exception(f"Failed to register user to watch. Err: {error}")

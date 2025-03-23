@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "kazan-reds"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "The bot is a registrar for fan meetings of Manchester United."
+authors = ["Roman Zamaraev <romzamaraev@yandex.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -17,6 +17,9 @@ aiogram-dialog = "^2.2.0"
 aiogram-calendar = "^0.5.0"
 redis = "^5.2.1"
 
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core"]

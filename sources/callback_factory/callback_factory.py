@@ -1,15 +1,19 @@
 from aiogram.filters.callback_data import CallbackData
 
 
-class MatchDayCallbackFactory(CallbackData, prefix='watch_days'):
+class MatchDayCallbackFactory(CallbackData, prefix="watch_days"):
     id: int
 
 
-class AdminMatchDayCallbackFactory(CallbackData, prefix='admin_watch_days'):
+class AdminMatchDayCallbackFactory(CallbackData, prefix="admin_watch_days"):
     id: int
 
-class AdminCreateWatchDayCallbackFactory(CallbackData, prefix='admin_watch_days_creator'):
+
+class AdminCreateWatchDayCallbackFactory(
+    CallbackData, prefix="admin_watch_days_creator"
+):
     id: int
+
 
 class PlacesFactory(CallbackData, prefix="places"):
     id: int
@@ -17,6 +21,7 @@ class PlacesFactory(CallbackData, prefix="places"):
 
 class PlacesEditorFactory(CallbackData, prefix="places_editor"):
     id: int
+
 
 class WatchPlaceChangeFactory(CallbackData, prefix="places_editor"):
     id: int

@@ -23,7 +23,7 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-redis = Redis(host='localhost')
+redis = Redis(host="localhost")
 
 logger.info(f"Redis here - {redis}")
 
@@ -40,6 +40,7 @@ async def create_or_update_matches_task():
         except Exception as e:
             logger.error(e)
         await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
+
 
 async def update_last_passed_match_task():
     while True:
@@ -64,14 +65,17 @@ async def send_invites_task(redis_client: Redis, bot_client: Bot):
 
 
 async def main():
-    logging.basicConfig(level=logging.INFO,
-                        format='[%(asctime)s] #%(levelname)-8s %(filename)s:'
-                               '%(lineno)d - %(name)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
+        "%(lineno)d - %(name)s - %(message)s",
+    )
 
     logger.info("Starting bot...")
 
-    bot = Bot(token=settings.tg_token,
-              default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(
+        token=settings.tg_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
 
     dispatcher = Dispatcher(storage=redis_storage)
 
@@ -84,12 +88,10 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
-    # update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
+    create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
+    update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
     send_inviters_job = asyncio.create_task(
-        send_invites_task(
-            redis_client=redis, bot_client=bot
-        )
+        send_invites_task(redis_client=redis, bot_client=bot)
     )
 
     logger.info("Bot started.")
@@ -97,10 +99,9 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dispatcher.start_polling(bot)
 
-
-    # await update_last_passed_match_job
+    await update_last_passed_match_job
     await send_inviters_job
-    # await create_or_update_matches_job
+    await create_or_update_matches_job
 
 
 asyncio.run(main())

@@ -5,8 +5,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
 
-from callback_factory.callback_factory import AdminCreateWatchDayCallbackFactory, \
-    PlacesFactory
+from callback_factory.callback_factory import (
+    AdminCreateWatchDayCallbackFactory,
+    PlacesFactory,
+)
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
@@ -15,7 +17,10 @@ from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from schemes.scheme import MatchDaySchema
-from lexicon.admin_lexicon_ru import ADMIN_WATCH_DAY_HANDLER_LEXICON_RU, ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU
+from lexicon.admin_lexicon_ru import (
+    ADMIN_WATCH_DAY_HANDLER_LEXICON_RU,
+    ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +48,8 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
         nearest_matches = match_day_manager.get_nearest_match_day()
 
         data_factories = [
-            AdminCreateWatchDayCallbackFactory(
-                id=context.event_id
-            ) for context in nearest_matches
+            AdminCreateWatchDayCallbackFactory(id=context.event_id)
+            for context in nearest_matches
         ]
         reply_keyboard = keyboard_generator.admin_create_watch_day_keyboard(
             data_factories, nearest_matches, add_watch_day=False
@@ -53,80 +57,86 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
 
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["add_watch_day"],
-            reply_markup=reply_keyboard
+            reply_markup=reply_keyboard,
         )
-        logger.info(f"Successfully reacted on watch_day_register action by user {callback.from_user.id}")
+        logger.info(
+            f"Successfully reacted on watch_day_register action by user {callback.from_user.id}"
+        )
     except Exception as error:
         logger.error(f"Failed to react on action watch_day_register. Err: {error}")
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU["watch_day_register_error"],
-            reply_markup=main_keyboard.main_admin_keyboard()
+            reply_markup=main_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
 
 
 @router.callback_query(AdminCreateWatchDayCallbackFactory.filter(), AdminFilter())
 async def choose_place(
-    callback: CallbackQuery, callback_data: AdminCreateWatchDayCallbackFactory, state: FSMContext
+    callback: CallbackQuery,
+    callback_data: AdminCreateWatchDayCallbackFactory,
+    state: FSMContext,
 ):
     try:
-        logger.debug(f"Step choose_place with context {callback.data} and {callback_data=}")
+        logger.debug(
+            f"Step choose_place with context {callback.data} and {callback_data=}"
+        )
         match_day_by_id = match_day_manager.get_match_day_by_event_id(callback_data.id)
 
         match_day_by_id_dict = match_day_by_id[0].model_dump()
-        match_day_by_id_dict['start_timestamp'] = match_day_by_id_dict['start_timestamp'].isoformat()
-        match_day_by_id_dict['match_status'] = match_day_by_id_dict['match_status'].value
+        match_day_by_id_dict["start_timestamp"] = match_day_by_id_dict[
+            "start_timestamp"
+        ].isoformat()
+        match_day_by_id_dict["match_status"] = match_day_by_id_dict[
+            "match_status"
+        ].value
 
         await state.set_state(WatchDay.choose_place)
         await state.update_data(match_day_by_id=match_day_by_id_dict)
 
         places = match_day_manager.get_places()
 
-        data_factories = [
-            PlacesFactory(id=context.id) for context in places
-        ]
-        reply_keyboard = keyboard_generator.places_keyboard(
-            data_factories, places
-        )
+        data_factories = [PlacesFactory(id=context.id) for context in places]
+        reply_keyboard = keyboard_generator.places_keyboard(data_factories, places)
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["choose_place"],
-            reply_markup=reply_keyboard
+            reply_markup=reply_keyboard,
         )
     except Exception as error:
         logger.error(f"Failed to react on choose_place action. Err: {error}")
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU["choose_place_error"],
-            reply_markup=main_keyboard.main_admin_keyboard()
+            reply_markup=main_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
 
 
 @router.callback_query(PlacesFactory.filter(), WatchDay.choose_place, AdminFilter())
 async def registrate_meeting(
-        callback: CallbackQuery, callback_data: PlacesFactory, state: FSMContext
+    callback: CallbackQuery, callback_data: PlacesFactory, state: FSMContext
 ):
     current_state_data = await state.get_data()
     place_id = callback_data.id
 
     try:
         logger.debug(f"Step registrate_meeting with context={callback.data}")
-        match_day_data = MatchDaySchema(**current_state_data['match_day_by_id'])
+        match_day_data = MatchDaySchema(**current_state_data["match_day_by_id"])
         match_day_manager.add_watch_day(match_day_data, place_id)
         match_day_manager.create_watch_day_table(match_day_data)
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["registrate_meeting"],
-            reply_markup=admin_keyboard.main_admin_keyboard()
+            reply_markup=admin_keyboard.main_admin_keyboard(),
         )
-        logger.info(f"Successfully registered meeting on match_day_id={match_day_data.id}")
+        logger.info(
+            f"Successfully registered meeting on match_day_id={match_day_data.id}"
+        )
 
     except Exception as error:
         logger.error(f"Failed to react on action registrate_meeting. Err: {error}")
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU["registrate_meeting_error"],
-            reply_markup=main_keyboard.main_admin_keyboard()
+            reply_markup=main_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
 
     await state.clear()
-
-

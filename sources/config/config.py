@@ -21,9 +21,8 @@ class Settings(BaseSettings):
     send_job_timeout_in_sec: str = "300"
     update_match_job_timeout_in_sec: str = "3600"
 
-
     class Config:
-        env_file = '.env'
+        env_file = ".env"
 
 
 @lru_cache()

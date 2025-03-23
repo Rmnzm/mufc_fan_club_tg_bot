@@ -6,5 +6,5 @@ WATCH_DAY_LEXICON_RU: dict = {
     "cancel_adding": "Отмена",
     "choose_another_match_day": "Выбрать другой матч",
     "main_menu": "Возврат в меню",
-    "register_success": "Встреча добавлена"
+    "register_success": "Встреча добавлена",
 }
