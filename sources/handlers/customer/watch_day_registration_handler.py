@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery
 from callback_factory.callback_factory import MatchDayCallbackFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
+from functions.schema_converter import SchemaConverter
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from lexicon.BASE_LEXICON_RU import BASE_LEXICON_RU
@@ -22,6 +23,7 @@ main_keyboard = MainKeyboard()
 watch_day_keyboard = WatchDayKeyboard()
 
 match_day_manager = KznRedsPGManager()
+schema_converter = SchemaConverter()
 
 
 @router.callback_query(MatchDayCallbackFactory.filter())
@@ -39,7 +41,9 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
-    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+    watch_day_by_id_dict = [
+        schema_converter.convert_model_to_dict(watch_day) for watch_day in watch_day_by_id
+    ]
     for watch_day in watch_day_by_id_dict:
         watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
 

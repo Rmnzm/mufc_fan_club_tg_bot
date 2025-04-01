@@ -9,8 +9,9 @@ from aiogram.types import Poll, PollAnswer, PollOption
 
 from callback_factory.callback_factory import AdminMatchDayCallbackFactory, WatchPlaceChangeFactory
 from config.config import get_settings
-from functions.admin_checker import admin_required, AdminFilter
+from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
+from functions.schema_converter import SchemaConverter
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
 from schemes.scheme import UsersSchema
@@ -25,6 +26,7 @@ admin_watch_day_keyboard = AdminKeyboard()
 places_keyboard = KeyboardGenerator()
 
 match_day_manager = KznRedsPGManager()
+schema_converter = SchemaConverter()
 
 class PlaceState(StatesGroup):
     watch_day_id = State()
@@ -51,7 +53,9 @@ async def process_scheduled_match_days_filter(
         f"(встреча назначена за пол часа до события)"
     )
 
-    watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
+    watch_day_by_id_dict = [
+        schema_converter.convert_model_to_dict(watch_day) for watch_day in watch_day_by_id
+    ]
     for watch_day in watch_day_by_id_dict:
         watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
 
@@ -82,7 +86,6 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
                 f"{located_match_day_name}\n"
                 f"\n"
                 f"{meeting_date}\n"
-                # f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
                 f"{place_name} - {address}")
 
     await state.set_state(PollStates.watch_day_info)
@@ -107,8 +110,6 @@ async def start_meeting_poll(callback: CallbackQuery, state: FSMContext):
         total_voter_count=0,
         is_closed=True
     )
-
-    # TODO: Придумать как убирать предыдущее сообщение
 
     await callback.bot.send_poll(
         chat_id=-1002374530977,

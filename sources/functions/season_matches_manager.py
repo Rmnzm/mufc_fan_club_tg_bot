@@ -16,8 +16,6 @@ match_day_manager = KznRedsPGManager()
 
 
 class SeasonMatchesManager:
-    def __init__(self):
-        pass
 
     def update_next_matches(self, next_matches: MatchDayDTO):
         logger.info(f"Received {len(next_matches.events)} matches to create or update")
@@ -76,8 +74,6 @@ class SeasonMatchesManager:
         context = match_day_manager.get_nearest_watching_day()
         table_name = CommonHelpers.table_name_by_date(context[0].meeting_date)
 
-        # meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
-
         users = match_day_manager.get_users_by_watch_day_table(table_name=table_name)
         match_day_name = match_day_manager.get_match_day_name_by_id(context[0].match_day_id)
         place_info = match_day_manager.get_place_by_id(context[0].place_id)
@@ -101,7 +97,6 @@ class SeasonMatchesManager:
     @staticmethod
     def __check_match_day_has_changes(event: EventDTO, match_day_schema: MatchDaySchema) -> bool:
         try:
-            # TODO: add more checks
             assert datetime.fromtimestamp(event.startTimestamp) == match_day_schema.start_timestamp
             assert event.id == match_day_schema.event_id
             return True
@@ -155,12 +150,6 @@ class SeasonMatchesManager:
                 f"Cannot get next event. "
                 f"response code: {response.status_code}, response text: {response.text}"
             )
-
-    def __update_passed_event(self):
-        pass
-
-    def __update_first_nearest_event(self):
-        pass
 
     @staticmethod
     def __convert_into_match_day_dto(match_days: dict) -> MatchDayDTO:

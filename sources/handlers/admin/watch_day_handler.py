@@ -10,6 +10,7 @@ from callback_factory.callback_factory import AdminCreateWatchDayCallbackFactory
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
+from functions.schema_converter import SchemaConverter
 from handlers.admin.base_admin_handler import admin_keyboard
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -27,7 +28,7 @@ match_day_manager = KznRedsPGManager()
 watch_day_keyboard = WatchDayKeyboard().watch_day_keyboard()
 main_keyboard = AdminKeyboard()
 keyboard_generator = KeyboardGenerator()
-
+schema_converter = SchemaConverter()
 
 class WatchDay(StatesGroup):
     choose_match_day = State()
@@ -49,7 +50,7 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
     )
 
     await callback.message.edit_text(
-        text=f"Выберите матч", reply_markup=reply_keyboard
+        text="Выберите матч", reply_markup=reply_keyboard
     )
     await callback.answer()
 
@@ -63,7 +64,7 @@ async def choose_place(
 
     print(f"choose_place - {match_day_by_id=}")
 
-    match_day_by_id_dict = match_day_by_id[0].model_dump()
+    match_day_by_id_dict = schema_converter.convert_model_to_dict(match_day_by_id[0])
     match_day_by_id_dict['start_timestamp'] = match_day_by_id_dict['start_timestamp'].isoformat()
     match_day_by_id_dict['match_status'] = match_day_by_id_dict['match_status'].value
 
@@ -81,7 +82,7 @@ async def choose_place(
         data_factories, places
     )
     await callback.message.edit_text(
-        text=f"Выберите место просмотра", reply_markup=reply_keyboard
+        text="Выберите место просмотра", reply_markup=reply_keyboard
     )
     await callback.answer()
 
@@ -98,13 +99,14 @@ async def registrate_meeting(
         match_day_manager.add_watch_day(match_day_data, place_id)
         match_day_manager.create_watch_day_table(match_day_data)
         await callback.message.edit_text(
-            text=f"Встреча добавлена", reply_markup=admin_keyboard.main_admin_keyboard()
+            text="Встреча добавлена", reply_markup=admin_keyboard.main_admin_keyboard()
         )
         await callback.answer()
 
         await state.clear()
 
     except Exception as e:
+        logger.exception(e)
         raise e
 
 
