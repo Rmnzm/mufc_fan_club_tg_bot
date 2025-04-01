@@ -5,7 +5,7 @@ from schemes.scheme import (
     NearestMeetingsSchema,
     PlacesSchema,
     UserRegistrationSchema,
-    InvitationContextSchema
+    InvitationContextSchema,
 )
 
 
@@ -24,7 +24,10 @@ class SchemaConverter:
 
     @staticmethod
     def convert_nearest_meetings(nearest_meetings):
-        return [NearestMeetingsSchema(**nearest_meeting) for nearest_meeting in nearest_meetings]
+        return [
+            NearestMeetingsSchema(**nearest_meeting)
+            for nearest_meeting in nearest_meetings
+        ]
 
     @staticmethod
     def convert_places(places):

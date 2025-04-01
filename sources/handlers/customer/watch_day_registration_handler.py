@@ -39,7 +39,9 @@ async def process_scheduled_match_days_filter(
             callback_data.id
         )
 
-        nearest_match_day_message, watch_day_by_id_dict = WatchDayHelper().watch_day_by_id_context(watch_day_by_id)
+        nearest_match_day_message, watch_day_by_id_dict = (
+            WatchDayHelper().watch_day_by_id_context(watch_day_by_id)
+        )
 
         logger.debug(
             f"Step process_scheduled_match_days_filter. watch_day_registration_handler - {watch_day_by_id_dict=}"

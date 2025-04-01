@@ -16,9 +16,10 @@ class WatchDayHelper:
         )
 
         watch_day_by_id_dict = [
-            SchemaConverter().convert_model_to_dict(watch_day) for watch_day in watch_day_by_id
+            SchemaConverter().convert_model_to_dict(watch_day)
+            for watch_day in watch_day_by_id
         ]
         for watch_day in watch_day_by_id_dict:
-            watch_day['meeting_date'] = watch_day['meeting_date'].isoformat()
+            watch_day["meeting_date"] = watch_day["meeting_date"].isoformat()
 
         return nearest_match_day, watch_day_by_id_dict

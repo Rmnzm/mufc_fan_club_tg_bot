@@ -85,7 +85,9 @@ async def choose_place(
         )
         match_day_by_id = match_day_manager.get_match_day_by_event_id(callback_data.id)
 
-        match_day_by_id_dict = schema_converter.convert_model_to_dict(match_day_by_id[0])
+        match_day_by_id_dict = schema_converter.convert_model_to_dict(
+            match_day_by_id[0]
+        )
         match_day_by_id_dict["start_timestamp"] = match_day_by_id_dict[
             "start_timestamp"
         ].isoformat()

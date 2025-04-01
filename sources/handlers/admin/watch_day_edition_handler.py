@@ -62,7 +62,9 @@ async def process_scheduled_match_days_filter(
             callback_data.id
         )
 
-        nearest_match_day_message, watch_day_by_id_dict = WatchDayHelper().watch_day_by_id_context(watch_day_by_id)
+        nearest_match_day_message, watch_day_by_id_dict = (
+            WatchDayHelper().watch_day_by_id_context(watch_day_by_id)
+        )
 
         await state.set_state(WatchDayInfoStateGroup.watch_day_id)
         await state.update_data(watch_day_by_id=watch_day_by_id_dict)

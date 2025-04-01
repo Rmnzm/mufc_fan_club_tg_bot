@@ -11,7 +11,7 @@ from schemes.scheme import (
     UsersSchema,
     InvitationContextSchema,
     PlacesSchema,
-    UserRegistrationSchema
+    UserRegistrationSchema,
 )
 from tools.helpers import CommonHelpers
 
@@ -49,7 +49,11 @@ class KznRedsPGManager:
             logger.debug(
                 f"Step get_match_day_by_event_id. Command result: {command_result}"
             )
-            return self._schema_converter.convert_match_day_info(command_result) if command_result else []
+            return (
+                self._schema_converter.convert_match_day_info(command_result)
+                if command_result
+                else []
+            )
         except Exception as e:
             logger.error(f"Error fetching match day by event ID {event_id}: {e}")
             raise
@@ -443,7 +447,6 @@ class KznRedsPGManager:
             self.kzn_reds_pg_connector.execute_command(
                 command, f"updated {user_id}, {match_day_id}", "failed"
             )
-        #     TODO: HERE next
         except Exception as e:
             logger.error(
                 f"Error canceling watch day for user {user_id} in table {table_name}: {e}"
