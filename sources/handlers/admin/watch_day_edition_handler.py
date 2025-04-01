@@ -13,6 +13,8 @@ from callback_factory.callback_factory import (
 )
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
+from functions.helpers.watch_day_helper import WatchDayHelper
+from functions.schema_converter import SchemaConverter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -33,6 +35,7 @@ admin_watch_day_keyboard = AdminKeyboard()
 places_keyboard = KeyboardGenerator()
 
 match_day_manager = KznRedsPGManager()
+schema_converter = SchemaConverter()
 
 
 class PlaceState(StatesGroup):
@@ -59,21 +62,17 @@ async def process_scheduled_match_days_filter(
             callback_data.id
         )
 
-        nearest_match_day_str = __simple_parse_nearest_matches(watch_day_by_id[0])
-
-        watch_day_by_id_dict = [watch_day.model_dump() for watch_day in watch_day_by_id]
-        for watch_day in watch_day_by_id_dict:
-            watch_day["meeting_date"] = watch_day["meeting_date"].isoformat()
+        nearest_match_day_message, watch_day_by_id_dict = WatchDayHelper().watch_day_by_id_context(watch_day_by_id)
 
         await state.set_state(WatchDayInfoStateGroup.watch_day_id)
         await state.update_data(watch_day_by_id=watch_day_by_id_dict)
 
         await callback.message.edit_text(
-            text=nearest_match_day_str,
+            text=nearest_match_day_message,
             reply_markup=admin_watch_day_keyboard.edit_meeting_keyboard(),
         )
         logger.info(
-            f"Successfully received scheduled match days. {nearest_match_day_str}"
+            f"Successfully received scheduled match days. {nearest_match_day_message}"
         )
     except Exception as error:
         logger.error(f"Failed to fetch nearest match day. Err: {error}")
@@ -308,18 +307,6 @@ async def process_menu_button(callback: CallbackQuery):
     await callback.answer()
 
 
-def __simple_parse_nearest_matches(watch_day_by_id: NearestMeetingsSchema):
-    nearest_match_day = (
-        f"{watch_day_by_id.meeting_date.strftime('%a, %d %b %H:%M')}\n"
-        f"{watch_day_by_id.tournament_name}\n"
-        f"{watch_day_by_id.localed_match_day_name}\n"
-        f"{watch_day_by_id.place_name}\n"
-        f"{watch_day_by_id.address}\n\n"
-        f"(встреча назначена за пол часа до события)"
-    )
-    return nearest_match_day
-
-
 def _create_poll_question(watch_day_info):
     tournament_name = watch_day_info[0].get("tournament_name")
     located_match_day_name = watch_day_info[0].get("localed_match_day_name")
@@ -332,7 +319,6 @@ def _create_poll_question(watch_day_info):
         f"{located_match_day_name}\n"
         f"\n"
         f"{meeting_date}\n"
-        # f"{meeting_date.strftime('%a, %d %b %H:%M')}\n"
         f"{place_name} - {address}"
     )
 

@@ -45,7 +45,7 @@ class MeetingInvitesManager:
         place_name = context.get("place_name")
         address = context.get("address")
         meeting_date = context.get("meeting_date")
-
+        # TODO: переписать под макроподстановки и базовое сообщение из БД
         return (
             f"Матч\n"
             f"{match_name} \n"
