@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from lexicon.WATCH_DAY_LEXICON_RU import WATCH_DAY_LEXICON_RU
+from lexicon.watch_day_lexicon_ru import WATCH_DAY_LEXICON_RU
 
 
 class WatchDayKeyboard:
@@ -11,7 +11,8 @@ class WatchDayKeyboard:
             text=WATCH_DAY_LEXICON_RU["add_watch_day"], callback_data="add_watch_day"
         )
         choose_another_match_day = InlineKeyboardButton(
-            text=WATCH_DAY_LEXICON_RU["choose_another_match_day"], callback_data="choose_another_match_day"
+            text=WATCH_DAY_LEXICON_RU["choose_another_match_day"],
+            callback_data="choose_another_match_day",
         )
         cancel_adding = InlineKeyboardButton(
             text=WATCH_DAY_LEXICON_RU["cancel_adding"], callback_data="cancel_adding"
@@ -32,9 +33,7 @@ class WatchDayKeyboard:
 
     @staticmethod
     def approve_meeting_keyboard():
-        go_button = InlineKeyboardButton(
-            text="Иду", callback_data="go_button"
-        )
+        go_button = InlineKeyboardButton(text="Иду", callback_data="go_button")
         not_go_button = InlineKeyboardButton(
             text="Не иду", callback_data="not_go_button"
         )

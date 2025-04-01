@@ -18,22 +18,17 @@ class AdminKeyboard:
         add_watching_place = InlineKeyboardButton(
             text="Добавить место просмотра", callback_data="add_watching_place"
         )
-        # back_to_main_menu = InlineKeyboardButton(
-        #     text="Назад", callback_data="back_to_main_menu"
-        # )
 
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [show_users],
                 [show_nearest_watching_days],
                 [show_places],
-                [add_watching_place]
-                # [back_to_main_menu],
+                [add_watching_place],
             ],
             resize_keyboard=True,
         )
         return keyboard
-
 
     @staticmethod
     def edit_meeting_keyboard():

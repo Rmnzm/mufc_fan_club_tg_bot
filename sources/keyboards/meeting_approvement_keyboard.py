@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+
 class MeetingApprovementKeyboard:
     @staticmethod
     def main_approvement_keyboard():
@@ -11,9 +12,6 @@ class MeetingApprovementKeyboard:
         )
 
         keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [approve], [cancel]
-            ],
-            resize_keyboard=True
+            inline_keyboard=[[approve], [cancel]], resize_keyboard=True
         )
         return keyboard

@@ -5,6 +5,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     tg_token: str
+    tg_bot_id: str
+    tg_kzn_reds_chat_id: str
     sofascore_rapidapi_url: str
     x_rapidapi_host: str
     x_rapidapi_key: str
@@ -19,9 +21,8 @@ class Settings(BaseSettings):
     send_job_timeout_in_sec: str = "300"
     update_match_job_timeout_in_sec: str = "3600"
 
-
     class Config:
-        env_file = '.env'
+        env_file = ".env"
 
 
 @lru_cache()
