@@ -41,6 +41,7 @@ class MeetingInvitesManager:
         address = context.get("address")
         meeting_date = context.get("meeting_date").strftime("%a, %d %b %H:%M")
 
+        # TODO: переписать под макроподстановки и базовое сообщение из БД
         return (f"Матч\n"
                 f"{match_name} \n"
                 f"\n"

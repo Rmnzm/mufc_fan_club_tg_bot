@@ -5,6 +5,7 @@ from schemes.scheme import NearestMeetingsSchema
 class WatchDayHelper:
     @staticmethod
     def watch_day_by_id_context(watch_day_by_id: list[NearestMeetingsSchema]):
+        # TODO: переписать под макроподстановки и базовое сообщение
         nearest_match_day = (
             f"{watch_day_by_id[0].meeting_date.strftime('%a, %d %b %H:%M')}\n"
             f"{watch_day_by_id[0].tournament_name}\n"
