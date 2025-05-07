@@ -12,6 +12,7 @@ from callback_factory.callback_factory import (
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
+from functions.schema_converter import SchemaConverter
 from handlers.admin.base_admin_handler import admin_keyboard
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -29,6 +30,7 @@ settings = get_settings()
 router = Router()
 
 match_day_manager = KznRedsPGManager()
+schema_converter = SchemaConverter()
 
 watch_day_keyboard = WatchDayKeyboard().watch_day_keyboard()
 main_keyboard = AdminKeyboard()
@@ -83,7 +85,9 @@ async def choose_place(
         )
         match_day_by_id = match_day_manager.get_match_day_by_event_id(callback_data.id)
 
-        match_day_by_id_dict = match_day_by_id[0].model_dump()
+        match_day_by_id_dict = schema_converter.convert_model_to_dict(
+            match_day_by_id[0]
+        )
         match_day_by_id_dict["start_timestamp"] = match_day_by_id_dict[
             "start_timestamp"
         ].isoformat()

@@ -16,8 +16,6 @@ match_day_manager = KznRedsPGManager()
 
 
 class SeasonMatchesManager:
-    def __init__(self):
-        pass
 
     def update_next_matches(self, next_matches: MatchDayDTO):
         logger.info(f"Received {len(next_matches.events)} matches to create or update")
@@ -188,12 +186,6 @@ class SeasonMatchesManager:
                 f"Cannot get next event. "
                 f"response code: {response.status_code}, response text: {response.text}"
             )
-
-    def __update_passed_event(self):
-        pass
-
-    def __update_first_nearest_event(self):
-        pass
 
     @staticmethod
     def __convert_into_match_day_dto(match_days: dict) -> MatchDayDTO:

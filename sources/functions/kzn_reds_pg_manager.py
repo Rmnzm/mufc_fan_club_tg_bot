@@ -1,17 +1,17 @@
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
 from context.enums import UserRoleEnum
+from functions.schema_converter import SchemaConverter
 from schemes.scheme import (
     MatchDaySchema,
-    WatchDaySchema,
     NearestMeetingsSchema,
     UsersSchema,
+    InvitationContextSchema,
     PlacesSchema,
     UserRegistrationSchema,
-    InvitationContextSchema,
 )
 from tools.helpers import CommonHelpers
 
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class KznRedsPGManager:
+    _schema_converter = SchemaConverter()
 
     def __init__(self):
         self.kzn_reds_pg_connector = KznRedsPgConnector()
@@ -32,7 +33,7 @@ class KznRedsPGManager:
             ORDER BY start_timestamp ASC LIMIT 5;
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-            match_days = self.__convert_match_day_info(command_result)
+            match_days = self._schema_converter.convert_match_day_info(command_result)
             return match_days
         except Exception as e:
             logger.error(f"Error fetching match days")
@@ -49,7 +50,9 @@ class KznRedsPGManager:
                 f"Step get_match_day_by_event_id. Command result: {command_result}"
             )
             return (
-                self.__convert_match_day_info(command_result) if command_result else []
+                self._schema_converter.convert_match_day_info(command_result)
+                if command_result
+                else []
             )
         except Exception as e:
             logger.error(f"Error fetching match day by event ID {event_id}: {e}")
@@ -81,7 +84,7 @@ class KznRedsPGManager:
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
             return (
-                self.__convert_invitations_context(command_result)
+                self._schema_converter.convert_invitations_context(command_result)
                 if command_result
                 else []
             )
@@ -194,17 +197,17 @@ class KznRedsPGManager:
         ORDER BY start_timestamp ASC LIMIT 5;
         """
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        return self.__convert_match_day_info(command_result)
+        return self._schema_converter.convert_match_day_info(command_result)
 
     def get_places(self) -> List[PlacesSchema]:
         command = "SELECT * FROM public.places"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        return self.__convert_places(command_result)
+        return self._schema_converter.convert_places(command_result)
 
     def get_place_by_id(self, place_id: int) -> List[PlacesSchema]:
         command = f"SELECT * FROM public.places WHERE id = {place_id}"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        return self.__convert_places(command_result)
+        return self._schema_converter.convert_places(command_result)
 
     def add_match_day(
         self,
@@ -333,7 +336,7 @@ class KznRedsPGManager:
         LIMIT 5;
         """
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        return self.__convert_nearest_meetings(command_result)
+        return self._schema_converter.convert_nearest_meetings(command_result)
 
     def get_watch_day_by_match_day_id(
         self, match_day_id: int
@@ -346,7 +349,7 @@ class KznRedsPGManager:
         WHERE public.match_day.id = {match_day_id}
         """
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        return self.__convert_nearest_meetings(command_result)
+        return self._schema_converter.convert_nearest_meetings(command_result)
 
     def register_user_to_watch(
         self, user_id: int, watch_day_id: int, match_day_id: int, place_id: int
@@ -412,7 +415,7 @@ class KznRedsPGManager:
     def get_users(self) -> List[UsersSchema]:
         command = "SELECT * FROM users"
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-        return self.__convert_users_info(command_result)
+        return self._schema_converter.convert_users_info(command_result)
 
     def approve_watch_day_by_user_invitation_info(
         self, table_name: str, user_id: int, match_day_id: int
@@ -444,7 +447,6 @@ class KznRedsPGManager:
             self.kzn_reds_pg_connector.execute_command(
                 command, f"updated {user_id}, {match_day_id}", "failed"
             )
-        #     TODO: HERE next
         except Exception as e:
             logger.error(
                 f"Error canceling watch day for user {user_id} in table {table_name}: {e}"
@@ -520,7 +522,7 @@ class KznRedsPGManager:
             JOIN public.users as u ON public.{watch_day_table}.user_id = u.user_tg_id
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-            return self.__convert_users_info(command_result)
+            return self._schema_converter.convert_users_info(command_result)
         except Exception as e:
             logger.error(
                 f"Error fetching visitors for watch day table {watch_day_table}: {e}"
@@ -593,44 +595,9 @@ class KznRedsPGManager:
             WHERE is_canceled = false AND match_day_id = {match_day_id}
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-            return self.__convert_users_registration(command_result)
+            return self._schema_converter.convert_users_registration(command_result)
         except Exception as e:
             logger.error(
                 f"Error fetching users to match day {match_day_id} in table {table_name}: {e}"
             )
             raise
-
-    @staticmethod
-    def __convert_users_info(users: List[dict]) -> List[UsersSchema]:
-        return [UsersSchema(**user) for user in users]
-
-    @staticmethod
-    def __convert_match_day_info(match_days: List[dict]) -> List[MatchDaySchema]:
-        return [MatchDaySchema(**match_day) for match_day in match_days]
-
-    @staticmethod
-    def __convert_watch_day_info(watch_days: List[dict]) -> List[WatchDaySchema]:
-        return [WatchDaySchema(**watch_day) for watch_day in watch_days]
-
-    @staticmethod
-    def __convert_nearest_meetings(
-        nearest_meetings: List[dict],
-    ) -> List[NearestMeetingsSchema]:
-        return [
-            NearestMeetingsSchema(**nearest_meeting)
-            for nearest_meeting in nearest_meetings
-        ]
-
-    @staticmethod
-    def __convert_places(places: List[dict]) -> List[PlacesSchema]:
-        return [PlacesSchema(**place) for place in places]
-
-    @staticmethod
-    def __convert_users_registration(users: List[dict]) -> List[UserRegistrationSchema]:
-        return [UserRegistrationSchema(**user) for user in users]
-
-    @staticmethod
-    def __convert_invitations_context(
-        invitations: List[dict],
-    ) -> List[InvitationContextSchema]:
-        return [InvitationContextSchema(**context) for context in invitations]
