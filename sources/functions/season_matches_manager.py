@@ -16,10 +16,12 @@ match_day_manager = KznRedsPGManager()
 
 
 class SeasonMatchesManager:
-    def __init__(self):
-        pass
 
     def update_next_matches(self, next_matches: MatchDayDTO):
+        if not next_matches or not next_matches.events:
+            logger.info("No matches to update")
+            return
+
         logger.info(f"Received {len(next_matches.events)} matches to create or update")
         for num, event in enumerate(next_matches.events):
             match_day = match_day_manager.get_match_day_by_event_id(event.id)
@@ -61,27 +63,10 @@ class SeasonMatchesManager:
                             - timedelta(minutes=30),
                         )
                     )
-                    old_date = match_day[0].start_timestamp.strftime("%d_%m_%Y")
-                    new_date = (
-                        datetime.fromtimestamp(event.startTimestamp)
-                        .date()
-                        .strftime("%d_%m_%Y")
-                    )
-                    rename_watch_day_table_command = (
-                        match_day_manager.rename_watch_day_table_name(
-                            old_name=f"match_day_{old_date}",
-                            new_name=f"match_day_{new_date}",
-                        )
-                        if match_day_manager.check_is_table_exists(
-                            f"match_day_{old_date}"
-                        )
-                        else ""
-                    )
 
                     fully_command = (
                         update_match_day_table_command
                         + update_meeting_date_command
-                        + rename_watch_day_table_command
                     )
 
                     match_day_manager.update_match_day_info(command=fully_command)
@@ -95,11 +80,10 @@ class SeasonMatchesManager:
     ):
         context = match_day_manager.get_nearest_watching_day()
         logger.info(f"Send invitations current context = {context}")
-        table_name = CommonHelpers.table_name_by_date(context[0].meeting_date)
 
         meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
 
-        users = match_day_manager.get_users_by_watch_day_table(table_name=table_name)
+        users = match_day_manager.get_users_to_send_invitations(context[0].match_day_id)
         match_day_name = match_day_manager.get_match_day_name_by_id(
             context[0].match_day_id
         )
@@ -107,7 +91,6 @@ class SeasonMatchesManager:
 
         match_day_info = {
             "match_day_id": context[0].match_day_id,
-            "table_name": table_name,
             "match_day_name": match_day_name,
             "place_name": place_info[0].place_name,
             "address": place_info[0].address,
@@ -118,9 +101,9 @@ class SeasonMatchesManager:
 
     @staticmethod
     def update_message_sent_status(context, user_id: int):
-        table_name = context.get("table_name")
+        match_day_id = context.get("match_day_id")
         match_day_manager.update_message_sent_status(
-            table_name=table_name, user_id=user_id
+            user_id=user_id, match_day_id=match_day_id
         )
 
     @staticmethod
@@ -139,6 +122,10 @@ class SeasonMatchesManager:
             return False
 
     def update_last_passed_match(self, nearest_events: NearestEventsDTO):
+        if not nearest_events or not nearest_events.previousEvent:
+            logger.info("No previous event to update")
+            return
+
         start_timestamp = datetime.fromtimestamp(
             nearest_events.previousEvent.startTimestamp
         )
@@ -188,12 +175,6 @@ class SeasonMatchesManager:
                 f"Cannot get next event. "
                 f"response code: {response.status_code}, response text: {response.text}"
             )
-
-    def __update_passed_event(self):
-        pass
-
-    def __update_first_nearest_event(self):
-        pass
 
     @staticmethod
     def __convert_into_match_day_dto(match_days: dict) -> MatchDayDTO:
