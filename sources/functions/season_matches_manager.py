@@ -74,10 +74,7 @@ class SeasonMatchesManager:
                     logger.info("Events has no changes")
 
     @staticmethod
-    def create_context_to_send_invitations() -> (
-        list[dict],
-        list[InvitationContextSchema],
-    ):
+    def create_context_to_send_invitations():
         context = match_day_manager.get_nearest_watching_day()
         logger.info(f"Send invitations current context = {context}")
 

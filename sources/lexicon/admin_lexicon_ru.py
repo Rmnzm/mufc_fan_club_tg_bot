@@ -47,8 +47,10 @@ ADMIN_WATCH_DAY_HANDLER_LEXICON_RU = {
 }
 
 
+# TODO: Разобраться с лексикой ощибок
 ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU = {
-    "add_watch_day_error": "",
+    "add_watch_day_error": "К сожаленю ошибка. Повторите позднее или обратитесь к организаторам",
     "choose_place_error": "Выберите место просмотра",
     "registrate_meeting_error": "Встреча добавлена",
+    "watch_day_register_error": "К сожаленю ошибка. Повторите позднее или обратитесь к организаторам",
 }

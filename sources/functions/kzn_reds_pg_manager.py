@@ -123,22 +123,6 @@ class KznRedsPGManager:
             logger.error(f"Error updating message status for user {user_id}: {e}")
             raise
 
-    def get_users_by_watch_day_table(self, table_name: str) -> List[dict]:
-        """Get users who need invitations for a specific match."""
-        try:
-            command = f"""
-            SELECT user_id, is_approved, is_canceled
-            FROM public.user_registrations
-            WHERE is_canceled = false 
-            AND match_day_id = {match_day_id}
-            AND is_message_sent = false
-            """
-            command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
-            return command_result if command_result else []
-        except Exception as e:
-            logger.error(f"Error fetching users for match {match_day_id}: {e}")
-            raise
-
     def update_passed_match_day(
         self, event_id: int, start_timestamp: datetime, match_status: str
     ):
