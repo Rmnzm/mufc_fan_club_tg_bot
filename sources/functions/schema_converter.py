@@ -6,6 +6,7 @@ from schemes.scheme import (
     PlacesSchema,
     UserRegistrationSchema,
     InvitationContextSchema,
+    UserRegistrationTableSchema,
 )
 
 
@@ -40,6 +41,10 @@ class SchemaConverter:
     @staticmethod
     def convert_invitations_context(invitations):
         return [InvitationContextSchema(**context) for context in invitations]
+
+    @staticmethod
+    def convert_registration_table(registrations):
+        return [UserRegistrationTableSchema(**registration) for registration in registrations]
 
     @staticmethod
     def convert_model_to_dict(model):

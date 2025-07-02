@@ -36,9 +36,12 @@ async def create_or_update_matches_task():
         logger.info("Create/update next matches task is running ...")
         try:
             update_test = season_manager.get_next_matches()
-            season_manager.update_next_matches(update_test)
+            if update_test and update_test.events:
+                season_manager.update_next_matches(update_test)
+            else:
+                logger.info("No matches to update")
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Error in create/update matches task: {e}")
         await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
@@ -47,9 +50,12 @@ async def update_last_passed_match_task():
         logger.info("Update already passed matches task is running ...")
         try:
             update_test = season_manager.get_nearest_events()
-            season_manager.update_last_passed_match(update_test)
+            if update_test and update_test.previousEvent:
+                season_manager.update_last_passed_match(update_test)
+            else:
+                logger.info("No previous events to update")
         except Exception as e:
-            logger.error(e)
+            logger.error(f"Error in update passed matches task: {e}")
         await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
@@ -59,8 +65,7 @@ async def send_invites_task(redis_client: Redis, bot_client: Bot):
         try:
             await MatchInvitorManager(redis=redis_client, bot=bot_client).send()
         except Exception as e:
-            logger.error(e)
-            raise
+            logger.error(f"Error in send invites task: {e}")
         await asyncio.sleep(int(settings.send_job_timeout_in_sec))
 
 
