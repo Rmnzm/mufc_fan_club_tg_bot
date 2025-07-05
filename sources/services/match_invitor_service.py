@@ -29,21 +29,21 @@ class MatchInvitorManager:
 
         if users and is_time_so_send:
             for user in users:
-                user_id = user.get("user_id")
-                if user_id:
+                if user:
+                    logging.info(f"Sending invitation to user {user.user_id}")
                     state = FSMContext(
                         storage=self.redis,
                         key=StorageKey(
-                            user_id=user_id,
+                            user_id=user.user_id,
                             bot_id=int(settings.tg_bot_id),
-                            chat_id=user_id,
+                            chat_id=user.user_id,
                         ),
                     )
                     await MeetingInvitesManager(self.bot).send_message(
-                        state=state, context=match_day_context, user_id=user_id
+                        state=state, context=match_day_context, user_id=user.user_id
                     )
                     season_manager.update_message_sent_status(
-                        match_day_context, user_id
+                        match_day_context, user.user_id
                     )
 
     @staticmethod
