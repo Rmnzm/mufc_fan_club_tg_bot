@@ -194,11 +194,15 @@ class KznRedsPGManager:
             raise
 
     def get_nearest_match_day(self) -> List[MatchDaySchema]:
-        current_date = datetime.now()
         command = f"""
-        SELECT * FROM public.match_day
-        WHERE match_status = 'notstarted' AND start_timestamp > '{current_date}'
-        ORDER BY start_timestamp ASC LIMIT 5;
+            SELECT md.* 
+            FROM public.match_day md
+            LEFT JOIN public.watch_day wd ON md.id = wd.match_day_id
+            WHERE md.match_status = 'notstarted' 
+            AND md.start_timestamp > now()
+            AND wd.match_day_id IS NULL
+            ORDER BY md.start_timestamp ASC 
+            LIMIT 5;
         """
         command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
         return self._schema_converter.convert_match_day_info(command_result)

@@ -44,6 +44,7 @@ ADMIN_WATCH_DAY_HANDLER_LEXICON_RU = {
     "add_watch_day": "Выберите матч",
     "choose_place": "Выберите место просмотра",
     "registrate_meeting": "Встреча добавлена",
+    "no_nearest_matches": "Нет ближайших матчей",
 }
 
 

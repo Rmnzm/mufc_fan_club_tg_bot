@@ -49,23 +49,29 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
         await state.set_state(WatchDay.choose_match_day)
         nearest_matches = match_day_manager.get_nearest_match_day()
 
-        data_factories = [
-            AdminCreateWatchDayCallbackFactory(id=context.event_id)
-            for context in nearest_matches
-        ]
-        reply_keyboard = keyboard_generator.admin_create_watch_day_keyboard(
-            data_factories, nearest_matches, add_watch_day=False
-        )
-
-        await callback.message.edit_text(
-            text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["add_watch_day"],
-            reply_markup=reply_keyboard,
-        )
+        if nearest_matches:
+            logger.info(f"{nearest_matches=}")
+            data_factories = [
+                AdminCreateWatchDayCallbackFactory(id=context.event_id)
+                for context in nearest_matches
+            ]
+            reply_keyboard = keyboard_generator.admin_create_watch_day_keyboard(
+                data_factories, nearest_matches, add_watch_day=False
+            )
+            await callback.message.edit_text(
+                text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["add_watch_day"],
+                reply_markup=reply_keyboard,
+            )
+        else:
+            await callback.message.edit_text(
+                text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["no_nearest_matches"],
+                reply_markup=main_keyboard.main_admin_keyboard(),
+            )
         logger.info(
             f"Successfully reacted on watch_day_register action by user {callback.from_user.id}"
         )
     except Exception as error:
-        logger.error(f"Failed to react on action watch_day_register. Err: {error}")
+        logger.error(f"Failed to react on action watch_day_register. Err: {error.with_traceback}")
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU["watch_day_register_error"],
             reply_markup=main_keyboard.main_admin_keyboard(),
