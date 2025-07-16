@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
-from context.enums import UserRoleEnum
+from sources.enums import MatchDayStatusEnum, UserRoleEnum
 from functions.schema_converter import SchemaConverter
 from schemes.scheme import (
     MatchDaySchema,
@@ -220,7 +220,7 @@ class KznRedsPGManager:
     def add_match_day(
         self,
         start_timestamp: datetime,
-        match_status: str,
+        match_status: MatchDayStatusEnum,
         opponent_name: str,
         opponent_name_slug: str,
         tournament_name: str,
@@ -233,10 +233,10 @@ class KznRedsPGManager:
             INSERT INTO public.match_day (
                 start_timestamp, match_status, opponent_name, opponent_name_slug,
                 tournament_name, tournament_name_slug, localed_match_day_name, event_id
-            ) VALUES ('{start_timestamp}', '{match_status}', '{opponent_name}', '{opponent_name_slug}', 
+            ) VALUES ('{start_timestamp}', '{match_status.value}', '{opponent_name}', '{opponent_name_slug}', 
             '{tournament_name}', '{tournament_name_slug}', '{localed_match_day_name}', {event_id})
             ON CONFLICT (event_id) DO UPDATE SET
-                start_timestamp = '{start_timestamp}', match_status = '{match_status}';
+                start_timestamp = '{start_timestamp}', match_status = '{match_status.value}';
             """
             logger.debug(f"Step add_match_day. Adding match day {command=}")
             self.kzn_reds_pg_connector.execute_command(command, "added", "failed")

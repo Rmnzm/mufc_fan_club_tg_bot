@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -8,49 +9,30 @@ class CategoryDTO(BaseModel):
     slug: str
 
 
-class TournamentDTO(BaseModel):
+class CompetitionDTO(BaseModel):
+    id: int
+    short: str
+    title: str
+
+
+class RivalDTO(BaseModel):
     name: str
-    slug: str
-    category: CategoryDTO
-
-
-class StatusDTO(BaseModel):
-    code: int
-    description: str
-    type: str
-
-
-class NameTranslationDTO(BaseModel):
-    ar: str
-    ru: str
-
-
-class FieldTranslationsDTO(BaseModel):
-    nameTranslation: NameTranslationDTO
-
-
-class TeamDTO(BaseModel):
-    name: str
-    slug: str
-    type: int
-    fieldTranslations: FieldTranslationsDTO
+    name_eng: str
+    short_name: str
+    term: str
+    stadium: Optional[str] = None
+    city: Optional[str] = None
 
 
 class EventDTO(BaseModel):
-    tournament: TournamentDTO
-    status: StatusDTO
-    homeTeam: TeamDTO
-    awayTeam: TeamDTO
-    homeScore: dict
-    awayScore: dict
-    id: int
-    startTimestamp: int
+    competition: CompetitionDTO
+    rival: RivalDTO
+    place: str
+    score: Optional[str] = None
+    stats: list
+    eventId: int
+    date: datetime
 
 
 class MatchDayDTO(BaseModel):
     events: List[EventDTO]
-
-
-class NearestEventsDTO(BaseModel):
-    previousEvent: EventDTO
-    nextEvent: EventDTO
