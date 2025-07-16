@@ -124,17 +124,17 @@ class KznRedsPGManager:
             raise
 
     def update_passed_match_day(
-        self, event_id: str, start_timestamp: datetime, match_status: str
+        self, event_id: str, start_timestamp: datetime, match_status: MatchDayStatusEnum
     ):
         try:
             command = f"""
             UPDATE public.match_day
-            SET start_timestamp = '{start_timestamp}', match_status = '{match_status}'
+            SET start_timestamp = '{start_timestamp}', match_status = '{match_status.value}'
             WHERE event_id = '{event_id}';
             """
             self.kzn_reds_pg_connector.execute_command(
                 command,
-                f"updated {start_timestamp}, {match_status}, {event_id}",
+                f"updated {start_timestamp}, {match_status.value}, {event_id}",
                 "failed",
             )
         except Exception as e:
@@ -147,7 +147,7 @@ class KznRedsPGManager:
     def get_update_match_day_table_command(
         event_id: str,
         start_timestamp: datetime,
-        match_status: str,
+        match_status: MatchDayStatusEnum,
         opponent_name: str,
         opponent_name_slug: str,
         tournament_name: str,
@@ -157,7 +157,7 @@ class KznRedsPGManager:
         try:
             command = f"""
             UPDATE public.match_day
-            SET start_timestamp = '{start_timestamp}', match_status = '{match_status}', opponent_name = '{opponent_name}',
+            SET start_timestamp = '{start_timestamp}', match_status = '{match_status.value}', opponent_name = '{opponent_name}',
                 opponent_name_slug = '{opponent_name_slug}', tournament_name = '{tournament_name}',
                 tournament_name_slug = '{tournament_name_slug}', localed_match_day_name = '{localed_match_day_name}'
             WHERE event_id = '{event_id}';

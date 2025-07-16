@@ -25,9 +25,7 @@ class SeasonMatchesManager:
             return
 
         logger.info(f"Received {len(events)} matches to create or update")
-        for num, event in enumerate(events, start=1):
-            if num == 2:
-                break
+        for event in events:
             match_day = match_day_manager.get_match_day_by_event_id(event.eventId)
             match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED
             opponent_name, opponent_name_slug = event.rival.name, event.rival.name_eng
@@ -78,6 +76,8 @@ class SeasonMatchesManager:
     @staticmethod
     def create_context_to_send_invitations():
         context = match_day_manager.get_nearest_watching_day()
+        if not context:
+            return None, None
         logger.info(f"Send invitations current context = {context}")
 
         meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
@@ -111,7 +111,9 @@ class SeasonMatchesManager:
     ) -> bool:
         try:
             # TODO: add more checks and remove asserts
-            assert datetime(event.date).timestamp() == match_day_schema.start_timestamp
+            logger.info("Check match day date has changes ...")
+            assert event.date.timestamp() == match_day_schema.start_timestamp
+            logger.info("Check match day event id has changes ...")
             assert event.id == match_day_schema.event_id
             return True
         except AssertionError:

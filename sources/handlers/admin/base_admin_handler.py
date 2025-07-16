@@ -16,7 +16,7 @@ from keyboards.keyboard_generator import KeyboardGenerator
 from keyboards.main_keyboard import MainKeyboard
 from schemes.scheme import UsersSchema
 from states.create_place_state import CreatePlaceStateGroup
-from lexicon.admin_lexicon_ru import BASE_ADMIN_LEXICON_RU, ERROR_ADMIN_LEXICON_RU
+from lexicon.admin_lexicon_ru import ADMIN_WATCH_DAY_HANDLER_LEXICON_RU, BASE_ADMIN_LEXICON_RU, ERROR_ADMIN_LEXICON_RU
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +71,16 @@ async def process_nearest_meetings(callback: CallbackQuery):
         reply_keyboard = keyboard_generator.admin_watch_day_keyboard(
             data_factories, nearest_match_day_context, add_watch_day=True
         )
-        await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["show_nearest_watching_days"],
-            reply_markup=reply_keyboard,
-        )
+        if nearest_match_day_context:
+            await callback.message.edit_text(
+                text=BASE_ADMIN_LEXICON_RU["show_nearest_watching_days"],
+                reply_markup=reply_keyboard,
+            )
+        else:
+            await callback.message.edit_text(
+                text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["no_nearest_matches"],
+                reply_markup=admin_keyboard.main_admin_keyboard(),
+            )
     except Exception as e:
         logger.error(
             f"Error due reaction on {F.data=} with context {callback.data}. Err: {e}"
