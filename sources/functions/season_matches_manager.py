@@ -1,13 +1,14 @@
 import logging
 from datetime import timedelta, datetime
+from typing import List
 
 import requests
 
 from functions.kzn_reds_pg_manager import KznRedsPGManager
-from schemes.matchday_dto import MatchDayDTO, NearestEventsDTO, EventDTO
+from schemes.matchday_dto import EventDTO
 from config.config import get_settings
 from schemes.scheme import MatchDaySchema, InvitationContextSchema
-from sources.enums import EventPlaceEnum, MatchDayStatusEnum
+from enums import EventPlaceEnum, MatchDayStatusEnum
 from tools.helpers import CommonHelpers
 
 settings = get_settings()
@@ -18,13 +19,15 @@ match_day_manager = KznRedsPGManager()
 
 class SeasonMatchesManager:
 
-    def update_next_matches(self, next_matches: MatchDayDTO):
-        if not next_matches or not next_matches.events:
+    def update_next_matches(self, events: List[EventDTO]):
+        if not events:
             logger.info("No matches to update")
             return
 
-        logger.info(f"Received {len(next_matches.events)} matches to create or update")
-        for num, event in enumerate(next_matches.events):
+        logger.info(f"Received {len(events)} matches to create or update")
+        for num, event in enumerate(events, start=1):
+            if num == 2:
+                break
             match_day = match_day_manager.get_match_day_by_event_id(event.eventId)
             match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED
             opponent_name, opponent_name_slug = event.rival.name, event.rival.name_eng
@@ -40,13 +43,13 @@ class SeasonMatchesManager:
                     tournament_name=tournament_name,
                     tournament_name_slug=tournament_name_slug,
                     localed_match_day_name=localed_match_day_name,
-                    event_id=event.id,
+                    event_id=event.eventId,
                 )
             else:
                 if not self.__check_match_day_has_changes(event, match_day[0]):
                     update_match_day_table_command = (
                         match_day_manager.get_update_match_day_table_command(
-                            event_id=event.id,
+                            event_id=event.eventId,
                             start_timestamp=event.date,
                             match_status=match_status,
                             opponent_name=opponent_name,
@@ -162,9 +165,14 @@ class SeasonMatchesManager:
     #         )
 
     @staticmethod
-    def __convert_into_match_day_dto(match_days: dict) -> MatchDayDTO:
+    def __convert_into_match_day_dto(match_days: list) -> List[EventDTO]:
         try:
-            return MatchDayDTO(**match_days)
+            events = []
+            for match_day in match_days:
+                events.append(
+                    EventDTO(**match_day)
+                )
+            return events
         except Exception as e:
             logger.error(e)
 

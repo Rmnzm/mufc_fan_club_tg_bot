@@ -10,7 +10,7 @@ class CategoryDTO(BaseModel):
 
 
 class CompetitionDTO(BaseModel):
-    id: int
+    id: str
     short: str
     title: str
 
@@ -30,9 +30,5 @@ class EventDTO(BaseModel):
     place: str
     score: Optional[str] = None
     stats: list
-    eventId: int
+    eventId: str
     date: datetime
-
-
-class MatchDayDTO(BaseModel):
-    events: List[EventDTO]

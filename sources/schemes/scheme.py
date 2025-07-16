@@ -3,8 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from sources.enums import MatchDayStatusEnum
-from sources.enums import UserRoleEnum
+from enums import MatchDayStatusEnum, UserRoleEnum
 
 
 class MatchDaySchema(BaseModel):

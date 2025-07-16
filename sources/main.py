@@ -36,7 +36,7 @@ async def create_or_update_matches_task():
         logger.info("Create/update next matches task is running ...")
         try:
             update_test = season_manager.get_next_matches()
-            if update_test and update_test.events:
+            if update_test:
                 season_manager.update_next_matches(update_test)
             else:
                 logger.info("No matches to update")
@@ -94,7 +94,7 @@ async def main():
     dispatcher.include_router(meeting_approvement_handler.router)
 
     create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
-    update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
+    # update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
     send_inviters_job = asyncio.create_task(
         send_invites_task(redis_client=redis, bot_client=bot)
     )
@@ -104,7 +104,7 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dispatcher.start_polling(bot)
 
-    await update_last_passed_match_job
+    # await update_last_passed_match_job
     await send_inviters_job
     await create_or_update_matches_job
 
