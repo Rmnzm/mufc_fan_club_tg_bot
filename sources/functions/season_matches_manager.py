@@ -24,7 +24,6 @@ class SeasonMatchesManager:
             logger.info("No matches to update")
             return
 
-        logger.info(f"Received {len(events)} matches to create or update")
         for event in events:
             match_day = match_day_manager.get_match_day_by_event_id(event.eventId)
             match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED

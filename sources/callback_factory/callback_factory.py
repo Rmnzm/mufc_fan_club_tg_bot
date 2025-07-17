@@ -10,7 +10,7 @@ class AdminMatchDayCallbackFactory(CallbackData, prefix="admin_watch_days"):
 
 
 class AdminCreateWatchDayCallbackFactory(CallbackData, prefix="admin_watch_days_creator"):
-    id: int
+    id: str
 
 
 class PlacesFactory(CallbackData, prefix="places"):

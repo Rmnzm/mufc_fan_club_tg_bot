@@ -24,20 +24,21 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 redis = Redis(host="localhost")
-
-logger.info(f"Redis here - {redis}")
-
 redis_storage = RedisStorage(redis=redis)
+
 season_manager = SeasonMatchesManager()
 
 
 async def create_or_update_matches_task():
+    logger.info("Create/update next matches task is starting ...")
+    await asyncio.sleep(15)
     while True:
         logger.info("Create/update next matches task is running ...")
         try:
-            update_test = season_manager.get_next_matches()
-            if update_test:
-                season_manager.update_next_matches(update_test)
+            matches = season_manager.get_next_matches()
+            if matches:
+                season_manager.update_next_matches(matches)
+                logger.info("Matches updated")
             else:
                 logger.info("No matches to update")
         except Exception as e:
@@ -79,20 +80,18 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
-    # update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
+    # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
     send_inviters_job = asyncio.create_task(
         send_invites_task(redis_client=redis, bot_client=bot)
     )
 
-    logger.info("Bot started.")
-
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dispatcher.start_polling(bot)
-
-    # await update_last_passed_match_job
-    await send_inviters_job
-    await create_or_update_matches_job
+    try:
+        logger.info("Bot started.")
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dispatcher.start_polling(bot)
+    finally:
+        # create_or_update_matches_job.cancel()
+        send_inviters_job.cancel()
 
 
 asyncio.run(main())

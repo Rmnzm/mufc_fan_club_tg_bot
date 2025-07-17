@@ -1,4 +1,5 @@
 import logging
+from pydantic import ValidationError
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -70,6 +71,12 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
         logger.info(
             f"Successfully reacted on watch_day_register action by user {callback.from_user.id}"
         )
+    except ValidationError as error:
+        logger.error(f"Err: {error.with_traceback}. Validation error: {error.errors()}")
+        await callback.message.edit_text(
+            text=ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU["watch_day_register_error"],
+            reply_markup=main_keyboard.main_admin_keyboard(),
+        )
     except Exception as error:
         logger.error(f"Failed to react on action watch_day_register. Err: {error.with_traceback}")
         await callback.message.edit_text(
@@ -99,7 +106,7 @@ async def choose_place(
         ].isoformat()
         match_day_by_id_dict["match_status"] = match_day_by_id_dict[
             "match_status"
-        ].value
+        ]
 
         await state.set_state(WatchDay.choose_place)
         await state.update_data(match_day_by_id=match_day_by_id_dict)

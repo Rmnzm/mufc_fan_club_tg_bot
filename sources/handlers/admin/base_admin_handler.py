@@ -79,7 +79,7 @@ async def process_nearest_meetings(callback: CallbackQuery):
         else:
             await callback.message.edit_text(
                 text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["no_nearest_matches"],
-                reply_markup=admin_keyboard.main_admin_keyboard(),
+                reply_markup=reply_keyboard,
             )
     except Exception as e:
         logger.error(
