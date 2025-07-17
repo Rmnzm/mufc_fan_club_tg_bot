@@ -29,21 +29,28 @@ redis_storage = RedisStorage(redis=redis)
 season_manager = SeasonMatchesManager()
 
 
-async def create_or_update_matches_task():
+def create_or_update_matches():
     logger.info("Create/update next matches task is starting ...")
-    await asyncio.sleep(15)
     while True:
         logger.info("Create/update next matches task is running ...")
         try:
             matches = season_manager.get_next_matches()
+            logger.info(f"Found {len(matches)} matches to update")
             if matches:
-                season_manager.update_next_matches(matches)
-                logger.info("Matches updated")
+                batch_size = 10  # TODO: move to config
+                for i in range(0, len(matches), batch_size):
+                    chunk = matches[i:i + batch_size]
+                    logger.debug(f"Processing batch {i//batch_size}: IDs {[m.eventId for m in chunk]}")
+                    try:
+                        season_manager.update_next_matches(chunk)
+                    except Exception as e:
+                        logger.error(f"Error processing batch {i//batch_size}: {e}")
+                    logger.info(f"Batch {i//batch_size} processed successfully")
+                logger.info("All matches processed!")
             else:
                 logger.info("No matches to update")
         except Exception as e:
             logger.error(f"Error in create/update matches task: {e}")
-        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
 async def send_invites_task(redis_client: Redis, bot_client: Bot):
@@ -57,12 +64,6 @@ async def send_invites_task(redis_client: Redis, bot_client: Bot):
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
-        "%(lineno)d - %(name)s - %(message)s",
-    )
-
     logger.info("Starting bot...")
 
     bot = Bot(
@@ -86,12 +87,21 @@ async def main():
     )
 
     try:
-        logger.info("Bot started.")
         await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("Bot started.")
         await dispatcher.start_polling(bot)
     finally:
         # create_or_update_matches_job.cancel()
         send_inviters_job.cancel()
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
+        "%(lineno)d - %(name)s - %(message)s",
+    )
+
+    create_or_update_matches()
+
+    asyncio.run(main())
