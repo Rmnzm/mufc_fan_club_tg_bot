@@ -174,7 +174,7 @@ class KznRedsPGManager:
 
     def update_match_day_info(self, command: str):
         try:
-            logger.info(f"Update match day info {command=}")
+            logger.debug(f"Update match day info {command=}")
             self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
         except Exception as e:
             logger.error(f"Error updating match day info: {e}")
@@ -239,7 +239,7 @@ class KznRedsPGManager:
                 start_timestamp = '{start_timestamp}', match_status = '{match_status.value}';
             """
             logger.debug(f"Step add_match_day. Adding match day {command=}")
-            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+            self.kzn_reds_pg_connector.execute_command(command, "add_match_day_successful", "add_match_day_failed")
         except Exception as e:
             logger.error(f"Error adding match day: {e}")
             raise

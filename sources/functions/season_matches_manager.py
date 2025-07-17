@@ -111,34 +111,11 @@ class SeasonMatchesManager:
     ) -> bool:
         try:
             # TODO: add more checks and remove asserts
-            logger.info("Check match day date has changes ...")
             assert event.date.timestamp() == match_day_schema.start_timestamp
-            logger.info("Check match day event id has changes ...")
             assert event.id == match_day_schema.event_id
             return True
         except AssertionError:
             return False
-
-    # def update_last_passed_match(self, nearest_events: NearestEventsDTO):
-    #     if not nearest_events or not nearest_events.previousEvent:
-    #         logger.info("No previous event to update")
-    #         return
-
-    #     start_timestamp = datetime.fromtimestamp(
-    #         nearest_events.previousEvent.startTimestamp
-    #     )
-    #     match_status = nearest_events.previousEvent.status.type
-    #     localed_match_day_name = self.__get_localed_match_day_name(nearest_events.previousEvent)
-    #     match_day_manager.update_passed_match_day(
-    #         start_timestamp=start_timestamp,
-    #         match_status=match_status,
-    #         event_id=nearest_events.previousEvent.id,
-    #     )
-
-    #     logger.info(
-    #         f"Updated passed on {start_timestamp.date().strftime('%d_%m_%Y')} match day "
-    #         f"{localed_match_day_name} with changing status to {match_status}"
-    #     )
 
     def get_next_matches(self):
         response = requests.get("https://manutd.one/restApi/getFixtures")

@@ -11,17 +11,11 @@ class MatchDaySchema(BaseModel):
     start_timestamp: datetime.datetime
     opponent_name: str
     opponent_name_slug: str
-    match_status: MatchDayStatusEnum
+    match_status: str
     tournament_name: str
     tournament_name_slug: str
     localed_match_day_name: str
     event_id: str
-
-
-class UserRoleSchema(BaseModel):
-    user_id: int
-    username: str
-    user_role: UserRoleEnum
 
 
 class WatchDaySchema(BaseModel):
