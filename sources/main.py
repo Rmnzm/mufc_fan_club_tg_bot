@@ -23,7 +23,7 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-redis = Redis(host="localhost")
+redis = Redis(host=settings.redis_host)
 redis_storage = RedisStorage(redis=redis)
 
 season_manager = SeasonMatchesManager()
@@ -102,6 +102,6 @@ if __name__ == "__main__":
         "%(lineno)d - %(name)s - %(message)s",
     )
 
-    create_or_update_matches()
+    # create_or_update_matches()
 
     asyncio.run(main())
