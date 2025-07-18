@@ -54,7 +54,7 @@ async def process_scheduled_match_days(callback: CallbackQuery):
 @router.callback_query(F.data == "nearest_meetings")
 async def process_nearest_meetings(callback: CallbackQuery):
     try:
-        nearest_match_day_context = match_day_manager.get_nearest_meetings()
+        nearest_match_day_context = await match_day_manager.get_nearest_meetings()
         data_factories = [
             MatchDayCallbackFactory(id=context.match_day_id)
             for context in nearest_match_day_context

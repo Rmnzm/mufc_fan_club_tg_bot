@@ -47,7 +47,7 @@ async def input_place_address(message: Message, state: FSMContext):
     await state.set_data(dict(add_address_state=message.text))
 
     try:
-        match_day_manager.add_watch_place(
+        await match_day_manager.add_watch_place(
             place_name=current_state_data["add_place_state"], place_address=message.text
         )
         msg = f"Место сбора добавлено.\nНазвание - {current_state_data['add_place_state']}\nАдрес - {message.text}"
