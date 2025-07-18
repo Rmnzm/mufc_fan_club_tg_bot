@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 from connector.kzn_reds_pg_connector import KznRedsPgConnector
-from context.enums import UserRoleEnum
+from enums import MatchDayStatusEnum, UserRoleEnum
 from functions.schema_converter import SchemaConverter
 from schemes.scheme import (
     MatchDaySchema,
@@ -64,10 +64,10 @@ class KznRedsPGManager:
             logger.error(f"Error fetching match days")
             raise
 
-    def get_match_day_by_event_id(self, event_id: int) -> List[MatchDaySchema]:
+    def get_match_day_by_event_id(self, event_id: str) -> List[MatchDaySchema]:
         try:
             command = f"""
-            SELECT * FROM public.match_day WHERE event_id = {event_id}
+            SELECT * FROM public.match_day WHERE event_id = '{event_id}'
             ORDER BY start_timestamp ASC LIMIT 5;
             """
             command_result = self.kzn_reds_pg_connector.select_with_dict_result(command)
@@ -124,17 +124,17 @@ class KznRedsPGManager:
             raise
 
     def update_passed_match_day(
-        self, event_id: int, start_timestamp: datetime, match_status: str
+        self, event_id: str, start_timestamp: datetime, match_status: MatchDayStatusEnum
     ):
         try:
             command = f"""
             UPDATE public.match_day
-            SET start_timestamp = '{start_timestamp}', match_status = '{match_status}'
-            WHERE event_id = {event_id};
+            SET start_timestamp = '{start_timestamp}', match_status = '{match_status.value}'
+            WHERE event_id = '{event_id}';
             """
             self.kzn_reds_pg_connector.execute_command(
                 command,
-                f"updated {start_timestamp}, {match_status}, {event_id}",
+                f"updated {start_timestamp}, {match_status.value}, {event_id}",
                 "failed",
             )
         except Exception as e:
@@ -145,9 +145,9 @@ class KznRedsPGManager:
 
     @staticmethod
     def get_update_match_day_table_command(
-        event_id: int,
+        event_id: str,
         start_timestamp: datetime,
-        match_status: str,
+        match_status: MatchDayStatusEnum,
         opponent_name: str,
         opponent_name_slug: str,
         tournament_name: str,
@@ -157,10 +157,10 @@ class KznRedsPGManager:
         try:
             command = f"""
             UPDATE public.match_day
-            SET start_timestamp = '{start_timestamp}', match_status = '{match_status}', opponent_name = '{opponent_name}',
+            SET start_timestamp = '{start_timestamp}', match_status = '{match_status.value}', opponent_name = '{opponent_name}',
                 opponent_name_slug = '{opponent_name_slug}', tournament_name = '{tournament_name}',
                 tournament_name_slug = '{tournament_name_slug}', localed_match_day_name = '{localed_match_day_name}'
-            WHERE event_id = {event_id};
+            WHERE event_id = '{event_id}';
             """
             return command
         except Exception as e:
@@ -174,7 +174,7 @@ class KznRedsPGManager:
 
     def update_match_day_info(self, command: str):
         try:
-            logger.info(f"Update match day info {command=}")
+            logger.debug(f"Update match day info {command=}")
             self.kzn_reds_pg_connector.execute_command(command, "updated", "failed")
         except Exception as e:
             logger.error(f"Error updating match day info: {e}")
@@ -220,26 +220,26 @@ class KznRedsPGManager:
     def add_match_day(
         self,
         start_timestamp: datetime,
-        match_status: str,
+        match_status: MatchDayStatusEnum,
         opponent_name: str,
         opponent_name_slug: str,
         tournament_name: str,
         tournament_name_slug: str,
         localed_match_day_name: str,
-        event_id: int,
+        event_id: str,
     ):
         try:
             command = f"""
             INSERT INTO public.match_day (
                 start_timestamp, match_status, opponent_name, opponent_name_slug,
                 tournament_name, tournament_name_slug, localed_match_day_name, event_id
-            ) VALUES ('{start_timestamp}', '{match_status}', '{opponent_name}', '{opponent_name_slug}', 
-            '{tournament_name}', '{tournament_name_slug}', '{localed_match_day_name}', {event_id})
+            ) VALUES ('{start_timestamp}', '{match_status.value}', '{opponent_name}', '{opponent_name_slug}', 
+            '{tournament_name}', '{tournament_name_slug}', '{localed_match_day_name}', '{event_id}')
             ON CONFLICT (event_id) DO UPDATE SET
-                start_timestamp = '{start_timestamp}', match_status = '{match_status}';
+                start_timestamp = '{start_timestamp}', match_status = '{match_status.value}';
             """
             logger.debug(f"Step add_match_day. Adding match day {command=}")
-            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
+            self.kzn_reds_pg_connector.execute_command(command, "add_match_day_successful", "add_match_day_failed")
         except Exception as e:
             logger.error(f"Error adding match day: {e}")
             raise

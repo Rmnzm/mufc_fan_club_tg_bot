@@ -3,8 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from context.enums import MatchDayStatusEnum
-from context.enums import UserRoleEnum
+from enums import MatchDayStatusEnum, UserRoleEnum
 
 
 class MatchDaySchema(BaseModel):
@@ -12,17 +11,11 @@ class MatchDaySchema(BaseModel):
     start_timestamp: datetime.datetime
     opponent_name: str
     opponent_name_slug: str
-    match_status: MatchDayStatusEnum
+    match_status: str
     tournament_name: str
     tournament_name_slug: str
     localed_match_day_name: str
-    event_id: Optional[int]
-
-
-class UserRoleSchema(BaseModel):
-    user_id: int
-    username: str
-    user_role: UserRoleEnum
+    event_id: str
 
 
 class WatchDaySchema(BaseModel):

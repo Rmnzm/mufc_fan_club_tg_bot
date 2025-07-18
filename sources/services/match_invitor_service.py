@@ -25,6 +25,9 @@ class MatchInvitorManager:
 
     async def send(self):
         users, match_day_context = season_manager.create_context_to_send_invitations()
+        if not match_day_context:
+            logger.info("No matches to send invitations. Skipping ...")
+            return
         is_time_so_send = self.__is_time_to_send(match_day_context.get("meeting_date"))
 
         if users and is_time_so_send:
@@ -47,7 +50,11 @@ class MatchInvitorManager:
                     )
 
     @staticmethod
-    def __is_time_to_send(match_day_time):
+    def __is_time_to_send(match_day_time: datetime = None):
+        if not match_day_time:
+            logger.info("Match day time not found or match_day is not exists")
+            return False
+        
         match_day_datetime = datetime.strptime(match_day_time, "%a, %d %b %H:%M")
         if match_day_datetime.tzinfo is None:
             match_day_datetime = match_day_datetime.replace(

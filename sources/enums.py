@@ -11,3 +11,8 @@ class MatchDayStatusEnum(Enum):
 class UserRoleEnum(Enum):
     ADMIN = "ADMIN"
     USER = "USER"
+
+
+class EventPlaceEnum(Enum):
+    HOME = "home"
+    AWAY = "away"

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -23,40 +24,40 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-redis = Redis(host="localhost")
-
-logger.info(f"Redis here - {redis}")
-
+redis = Redis(host=settings.redis_host, port=settings.redis_port)
 redis_storage = RedisStorage(redis=redis)
+
 season_manager = SeasonMatchesManager()
 
 
-async def create_or_update_matches_task():
-    while True:
-        logger.info("Create/update next matches task is running ...")
-        try:
-            update_test = season_manager.get_next_matches()
-            if update_test and update_test.events:
-                season_manager.update_next_matches(update_test)
-            else:
-                logger.info("No matches to update")
-        except Exception as e:
-            logger.error(f"Error in create/update matches task: {e}")
-        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
+def create_or_update_matches():
+    # logger.info("Create/update next matches task is starting ...")
+    # while True:
+    logger.info("Create/update next matches task is running ...")
+    try:
+        matches = season_manager.get_next_matches()
+        logger.info(f"Found {len(matches)} matches to update")
+        if matches:
+            batch_size = 10  # TODO: move to config
+            processed_matches = 0
+            for i in range(0, len(matches), batch_size):
+                chunk = matches[i:i + batch_size]
+                logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
+                try:
+                    season_manager.update_next_matches(chunk)
+                    processed_matches += len(chunk)
+                except Exception as e:
+                    logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
+                logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
+            logger.info("All matches processed!")
+        else:
+            logger.info("No matches to update")
+    except Exception as e:
+        logger.error(f"Error in create/update matches task: {e}")
+    return  # TODO: make a job
 
-
-async def update_last_passed_match_task():
-    while True:
-        logger.info("Update already passed matches task is running ...")
-        try:
-            update_test = season_manager.get_nearest_events()
-            if update_test and update_test.previousEvent:
-                season_manager.update_last_passed_match(update_test)
-            else:
-                logger.info("No previous events to update")
-        except Exception as e:
-            logger.error(f"Error in update passed matches task: {e}")
-        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
+    # logger.info("Create/update next matches task is sleeping ...")
+    # time.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
 async def send_invites_task(redis_client: Redis, bot_client: Bot):
@@ -70,12 +71,6 @@ async def send_invites_task(redis_client: Redis, bot_client: Bot):
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
-        "%(lineno)d - %(name)s - %(message)s",
-    )
-
     logger.info("Starting bot...")
 
     bot = Bot(
@@ -93,20 +88,28 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
-    update_last_passed_match_job = asyncio.create_task(update_last_passed_match_task())
+    # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
     send_inviters_job = asyncio.create_task(
         send_invites_task(redis_client=redis, bot_client=bot)
     )
 
-    logger.info("Bot started.")
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("Bot started.")
+        await dispatcher.start_polling(bot)
+    finally:
+        # create_or_update_matches_job.cancel()
+        send_inviters_job.cancel()
+        # pass
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dispatcher.start_polling(bot)
 
-    await update_last_passed_match_job
-    await send_inviters_job
-    await create_or_update_matches_job
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
+        "%(lineno)d - %(name)s - %(message)s",
+    )
 
+    create_or_update_matches()
 
-asyncio.run(main())
+    asyncio.run(main())

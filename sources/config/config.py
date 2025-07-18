@@ -17,9 +17,13 @@ class Settings(BaseSettings):
     host: str
     port: str
     admin_ids: list[str]
+    redis_host: str
+    redis_port: str
     timedelta_to_start_sending_in_hours: str = "28"
     send_job_timeout_in_sec: str = "300"
-    update_match_job_timeout_in_sec: str = "3600"
+    update_match_job_timeout_in_sec: str = "36000"
+    base_team_name: str
+    base_team_located_ru_name: str
 
     class Config:
         env_file = ".env"
