@@ -30,7 +30,7 @@ redis_storage = RedisStorage(redis=redis)
 season_manager = SeasonMatchesManager()
 
 
-def create_or_update_matches():
+async def create_or_update_matches():
     # logger.info("Create/update next matches task is starting ...")
     # while True:
     logger.info("Create/update next matches task is running ...")
@@ -44,7 +44,7 @@ def create_or_update_matches():
                 chunk = matches[i:i + batch_size]
                 logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
                 try:
-                    season_manager.update_next_matches(chunk)
+                    await season_manager.update_next_matches(chunk)
                     processed_matches += len(chunk)
                 except Exception as e:
                     logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
@@ -110,6 +110,6 @@ if __name__ == "__main__":
         "%(lineno)d - %(name)s - %(message)s",
     )
 
-    create_or_update_matches()
+    asyncio.run(create_or_update_matches())
 
     asyncio.run(main())

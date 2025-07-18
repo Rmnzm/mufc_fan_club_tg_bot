@@ -24,7 +24,7 @@ class MatchInvitorManager:
         self.bot = bot
 
     async def send(self):
-        users, match_day_context = season_manager.create_context_to_send_invitations()
+        users, match_day_context = await season_manager.create_context_to_send_invitations()
         if not match_day_context:
             logger.info("No matches to send invitations. Skipping ...")
             return
@@ -45,7 +45,7 @@ class MatchInvitorManager:
                     await MeetingInvitesManager(self.bot).send_message(
                         state=state, context=match_day_context, user_id=user.user_id
                     )
-                    season_manager.update_message_sent_status(
+                    await season_manager.update_message_sent_status(
                         match_day_context, user.user_id
                     )
 

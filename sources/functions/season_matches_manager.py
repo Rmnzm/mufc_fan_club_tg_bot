@@ -19,20 +19,20 @@ match_day_manager = KznRedsPGManager()
 
 class SeasonMatchesManager:
 
-    def update_next_matches(self, events: List[EventDTO]):
+    async def update_next_matches(self, events: List[EventDTO]):
         if not events:
             logger.info("No matches to update")
             return
 
         for event in events:
-            match_day = match_day_manager.get_match_day_by_event_id(event.eventId)
+            match_day = await match_day_manager.get_match_day_by_event_id(event.eventId)
             match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED
             opponent_name, opponent_name_slug = event.rival.name, event.rival.name_eng
             tournament_name = event.competition.short
             tournament_name_slug = event.competition.id
             localed_match_day_name = self.__get_localed_match_day_name(event)
             if not match_day:
-                match_day_manager.add_match_day(
+                await match_day_manager.add_match_day(
                     start_timestamp=event.date,
                     match_status=match_status,
                     opponent_name=opponent_name,
@@ -57,7 +57,7 @@ class SeasonMatchesManager:
                         )
                     )
                     update_meeting_date_command = (
-                        match_day_manager.get_update_meeting_date_command(
+                        match_day_manager.update_meeting_date(
                             match_id=match_day[0].id,
                             new_date=event.date - timedelta(minutes=30),
                         )
@@ -73,19 +73,19 @@ class SeasonMatchesManager:
                     logger.info("Events has no changes")
 
     @staticmethod
-    def create_context_to_send_invitations():
-        context = match_day_manager.get_nearest_watching_day()
+    async def create_context_to_send_invitations():
+        context = await match_day_manager.get_nearest_watching_day()
         if not context:
             return None, None
         logger.info(f"Send invitations current context = {context}")
 
         meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
 
-        users = match_day_manager.get_users_to_send_invitations(context[0].match_day_id)
-        match_day_name = match_day_manager.get_match_day_name_by_id(
+        users = await match_day_manager.get_users_to_send_invitations(context[0].match_day_id)
+        match_day_name = await match_day_manager.get_match_day_name_by_id(
             context[0].match_day_id
         )
-        place_info = match_day_manager.get_place_by_id(context[0].place_id)
+        place_info = await match_day_manager.get_place_by_id(context[0].place_id)
 
         match_day_info = {
             "match_day_id": context[0].match_day_id,
