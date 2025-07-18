@@ -24,7 +24,8 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-redis = Redis(host=settings.redis_host, port=settings.redis_port)
+# redis = Redis(host=settings.redis_host, port=settings.redis_port)
+redis = Redis(host="localhost")
 redis_storage = RedisStorage(redis=redis)
 
 season_manager = SeasonMatchesManager()
@@ -88,7 +89,7 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    # create_or_update_matches_job = asyncio.create_task(create_or_update_matches_task())
+    create_or_update_matches_job = asyncio.create_task(create_or_update_matches())
     send_inviters_job = asyncio.create_task(
         send_invites_task(redis_client=redis, bot_client=bot)
     )
@@ -98,7 +99,7 @@ async def main():
         logger.info("Bot started.")
         await dispatcher.start_polling(bot)
     finally:
-        # create_or_update_matches_job.cancel()
+        create_or_update_matches_job.cancel()
         send_inviters_job.cancel()
         # pass
 
@@ -109,7 +110,5 @@ if __name__ == "__main__":
         format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
         "%(lineno)d - %(name)s - %(message)s",
     )
-
-    asyncio.run(create_or_update_matches())
 
     asyncio.run(main())

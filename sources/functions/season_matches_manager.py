@@ -44,31 +44,21 @@ class SeasonMatchesManager:
                 )
             else:
                 if not self.__check_match_day_has_changes(event, match_day[0]):
-                    update_match_day_table_command = (
-                        match_day_manager.get_update_match_day_table_command(
-                            event_id=event.eventId,
-                            start_timestamp=event.date,
-                            match_status=match_status,
-                            opponent_name=opponent_name,
-                            opponent_name_slug=opponent_name_slug,
-                            tournament_name=tournament_name,
-                            tournament_name_slug=tournament_name_slug,
-                            localed_match_day_name=localed_match_day_name,
-                        )
+                    await match_day_manager.update_match_day_info(
+                        event_id=event.eventId,
+                        start_timestamp=event.date,
+                        match_status=match_status,
+                        opponent_name=opponent_name,
+                        opponent_name_slug=opponent_name_slug,
+                        tournament_name=tournament_name,
+                        tournament_name_slug=tournament_name_slug,
+                        localed_match_day_name=localed_match_day_name,
                     )
-                    update_meeting_date_command = (
-                        match_day_manager.update_meeting_date(
-                            match_id=match_day[0].id,
-                            new_date=event.date - timedelta(minutes=30),
-                        )
+                    await match_day_manager.update_meeting_date(
+                        match_id=match_day[0].id,
+                        new_date=event.date - timedelta(minutes=30),
                     )
 
-                    fully_command = (
-                        update_match_day_table_command
-                        + update_meeting_date_command
-                    )
-
-                    match_day_manager.update_match_day_info(command=fully_command)
                 else:
                     logger.info("Events has no changes")
 
