@@ -24,8 +24,7 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-# redis = Redis(host=settings.redis_host, port=settings.redis_port)
-redis = Redis(host="localhost")
+redis = Redis(host=settings.redis_host, port=settings.redis_port)
 redis_storage = RedisStorage(redis=redis)
 
 season_manager = SeasonMatchesManager()
