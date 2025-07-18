@@ -88,9 +88,9 @@ class SeasonMatchesManager:
         return users, match_day_info
 
     @staticmethod
-    def update_message_sent_status(context, user_id: int):
+    async def update_user_message_sent_status(context, user_id: int):
         match_day_id = context.get("match_day_id")
-        match_day_manager.update_message_sent_status(
+        await match_day_manager.update_message_sent_status(
             user_id=user_id, match_day_id=match_day_id
         )
 

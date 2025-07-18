@@ -117,7 +117,7 @@ async def add_watching_place(callback: CallbackQuery, state: FSMContext):
 async def show_places(callback: CallbackQuery):
     try:
         logger.debug(f"Step {F.data=}")
-        places = match_day_manager.get_places()
+        places = await match_day_manager.get_places()
 
         data_factories = [PlacesEditorFactory(id=context.id) for context in places]
         reply_keyboard = keyboard_generator.places_editor_keyboard(

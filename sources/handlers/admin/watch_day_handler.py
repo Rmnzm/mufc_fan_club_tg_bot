@@ -48,7 +48,7 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
     try:
         logger.debug(f"Step watch_day_register with context {callback.data}")
         await state.set_state(WatchDay.choose_match_day)
-        nearest_matches = match_day_manager.get_nearest_match_day()
+        nearest_matches = await match_day_manager.get_nearest_match_day()
 
         if nearest_matches:
             logger.info(f"{nearest_matches=}")
@@ -96,7 +96,7 @@ async def choose_place(
         logger.debug(
             f"Step choose_place with context {callback.data} and {callback_data=}"
         )
-        match_day_by_id = match_day_manager.get_match_day_by_event_id(callback_data.id)
+        match_day_by_id = await match_day_manager.get_match_day_by_event_id(callback_data.id)
 
         match_day_by_id_dict = schema_converter.convert_model_to_dict(
             match_day_by_id[0]
@@ -111,7 +111,7 @@ async def choose_place(
         await state.set_state(WatchDay.choose_place)
         await state.update_data(match_day_by_id=match_day_by_id_dict)
 
-        places = match_day_manager.get_places()
+        places = await match_day_manager.get_places()
 
         data_factories = [PlacesFactory(id=context.id) for context in places]
         reply_keyboard = keyboard_generator.places_keyboard(data_factories, places)

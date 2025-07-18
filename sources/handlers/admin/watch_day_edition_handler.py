@@ -186,7 +186,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 
         await state.update_data(watch_day_id=watch_day_id)
 
-        places = match_day_manager.get_places()
+        places = await match_day_manager.get_places()
 
         data_factories = [WatchPlaceChangeFactory(id=context.id) for context in places]
         reply_keyboard = places_keyboard.places_editor_keyboard(data_factories, places)

@@ -77,7 +77,7 @@ class KznRedsPGManager:
             logger.error("Error fetching nearest watching day", exc_info=True)
             raise
 
-    async def update_message_sent_status(self, user_id: int, match_day_id: int):
+    async def update_message_sent_status(self, user_id: int, match_day_id: int):        
         try:
             await objects.execute(
                 UserRegistration
@@ -89,22 +89,6 @@ class KznRedsPGManager:
             )
         except Exception as e:
             logger.error(f"Error updating message status for user {user_id}", exc_info=True)
-            raise
-
-    async def update_passed_match_day(
-        self, event_id: str, start_timestamp: datetime, match_status: MatchDayStatusEnum
-    ):
-        try:
-            await objects.execute(
-                MatchDay
-                .update(
-                    start_timestamp=start_timestamp,
-                    match_status=match_status.value
-                )
-                .where(MatchDay.event_id == event_id)
-            )
-        except Exception as e:
-            logger.error(f"Error updating passed match day for event ID {event_id}", exc_info=True)
             raise
 
     async def update_match_day_info(

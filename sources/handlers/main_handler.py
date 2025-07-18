@@ -38,7 +38,7 @@ async def process_start_command(message: Message):
 @router.callback_query(F.data == "scheduled_match_days")
 async def process_scheduled_match_days(callback: CallbackQuery):
     try:
-        nearest_matches = match_day_manager.get_match_days()
+        nearest_matches = await match_day_manager.get_match_days()
         await callback.message.edit_text(
             text=__fetched_nearest_matches(nearest_matches),
             reply_markup=main_keyboard.main_keyboard(),

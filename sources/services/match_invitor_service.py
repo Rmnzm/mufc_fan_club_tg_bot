@@ -45,7 +45,7 @@ class MatchInvitorManager:
                     await MeetingInvitesManager(self.bot).send_message(
                         state=state, context=match_day_context, user_id=user.user_id
                     )
-                    await season_manager.update_message_sent_status(
+                    await season_manager.update_user_message_sent_status(
                         match_day_context, user.user_id
                     )
 
