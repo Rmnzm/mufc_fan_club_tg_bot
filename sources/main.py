@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -23,34 +24,40 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-redis = Redis(host=settings.redis_host)
+redis = Redis(host=settings.redis_host, port=settings.redis_port)
 redis_storage = RedisStorage(redis=redis)
 
 season_manager = SeasonMatchesManager()
 
 
 def create_or_update_matches():
-    logger.info("Create/update next matches task is starting ...")
-    while True:
-        logger.info("Create/update next matches task is running ...")
-        try:
-            matches = season_manager.get_next_matches()
-            logger.info(f"Found {len(matches)} matches to update")
-            if matches:
-                batch_size = 10  # TODO: move to config
-                for i in range(0, len(matches), batch_size):
-                    chunk = matches[i:i + batch_size]
-                    logger.debug(f"Processing batch {i//batch_size}: IDs {[m.eventId for m in chunk]}")
-                    try:
-                        season_manager.update_next_matches(chunk)
-                    except Exception as e:
-                        logger.error(f"Error processing batch {i//batch_size}: {e}")
-                    logger.info(f"Batch {i//batch_size} processed successfully")
-                logger.info("All matches processed!")
-            else:
-                logger.info("No matches to update")
-        except Exception as e:
-            logger.error(f"Error in create/update matches task: {e}")
+    # logger.info("Create/update next matches task is starting ...")
+    # while True:
+    logger.info("Create/update next matches task is running ...")
+    try:
+        matches = season_manager.get_next_matches()
+        logger.info(f"Found {len(matches)} matches to update")
+        if matches:
+            batch_size = 10  # TODO: move to config
+            processed_matches = 0
+            for i in range(0, len(matches), batch_size):
+                chunk = matches[i:i + batch_size]
+                logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
+                try:
+                    season_manager.update_next_matches(chunk)
+                    processed_matches += len(chunk)
+                except Exception as e:
+                    logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
+                logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
+            logger.info("All matches processed!")
+        else:
+            logger.info("No matches to update")
+    except Exception as e:
+        logger.error(f"Error in create/update matches task: {e}")
+    return  # TODO: make a job
+
+    # logger.info("Create/update next matches task is sleeping ...")
+    # time.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
 async def send_invites_task(redis_client: Redis, bot_client: Bot):
@@ -93,6 +100,7 @@ async def main():
     finally:
         # create_or_update_matches_job.cancel()
         send_inviters_job.cancel()
+        # pass
 
 
 if __name__ == "__main__":
@@ -102,6 +110,6 @@ if __name__ == "__main__":
         "%(lineno)d - %(name)s - %(message)s",
     )
 
-    # create_or_update_matches()
+    create_or_update_matches()
 
     asyncio.run(main())
