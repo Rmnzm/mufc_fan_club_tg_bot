@@ -58,7 +58,7 @@ async def process_scheduled_match_days_filter(
         logger.debug(
             f"Step process_scheduled_match_days_filter with context: {callback_data}"
         )
-        watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(
+        watch_day_by_id = await match_day_manager.get_watch_day_by_match_day_id(
             callback_data.id
         )
 
@@ -163,12 +163,12 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
 
         logger.debug(f"Step poll_answers {watch_day_info=}")
 
-        match_day_manager.register_user(
+        await match_day_manager.register_user(
             user_tg_id=poll_answer.user.id, user_schema=user_schema
         )
 
         if option_ids == "0":
-            _register_user_poll_answer(poll_answer, watch_day_info)
+            await _register_user_poll_answer(poll_answer, watch_day_info)
         logger.info(f"Successfully processed user poll answer: {poll_answer}")
     except Exception as error:
         logger.error(f"Failed to process poll answer. Err: {error}")
@@ -367,10 +367,10 @@ def _create_poll_answer_user_schema(poll_answer):
     return user_schema
 
 
-def _register_user_poll_answer(poll_answer, watch_day_info):
+async def _register_user_poll_answer(poll_answer, watch_day_info):
     try:
         watch_day_list = NearestMeetingsSchema(**watch_day_info[0])
-        match_day_manager.register_user_to_watch(
+        await match_day_manager.register_user_to_watch(
             user_id=poll_answer.user.id,
             watch_day_id=watch_day_list.watch_day_id,
             match_day_id=watch_day_list.match_day_id,

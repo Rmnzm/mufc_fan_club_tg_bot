@@ -1,4 +1,5 @@
 import logging
+import aiohttp
 from datetime import timedelta, datetime
 from typing import List
 
@@ -106,31 +107,18 @@ class SeasonMatchesManager:
         except AssertionError:
             return False
 
-    def get_next_matches(self):
-        response = requests.get("https://manutd.one/restApi/getFixtures")
-        if response.status_code == 200:
-            return self.__convert_into_match_day_dto(response.json())
-        else:
-            logger.error(
-                f"Cannot get next matches. "
-                f"response code: {response.status_code}, response text: {response.text}"
-            )
-
-    # def get_nearest_events(self):
-    #     response = requests.get(
-    #         f"{settings.sofascore_rapidapi_url}/teams/get-near-events?teamId={settings.sofascore_team_id}",
-    #         headers={
-    #             "x-rapidapi-host": settings.x_rapidapi_host,
-    #             "x-rapidapi-key": settings.x_rapidapi_key,
-    #         },
-    #     )
-    #     if response.status_code == 200:
-    #         return self.__convert_next_events_dto(response.json())
-    #     else:
-    #         logger.error(
-    #             f"Cannot get next event. "
-    #             f"response code: {response.status_code}, response text: {response.text}"
-    #         )
+    async def get_next_matches(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://manutd.one/restApi/getFixtures") as resp:
+                status_code = resp.status
+                if status_code == 200:
+                    data = await resp.json()
+                    return self.__convert_into_match_day_dto(data)
+                else:
+                    logger.error(
+                        f"Cannot get next matches. "
+                        f"response code: {status_code}, response text: {resp.text}"
+                    )
 
     @staticmethod
     def __convert_into_match_day_dto(match_days: list) -> List[EventDTO]:

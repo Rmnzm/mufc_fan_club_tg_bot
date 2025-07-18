@@ -35,7 +35,7 @@ async def process_scheduled_match_days_filter(
 ):
     try:
         logger.debug(f"Step MatchDayCallbackFactory with context = {callback_data}")
-        watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(
+        watch_day_by_id = await match_day_manager.get_watch_day_by_match_day_id(
             callback_data.id
         )
 

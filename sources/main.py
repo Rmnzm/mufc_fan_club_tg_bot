@@ -32,33 +32,32 @@ season_manager = SeasonMatchesManager()
 
 
 async def create_or_update_matches():
-    # logger.info("Create/update next matches task is starting ...")
-    # while True:
-    logger.info("Create/update next matches task is running ...")
-    try:
-        matches = season_manager.get_next_matches()
-        logger.info(f"Found {len(matches)} matches to update")
-        if matches:
-            batch_size = 10  # TODO: move to config
-            processed_matches = 0
-            for i in range(0, len(matches), batch_size):
-                chunk = matches[i:i + batch_size]
-                logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
-                try:
-                    await season_manager.update_next_matches(chunk)
-                    processed_matches += len(chunk)
-                except Exception as e:
-                    logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
-                logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
-            logger.info("All matches processed!")
-        else:
-            logger.info("No matches to update")
-    except Exception as e:
-        logger.error(f"Error in create/update matches task: {e}")
-    return  # TODO: make a job
+    logger.info("Create/update next matches task is starting ...")
+    while True:
+        logger.info("Create/update next matches task is running ...")
+        try:
+            matches = await season_manager.get_next_matches()
+            logger.info(f"Found {len(matches)} matches to update")
+            if matches:
+                batch_size = 10  # TODO: move to config
+                processed_matches = 0
+                for i in range(0, len(matches), batch_size):
+                    chunk = matches[i:i + batch_size]
+                    logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
+                    try:
+                        await season_manager.update_next_matches(chunk)
+                        processed_matches += len(chunk)
+                    except Exception as e:
+                        logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
+                    logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
+                logger.info("All matches processed!")
+            else:
+                logger.info("No matches to update")
+        except Exception as e:
+            logger.error(f"Error in create/update matches task: {e}")
 
-    # logger.info("Create/update next matches task is sleeping ...")
-    # time.sleep(int(settings.update_match_job_timeout_in_sec))
+        logger.info("Create/update next matches task is sleeping ...")
+        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
 
 async def send_invites_task(redis_client: Redis, bot_client: Bot):
@@ -71,12 +70,8 @@ async def send_invites_task(redis_client: Redis, bot_client: Bot):
         await asyncio.sleep(int(settings.send_job_timeout_in_sec))
 
 
-async def main():
+async def run_bot(bot: Bot):
     logger.info("Starting bot...")
-
-    bot = Bot(
-        token=settings.tg_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
 
     dispatcher = Dispatcher(storage=redis_storage)
 
@@ -89,19 +84,19 @@ async def main():
     dispatcher.include_router(edit_place_handler.router)
     dispatcher.include_router(meeting_approvement_handler.router)
 
-    create_or_update_matches_job = asyncio.create_task(create_or_update_matches())
-    send_inviters_job = asyncio.create_task(
-        send_invites_task(redis_client=redis, bot_client=bot)
-    )
+    await bot.delete_webhook(drop_pending_updates=True)
+    logger.info("Bot started.")
+    await dispatcher.start_polling(bot)
 
-    try:
-        await bot.delete_webhook(drop_pending_updates=True)
-        logger.info("Bot started.")
-        await dispatcher.start_polling(bot)
-    finally:
-        create_or_update_matches_job.cancel()
-        send_inviters_job.cancel()
-        # pass
+async def main():
+    bot = Bot(
+        token=settings.tg_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
+    await asyncio.gather(
+        run_bot(bot=bot),
+        create_or_update_matches(),
+        send_invites_task(redis, bot_client=bot),
+    )
 
 
 if __name__ == "__main__":

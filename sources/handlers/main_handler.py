@@ -29,7 +29,11 @@ match_day_manager = KznRedsPGManager()
 async def process_start_command(message: Message):
     user_id = message.from_user.id
     username = message.from_user.username
-    match_day_manager.add_user_info(user_id=user_id, user_name=username)
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    await match_day_manager.add_user_info(
+        user_id=user_id, user_name=username, first_name=first_name, last_name=last_name
+        )
     await message.answer(
         text=BASE_LEXICON_RU["/start"], reply_markup=main_keyboard.main_keyboard()
     )

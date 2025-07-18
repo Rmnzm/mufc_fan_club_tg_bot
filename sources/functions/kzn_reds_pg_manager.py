@@ -210,26 +210,32 @@ class KznRedsPGManager:
         last_name: Optional[str] = None,
     ):
         try:
-            update_fields = {'username': user_name}
-            if first_name:
-                update_fields['first_name'] = first_name
-            if last_name:
-                update_fields['last_name'] = last_name
-
-            await objects.create(
-                User,
-                user_tg_id=user_id,
-                username=user_name,
-                user_role=UserRoleEnum.USER.value,
-                first_name=first_name,
-                last_name=last_name,
-                on_conflict={
-                    'update': update_fields,
-                    'preserve': [User.user_role]
-                }
-            )
+            try:
+                user = await objects.get(User, user_tg_id=user_id)
+                
+                update_fields = {'username': user_name}
+                if first_name:
+                    update_fields['first_name'] = first_name
+                if last_name:
+                    update_fields['last_name'] = last_name
+                    
+                for field, value in update_fields.items():
+                    setattr(user, field, value)
+                    
+                await objects.update(user)
+                
+            except User.DoesNotExist:
+                await objects.create(
+                    User,
+                    user_tg_id=user_id,
+                    username=user_name,
+                    user_role=UserRoleEnum.USER.value,
+                    first_name=first_name,
+                    last_name=last_name
+                )
+                
         except Exception as e:
-            logger.error("Error adding user info", exc_info=True)
+            logger.error(f"Error in add_user_info: {str(e)}", exc_info=True)
             raise
 
     async def add_watch_day(self, match_day_context: MatchDaySchema, place_id: int):
@@ -287,23 +293,25 @@ class KznRedsPGManager:
         try:
             query = (WatchDay
                      .select(
-                         WatchDay.id.alias('watch_day_id'),
-                         WatchDay,
-                         MatchDay,
-                         Place)
+                        WatchDay.id.alias('watch_day_id'),
+                        WatchDay.meeting_date,
+                        WatchDay.watch_status,
+                        MatchDay.id.alias('match_day_id'),
+                        MatchDay.start_timestamp,
+                        MatchDay.opponent_name,
+                        MatchDay.tournament_name,
+                        MatchDay.localed_match_day_name,
+                        Place.id.alias('place_id'),
+                        Place.place_name,
+                        Place.address
+                    )
                      .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
                      .join(Place, on=(WatchDay.place_id == Place.id))
                      .where(MatchDay.id == match_day_id))
             
-            meetings = await objects.execute(query)
-            return self._schema_converter.convert_nearest_meetings(
-                [{
-                    'watch_day_id': m.watch_day_id,
-                    **m.watch_day.__data__,
-                    **m.match_day.__data__,
-                    **m.place.__data__
-                } for m in meetings]
-            )
+            meetings = await objects.execute(query.dicts())
+            return self._schema_converter.convert_nearest_meetings(list(meetings))
+        
         except Exception as e:
             logger.error(f"Error fetching watch day for match {match_day_id}", exc_info=True)
             raise
