@@ -515,3 +515,13 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(f"Error fetching users for match {match_day_id}", exc_info=True)
             raise
+
+    async def cancel_meeting(self, watch_day_id: int):
+        try:
+            logger.debug(f"Step cancel_meeting with context: {watch_day_id}")
+            await objects.execute(UserRegistration.delete().where(UserRegistration.watch_day_id == watch_day_id))
+            await objects.execute(WatchDay.delete().where(WatchDay.id == watch_day_id))
+            logger.info(f"Successfully canceled meeting with {watch_day_id=}")
+        except Exception as e:
+            logger.error(f"Error canceling meeting with id={watch_day_id}", exc_info=True)
+            raise
