@@ -249,31 +249,39 @@ class KznRedsPGManager:
     async def get_nearest_meetings(self) -> List[NearestMeetingsSchema]:
         try:
             current_date = datetime.now()
-            query = (WatchDay
-                     .select(
-                         WatchDay.id.alias('watch_day_id'),
-                         WatchDay,
-                         MatchDay,
-                         Place)
-                     .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
-                     .join(Place, on=(WatchDay.place_id == Place.id))
-                     .where(
-                         (WatchDay.watch_status == 'notstarted') &
-                         (MatchDay.match_status == 'notstarted') &
-                         (WatchDay.meeting_date > current_date))
-                     .limit(5))
             
-            meetings = await objects.execute(query)
-            return self._schema_converter.convert_nearest_meetings(
-                [{
-                    'watch_day_id': m.watch_day_id,
-                    **m.watch_day.__data__,
-                    **m.match_day.__data__,
-                    **m.place.__data__
-                } for m in meetings]
-            )
+            # Основной запрос с явным указанием полей
+            query = (
+                WatchDay
+                    .select(
+                        WatchDay.id.alias('watch_day_id'),
+                        WatchDay.meeting_date,
+                        WatchDay.watch_status,
+                        MatchDay.id.alias('match_day_id'),
+                        MatchDay.start_timestamp,
+                        MatchDay.opponent_name,
+                        MatchDay.tournament_name,
+                        MatchDay.localed_match_day_name,
+                        Place.id.alias('place_id'),
+                        Place.place_name,
+                        Place.address
+                    )
+                    .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
+                    .join(Place, on=(WatchDay.place_id == Place.id))
+                    .where(
+                        (WatchDay.watch_status == 'notstarted') &
+                        (MatchDay.match_status == 'notstarted') &
+                        (WatchDay.meeting_date > current_date)
+                    )
+                    .limit(5)
+                )
+            
+            meetings = await objects.execute(query.dicts())
+            
+            return self._schema_converter.convert_nearest_meetings(list(meetings))
+            
         except Exception as e:
-            logger.error("Error fetching nearest meetings", exc_info=True)
+            logger.error(f"Error in get_nearest_meetings: {str(e)}", exc_info=True)
             raise
 
     async def get_watch_day_by_match_day_id(
