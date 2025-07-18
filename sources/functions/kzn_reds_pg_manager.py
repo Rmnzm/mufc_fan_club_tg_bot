@@ -248,9 +248,6 @@ class KznRedsPGManager:
 
     async def get_nearest_meetings(self) -> List[NearestMeetingsSchema]:
         try:
-            current_date = datetime.now()
-            
-            # Основной запрос с явным указанием полей
             query = (
                 WatchDay
                     .select(
@@ -271,7 +268,7 @@ class KznRedsPGManager:
                     .where(
                         (WatchDay.watch_status == 'notstarted') &
                         (MatchDay.match_status == 'notstarted') &
-                        (WatchDay.meeting_date > current_date)
+                        (WatchDay.meeting_date > datetime.now())
                     )
                     .limit(5)
                 )
