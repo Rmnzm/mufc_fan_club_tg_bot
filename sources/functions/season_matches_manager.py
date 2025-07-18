@@ -102,7 +102,7 @@ class SeasonMatchesManager:
         try:
             # TODO: add more checks and remove asserts
             assert event.date.timestamp() == match_day_schema.start_timestamp
-            assert event.id == match_day_schema.event_id
+            assert event.eventId == match_day_schema.event_id
             return True
         except AssertionError:
             return False
