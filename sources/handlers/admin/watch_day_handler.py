@@ -139,7 +139,6 @@ async def registrate_meeting(
         logger.debug(f"Step registrate_meeting with context={callback.data}")
         match_day_data = MatchDaySchema(**current_state_data["match_day_by_id"])
         match_day_manager.add_watch_day(match_day_data, place_id)
-        match_day_manager.create_watch_day_table(match_day_data)
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_LEXICON_RU["registrate_meeting"],
             reply_markup=admin_keyboard.main_admin_keyboard(),

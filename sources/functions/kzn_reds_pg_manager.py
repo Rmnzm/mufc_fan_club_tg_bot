@@ -23,31 +23,6 @@ class KznRedsPGManager:
 
     def __init__(self):
         self.kzn_reds_pg_connector = KznRedsPgConnector()
-        self._ensure_user_registrations_table()
-
-    def _ensure_user_registrations_table(self):
-        """Ensure the user_registrations table exists."""
-        try:
-            command = """
-            CREATE TABLE IF NOT EXISTS public.user_registrations (
-                id serial NOT NULL,
-                created_at timestamp without time zone NOT NULL DEFAULT now(),
-                user_id integer NOT NULL REFERENCES users (user_tg_id),
-                is_approved boolean NOT NULL DEFAULT false,
-                is_canceled boolean NOT NULL DEFAULT false,
-                watch_day_id integer NOT NULL REFERENCES watch_day (id),
-                match_day_id integer NOT NULL REFERENCES match_day (id),
-                place_id integer NOT NULL REFERENCES places (id),
-                is_message_sent boolean NOT NULL DEFAULT false,
-                PRIMARY KEY (id)
-            );
-            CREATE UNIQUE INDEX IF NOT EXISTS user_registrations_user_match_unique 
-            ON public.user_registrations(user_id, match_day_id);
-            """
-            self.kzn_reds_pg_connector.execute_command(command, "table_ensured", "failed")
-        except Exception as e:
-            logger.error(f"Error ensuring user_registrations table exists: {e}")
-            raise
 
     def get_match_days(self) -> list[MatchDaySchema]:
         try:
@@ -303,32 +278,6 @@ class KznRedsPGManager:
             )
         except Exception as e:
             logger.error(f"Error adding watch day: {e}")
-            raise
-
-    def create_watch_day_table(self, match_day_context: MatchDaySchema):
-        try:
-            table_name = (
-                f"match_day_{match_day_context.start_timestamp.strftime('%d_%m_%Y')}"
-            )
-            command = f"""
-            CREATE TABLE public.{table_name} (
-                id serial NOT NULL,
-                created_at timestamp without time zone NOT NULL DEFAULT now(),
-                user_id integer NOT NULL REFERENCES users (user_tg_id),
-                is_approved boolean NOT NULL DEFAULT false,
-                is_canceled boolean NOT NULL DEFAULT false,
-                watch_day_id integer NOT NULL REFERENCES watch_day (id),
-                match_day_id integer NOT NULL REFERENCES match_day (id),
-                place_id integer NOT NULL REFERENCES places (id),
-                is_message_sent boolean NOT NULL DEFAULT false,
-                PRIMARY KEY (id)
-            );
-            CREATE UNIQUE INDEX {table_name}_user_id_unique ON public.{table_name}(user_id);
-            """
-            self.kzn_reds_pg_connector.execute_command(command, "added", "failed")
-            logger.info(f"Table {table_name} successfully created")
-        except Exception as e:
-            logger.error(f"Error creating watch day table: {e}")
             raise
 
     def get_nearest_meetings(self) -> List[NearestMeetingsSchema]:
