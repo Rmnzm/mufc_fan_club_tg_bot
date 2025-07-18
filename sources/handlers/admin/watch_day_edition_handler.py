@@ -215,7 +215,7 @@ async def change_watch_place_process(
 
     try:
         logger.debug(f"Step change_watch_place_process with context: {callback_data}")
-        match_day_manager.change_watch_day_place(
+        await match_day_manager.change_watch_day_place(
             watch_day_id=watch_day_id, place_id=place_id
         )
         await callback.message.edit_text(
@@ -244,7 +244,7 @@ async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
     logger.debug(f"Step process_cancel_meeting {watch_day_info=}")
     try:
         logger.debug(f"Step process_cancel_meeting with context: {callback.data}")
-        match_day_manager.delete_watch_day(
+        await match_day_manager.delete_watch_day(
             watch_day_id=watch_day_id, watch_day_table=watch_day_table
         )
         await callback.message.edit_text(
@@ -277,7 +277,7 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
 
     try:
         logger.debug(f"Step process_show_visitors with context: {callback.data}")
-        users = match_day_manager.show_visitors(watch_day_table=watch_day_table)
+        users = await match_day_manager.show_visitors(watch_day_table=watch_day_table)
 
         users_string = "\n".join(
             [f"@{user.username} - {user.user_role}" for user in users]

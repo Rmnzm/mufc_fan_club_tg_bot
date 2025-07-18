@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import aiohttp
 from datetime import timedelta, datetime
@@ -25,13 +26,22 @@ class SeasonMatchesManager:
             logger.info("No matches to update")
             return
 
+        tasks = []
         for event in events:
+            task = asyncio.create_task(self._process_single_match(event))
+            tasks.append(task)
+        
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def _process_single_match(self, event: EventDTO):
+        try:
             match_day = await match_day_manager.get_match_day_by_event_id(event.eventId)
             match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED
             opponent_name, opponent_name_slug = event.rival.name, event.rival.name_eng
             tournament_name = event.competition.short
             tournament_name_slug = event.competition.id
             localed_match_day_name = self.__get_localed_match_day_name(event)
+            
             if not match_day:
                 await match_day_manager.add_match_day(
                     start_timestamp=event.date,
@@ -45,23 +55,27 @@ class SeasonMatchesManager:
                 )
             else:
                 if not self.__check_match_day_has_changes(event, match_day[0]):
-                    await match_day_manager.update_match_day_info(
-                        event_id=event.eventId,
-                        start_timestamp=event.date,
-                        match_status=match_status,
-                        opponent_name=opponent_name,
-                        opponent_name_slug=opponent_name_slug,
-                        tournament_name=tournament_name,
-                        tournament_name_slug=tournament_name_slug,
-                        localed_match_day_name=localed_match_day_name,
+                    await asyncio.gather(
+                        match_day_manager.update_match_day_info(
+                            event_id=event.eventId,
+                            start_timestamp=event.date,
+                            match_status=match_status,
+                            opponent_name=opponent_name,
+                            opponent_name_slug=opponent_name_slug,
+                            tournament_name=tournament_name,
+                            tournament_name_slug=tournament_name_slug,
+                            localed_match_day_name=localed_match_day_name,
+                        ),
+                        match_day_manager.update_meeting_date(
+                            match_id=match_day[0].id,
+                            new_date=event.date - timedelta(minutes=30),
+                        )
                     )
-                    await match_day_manager.update_meeting_date(
-                        match_id=match_day[0].id,
-                        new_date=event.date - timedelta(minutes=30),
-                    )
-
                 else:
-                    logger.info("Events has no changes")
+                    logger.debug(f"No changes for event {event.eventId}")
+        except Exception as e:
+            logger.error(f"Error processing event {event.eventId}: {e}")
+            raise
 
     @staticmethod
     async def create_context_to_send_invitations():

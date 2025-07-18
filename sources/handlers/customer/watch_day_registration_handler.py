@@ -78,7 +78,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
         user_id = callback.from_user.id
         logger.debug(f"Step {F.data=} by {user_id}")
 
-        match_day_manager.finish_registration(
+        await match_day_manager.finish_registration(
             user_id=user_id, match_day_id=state_data["match_day_id"], is_approved=True
         )
 
@@ -104,7 +104,7 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
         user_id = callback.from_user.id
         logger.debug(f"Step {F.data=} by {user_id=}")
 
-        match_day_manager.finish_registration(
+        await match_day_manager.finish_registration(
             user_id=user_id, match_day_id=state_data["match_day_id"], is_canceled=True
         )
         await callback.message.edit_text(

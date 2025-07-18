@@ -24,7 +24,7 @@ async def process_button_approve_invitation_press(
     logger.debug(f"Step {F.data=} with {context=}")
 
     try:
-        match_day_manager.approve_watch_day_by_user_invitation_info(
+        await match_day_manager.approve_watch_day_by_user_invitation_info(
             callback.from_user.id,
             context.get("match_day_id"),
         )
@@ -51,7 +51,7 @@ async def process_button_cancel_invitation_press(
     logger.debug(f"Step {F.data=} with {context=}")
 
     try:
-        match_day_manager.cancel_watch_day_by_user_invitation_info(
+        await match_day_manager.cancel_watch_day_by_user_invitation_info(
             context.get("table_name"),
             callback.from_user.id,
             context.get("match_day_id"),

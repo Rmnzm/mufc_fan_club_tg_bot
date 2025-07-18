@@ -34,30 +34,48 @@ season_manager = SeasonMatchesManager()
 async def create_or_update_matches():
     logger.info("Create/update next matches task is starting ...")
     while True:
-        logger.info("Create/update next matches task is running ...")
         try:
-            matches = await season_manager.get_next_matches()
-            logger.info(f"Found {len(matches)} matches to update")
-            if matches:
-                batch_size = 10  # TODO: move to config
-                processed_matches = 0
-                for i in range(0, len(matches), batch_size):
-                    chunk = matches[i:i + batch_size]
-                    logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
-                    try:
-                        await season_manager.update_next_matches(chunk)
-                        processed_matches += len(chunk)
-                    except Exception as e:
-                        logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
-                    logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
-                logger.info("All matches processed!")
-            else:
-                logger.info("No matches to update")
+            task = asyncio.create_task(_process_matches_update())
+            await asyncio.wait_for(task, timeout=60)  # TODO: move to config
+            
+        except asyncio.TimeoutError:
+            logger.warning("Match update task timed out")
         except Exception as e:
             logger.error(f"Error in create/update matches task: {e}")
+        finally:
+            logger.info("Create/update next matches task is sleeping ...")
+            await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
 
-        logger.info("Create/update next matches task is sleeping ...")
-        await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
+async def _process_matches_update():
+    logger.info("Create/update next matches task is running ...")
+    try:
+        matches = await season_manager.get_next_matches()
+        logger.info(f"Found {len(matches)} matches to update")
+        
+        if not matches:
+            logger.info("No matches to update")
+            return
+
+        batch_size = 10  # TODO: move to config
+        processed_matches = 0
+        
+        for i in range(0, len(matches), batch_size):
+            chunk = matches[i:i + batch_size]
+            logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
+            
+            try:
+                await asyncio.sleep(0.1)
+                await season_manager.update_next_matches(chunk)
+                processed_matches += len(chunk)
+            except Exception as e:
+                logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
+            
+            logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
+        
+        logger.info("All matches processed!")
+    except Exception as e:
+        logger.error(f"Error in matches processing: {e}")
+        raise
 
 
 async def send_invites_task(redis_client: Redis, bot_client: Bot):
@@ -102,8 +120,7 @@ async def main():
 if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format="[%(asctime)s] #%(levelname)-8s %(filename)s:"
-        "%(lineno)d - %(name)s - %(message)s",
+        format="[%(asctime)s] #%(levelname)-8s %(filename)s:%(lineno)d - %(name)s - %(message)s",
     )
 
     asyncio.run(main())
