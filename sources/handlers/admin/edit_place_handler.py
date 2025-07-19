@@ -80,7 +80,7 @@ async def edit_place_name(message: Message, state: FSMContext):
         logger.debug(
             f"Step edit_place_name with context: {message.text} from user {message.from_user.id}"
         )
-        match_day_manager.change_place_name(
+        await match_day_manager.change_place_name(
             place_id=place_id, new_place_name=new_place_name
         )
         await message.answer(
@@ -127,7 +127,7 @@ async def edit_place_address(message: Message, state: FSMContext):
         logger.debug(
             f"Step edit_place_name with context: {message.text} from user {message.from_user.id}"
         )
-        match_day_manager.change_place_address(
+        await match_day_manager.change_place_address(
             place_id=place_id, new_place_address=new_place_address
         )
         await message.answer(
@@ -154,7 +154,7 @@ async def delete_place(callback: CallbackQuery, state: FSMContext):
             f"Step edit_place_name with context: {callback.data} from user {callback.from_user.id}"
         )
 
-        match_day_manager.delete_place(place_id=place_id)
+        await match_day_manager.delete_place(place_id=place_id)
         await callback.message.answer(
             text=BASE_ADMIN_LEXICON_RU["delete_place"],
             reply_markup=admin_keyboard.main_admin_keyboard(),

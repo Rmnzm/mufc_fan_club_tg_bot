@@ -29,7 +29,11 @@ match_day_manager = KznRedsPGManager()
 async def process_start_command(message: Message):
     user_id = message.from_user.id
     username = message.from_user.username
-    match_day_manager.add_user_info(user_id=user_id, user_name=username)
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    await match_day_manager.add_user_info(
+        user_id=user_id, user_name=username, first_name=first_name, last_name=last_name
+        )
     await message.answer(
         text=BASE_LEXICON_RU["/start"], reply_markup=main_keyboard.main_keyboard()
     )
@@ -38,7 +42,7 @@ async def process_start_command(message: Message):
 @router.callback_query(F.data == "scheduled_match_days")
 async def process_scheduled_match_days(callback: CallbackQuery):
     try:
-        nearest_matches = match_day_manager.get_match_days()
+        nearest_matches = await match_day_manager.get_match_days()
         await callback.message.edit_text(
             text=__fetched_nearest_matches(nearest_matches),
             reply_markup=main_keyboard.main_keyboard(),
@@ -54,7 +58,7 @@ async def process_scheduled_match_days(callback: CallbackQuery):
 @router.callback_query(F.data == "nearest_meetings")
 async def process_nearest_meetings(callback: CallbackQuery):
     try:
-        nearest_match_day_context = match_day_manager.get_nearest_meetings()
+        nearest_match_day_context = await match_day_manager.get_nearest_meetings()
         data_factories = [
             MatchDayCallbackFactory(id=context.match_day_id)
             for context in nearest_match_day_context

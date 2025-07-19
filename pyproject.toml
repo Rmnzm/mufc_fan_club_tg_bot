@@ -16,6 +16,9 @@ aioschedule = "^0.5.2"
 aiogram-dialog = "^2.2.0"
 aiogram-calendar = "^0.5.0"
 redis = "^5.2.1"
+aiopg = "^1.4.0"
+peewee-async = "0.12.2"
+peewee = "^3.18.2"
 
 
 [tool.poetry.group.dev.dependencies]

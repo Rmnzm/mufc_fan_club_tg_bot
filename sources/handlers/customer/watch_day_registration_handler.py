@@ -12,8 +12,7 @@ from functions.schema_converter import SchemaConverter
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from lexicon.base_lexicon_ru import BASE_LEXICON_RU
-from lexicon.customer_lexicon_ru import CUSTOMER_LEXICON_RU, CUSTOMER_ERROR_LEXICON_RU
-from schemes.scheme import NearestMeetingsSchema
+from lexicon.customer_lexicon_ru import CUSTOMER_ERROR_LEXICON_RU
 from states.main_states import WatchDayUserRegistrationStateGroup
 
 logger = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ async def process_scheduled_match_days_filter(
 ):
     try:
         logger.debug(f"Step MatchDayCallbackFactory with context = {callback_data}")
-        watch_day_by_id = match_day_manager.get_watch_day_by_match_day_id(
+        watch_day_by_id = await match_day_manager.get_watch_day_by_match_day_id(
             callback_data.id
         )
 
@@ -64,57 +63,6 @@ async def process_scheduled_match_days_filter(
         )
         await callback.message.edit_text(
             text=CUSTOMER_ERROR_LEXICON_RU["error_fetching_scheduled_match_days"],
-            reply_markup=main_keyboard.main_keyboard(),
-        )
-    await callback.answer()
-
-
-@router.callback_query(
-    F.data == "go_button", WatchDayUserRegistrationStateGroup.watch_day_id
-)
-async def process_go_button(callback: CallbackQuery, state: FSMContext):
-    try:
-        state_data = await state.get_data()
-        user_id = callback.from_user.id
-        logger.debug(f"Step {F.data=} by {user_id}")
-
-        match_day_manager.finish_registration(
-            user_id=user_id, match_day_id=state_data["match_day_id"], is_approved=True
-        )
-
-        await callback.message.edit_text(
-            text=CUSTOMER_LEXICON_RU["first_approve_invitation"],
-            reply_markup=main_keyboard.main_keyboard(),
-        )
-    except Exception as e:
-        logger.error(f"Erro due first approving meeting. Err: {e}")
-        await callback.message.edit_text(
-            text=CUSTOMER_ERROR_LEXICON_RU["error_first_approve_invitation"],
-            reply_markup=main_keyboard.main_keyboard(),
-        )
-    await callback.answer()
-
-
-@router.callback_query(
-    F.data == "not_go_button", WatchDayUserRegistrationStateGroup.watch_day_id
-)
-async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
-    try:
-        state_data = await state.get_data()
-        user_id = callback.from_user.id
-        logger.debug(f"Step {F.data=} by {user_id=}")
-
-        match_day_manager.finish_registration(
-            user_id=user_id, match_day_id=state_data["match_day_id"], is_canceled=True
-        )
-        await callback.message.edit_text(
-            text=CUSTOMER_LEXICON_RU["first_cancel_invitation"],
-            reply_markup=main_keyboard.main_keyboard(),
-        )
-    except Exception as e:
-        logger.error(f"Error due canceling meeting. Err: {e}")
-        await callback.message.edit_text(
-            text=CUSTOMER_ERROR_LEXICON_RU["error_first_cancel_invitation"],
             reply_markup=main_keyboard.main_keyboard(),
         )
     await callback.answer()

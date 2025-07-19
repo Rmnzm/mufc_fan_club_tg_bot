@@ -41,7 +41,7 @@ async def process_admin_command(message: Message):
 async def show_users(callback: CallbackQuery):
     try:
         logger.debug(f"Step {F.data=}")
-        users = match_day_manager.get_users()
+        users = await match_day_manager.get_users()
 
         await callback.message.edit_text(
             text=__fetched_users(users),
@@ -63,7 +63,7 @@ async def show_users(callback: CallbackQuery):
 async def process_nearest_meetings(callback: CallbackQuery):
     try:
         logger.debug(f"Step {F.data=}")
-        nearest_match_day_context = match_day_manager.get_nearest_meetings()
+        nearest_match_day_context = await match_day_manager.get_nearest_meetings()
         data_factories = [
             AdminMatchDayCallbackFactory(id=context.match_day_id)
             for context in nearest_match_day_context
@@ -117,7 +117,7 @@ async def add_watching_place(callback: CallbackQuery, state: FSMContext):
 async def show_places(callback: CallbackQuery):
     try:
         logger.debug(f"Step {F.data=}")
-        places = match_day_manager.get_places()
+        places = await match_day_manager.get_places()
 
         data_factories = [PlacesEditorFactory(id=context.id) for context in places]
         reply_keyboard = keyboard_generator.places_editor_keyboard(

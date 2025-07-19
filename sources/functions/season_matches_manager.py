@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import aiohttp
 from datetime import timedelta, datetime
 from typing import List
 
@@ -19,20 +21,29 @@ match_day_manager = KznRedsPGManager()
 
 class SeasonMatchesManager:
 
-    def update_next_matches(self, events: List[EventDTO]):
+    async def update_next_matches(self, events: List[EventDTO]):
         if not events:
             logger.info("No matches to update")
             return
 
+        tasks = []
         for event in events:
-            match_day = match_day_manager.get_match_day_by_event_id(event.eventId)
+            task = asyncio.create_task(self._process_single_match(event))
+            tasks.append(task)
+        
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def _process_single_match(self, event: EventDTO):
+        try:
+            match_day = await match_day_manager.get_match_day_by_event_id(event.eventId)
             match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED
             opponent_name, opponent_name_slug = event.rival.name, event.rival.name_eng
             tournament_name = event.competition.short
             tournament_name_slug = event.competition.id
             localed_match_day_name = self.__get_localed_match_day_name(event)
+            
             if not match_day:
-                match_day_manager.add_match_day(
+                await match_day_manager.add_match_day(
                     start_timestamp=event.date,
                     match_status=match_status,
                     opponent_name=opponent_name,
@@ -44,8 +55,8 @@ class SeasonMatchesManager:
                 )
             else:
                 if not self.__check_match_day_has_changes(event, match_day[0]):
-                    update_match_day_table_command = (
-                        match_day_manager.get_update_match_day_table_command(
+                    await asyncio.gather(
+                        match_day_manager.update_match_day_info(
                             event_id=event.eventId,
                             start_timestamp=event.date,
                             match_status=match_status,
@@ -54,38 +65,32 @@ class SeasonMatchesManager:
                             tournament_name=tournament_name,
                             tournament_name_slug=tournament_name_slug,
                             localed_match_day_name=localed_match_day_name,
-                        )
-                    )
-                    update_meeting_date_command = (
-                        match_day_manager.get_update_meeting_date_command(
+                        ),
+                        match_day_manager.update_meeting_date(
                             match_id=match_day[0].id,
                             new_date=event.date - timedelta(minutes=30),
                         )
                     )
-
-                    fully_command = (
-                        update_match_day_table_command
-                        + update_meeting_date_command
-                    )
-
-                    match_day_manager.update_match_day_info(command=fully_command)
                 else:
-                    logger.info("Events has no changes")
+                    logger.debug(f"No changes for event {event.eventId}")
+        except Exception as e:
+            logger.error(f"Error processing event {event.eventId}: {e}")
+            raise
 
     @staticmethod
-    def create_context_to_send_invitations():
-        context = match_day_manager.get_nearest_watching_day()
+    async def create_context_to_send_invitations():
+        context = await match_day_manager.get_nearest_watching_day()
         if not context:
             return None, None
         logger.info(f"Send invitations current context = {context}")
 
         meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
 
-        users = match_day_manager.get_users_to_send_invitations(context[0].match_day_id)
-        match_day_name = match_day_manager.get_match_day_name_by_id(
+        users = await match_day_manager.get_users_to_send_invitations(context[0].match_day_id)
+        match_day_name = await match_day_manager.get_match_day_name_by_id(
             context[0].match_day_id
         )
-        place_info = match_day_manager.get_place_by_id(context[0].place_id)
+        place_info = await match_day_manager.get_place_by_id(context[0].place_id)
 
         match_day_info = {
             "match_day_id": context[0].match_day_id,
@@ -98,9 +103,9 @@ class SeasonMatchesManager:
         return users, match_day_info
 
     @staticmethod
-    def update_message_sent_status(context, user_id: int):
+    async def update_user_message_sent_status(context, user_id: int):
         match_day_id = context.get("match_day_id")
-        match_day_manager.update_message_sent_status(
+        await match_day_manager.update_message_sent_status(
             user_id=user_id, match_day_id=match_day_id
         )
 
@@ -111,36 +116,23 @@ class SeasonMatchesManager:
         try:
             # TODO: add more checks and remove asserts
             assert event.date.timestamp() == match_day_schema.start_timestamp
-            assert event.id == match_day_schema.event_id
+            assert event.eventId == match_day_schema.event_id
             return True
         except AssertionError:
             return False
 
-    def get_next_matches(self):
-        response = requests.get("https://manutd.one/restApi/getFixtures")
-        if response.status_code == 200:
-            return self.__convert_into_match_day_dto(response.json())
-        else:
-            logger.error(
-                f"Cannot get next matches. "
-                f"response code: {response.status_code}, response text: {response.text}"
-            )
-
-    # def get_nearest_events(self):
-    #     response = requests.get(
-    #         f"{settings.sofascore_rapidapi_url}/teams/get-near-events?teamId={settings.sofascore_team_id}",
-    #         headers={
-    #             "x-rapidapi-host": settings.x_rapidapi_host,
-    #             "x-rapidapi-key": settings.x_rapidapi_key,
-    #         },
-    #     )
-    #     if response.status_code == 200:
-    #         return self.__convert_next_events_dto(response.json())
-    #     else:
-    #         logger.error(
-    #             f"Cannot get next event. "
-    #             f"response code: {response.status_code}, response text: {response.text}"
-    #         )
+    async def get_next_matches(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://manutd.one/restApi/getFixtures") as resp:
+                status_code = resp.status
+                if status_code == 200:
+                    data = await resp.json()
+                    return self.__convert_into_match_day_dto(data)
+                else:
+                    logger.error(
+                        f"Cannot get next matches. "
+                        f"response code: {status_code}, response text: {resp.text}"
+                    )
 
     @staticmethod
     def __convert_into_match_day_dto(match_days: list) -> List[EventDTO]:
