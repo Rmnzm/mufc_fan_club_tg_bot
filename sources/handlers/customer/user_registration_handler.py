@@ -1,21 +1,17 @@
 import logging
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 
-from callback_factory.callback_factory import MatchDayCallbackFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.keyboard_generator import KeyboardGenerator
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
-from lexicon.base_lexicon_ru import BASE_LEXICON_RU, BASE_ERROR_LEXICON_RU
-from schemes.scheme import MatchDaySchema
 from lexicon.user_registration_lexicon import USER_REGISTRATION_ERROR_LEXICON_RU, USER_REGISTRATION_LEXICON_RU
 from states.user_registration_state import UserRegistrationState
-from aiogram_calendar import DialogCalendarCallback, DialogCalendar, get_user_locale
+from aiogram_calendar import DialogCalendarCallback, DialogCalendar
 from aiogram.filters.callback_data import CallbackData
 
 

@@ -15,7 +15,7 @@ from lexicon.base_lexicon_ru import BASE_LEXICON_RU, BASE_ERROR_LEXICON_RU
 from schemes.scheme import MatchDaySchema
 from lexicon.user_registration_lexicon import USER_REGISTRATION_LEXICON_RU
 from states.user_registration_state import UserRegistrationState
-from aiogram_calendar import DialogCalendar, get_user_locale
+from aiogram_calendar import DialogCalendar
 
 logger = logging.getLogger(__name__)
 
