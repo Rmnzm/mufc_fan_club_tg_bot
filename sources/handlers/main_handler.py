@@ -54,8 +54,7 @@ async def process_start_command(message: Message, state: FSMContext):
             )
         await message.answer(
             text=USER_REGISTRATION_LEXICON_RU["add_birthday_date"], 
-            reply_markup=await DialogCalendar(locale=await get_user_locale(message.from_user)
-        ).start_calendar())
+            reply_markup=await DialogCalendar().start_calendar())
 
 
 @router.callback_query(F.data == "scheduled_match_days")

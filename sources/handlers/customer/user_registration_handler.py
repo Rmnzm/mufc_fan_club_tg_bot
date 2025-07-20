@@ -34,9 +34,7 @@ match_day_manager = KznRedsPGManager()
 async def process_user_birthday_date(
     callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext
     ):
-    selected, date = await DialogCalendar(
-        locale=await get_user_locale(callback_query.from_user)
-    ).process_selection(callback_query, callback_data)
+    selected, date = await DialogCalendar().process_selection(callback_query, callback_data)
     if selected:    
         await state.set_state(UserRegistrationState.add_start_fan_state)
         await state.update_data(birthday_date=date)
