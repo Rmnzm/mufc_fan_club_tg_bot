@@ -18,7 +18,7 @@ from handlers.admin import watch_day_edition_handler
 from handlers.admin import watch_day_handler
 from handlers.customer import meeting_approvement_handler
 from handlers.customer import watch_day_registration_handler
-from sources.handlers.customer import user_registration_handler
+from handlers.customer import user_registration_handler
 
 settings = get_settings()
 
