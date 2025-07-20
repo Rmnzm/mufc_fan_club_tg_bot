@@ -202,8 +202,11 @@ class KznRedsPGManager:
             logger.error("Error adding match day", exc_info=True)
             raise
 
-    async def get_uset_info(self, user_id: int):
-        return await objects.get(User, user_tg_id=user_id)
+    async def get_user_info(self, user_id: int):
+        try:
+            return await objects.get(User, user_tg_id=user_id)
+        except User.DoesNotExist:
+            return
 
     async def add_user_info(
         self,

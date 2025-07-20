@@ -35,7 +35,7 @@ async def process_start_command(message: Message, state: FSMContext):
     username = message.from_user.username
     first_name = message.from_user.first_name
     last_name = message.from_user.last_name
-    if match_day_manager.get_user_info(user_id):
+    if await match_day_manager.get_user_info(user_id):
         await match_day_manager.add_user_info(
             user_id=user_id, user_name=username, first_name=first_name, last_name=last_name
             )
