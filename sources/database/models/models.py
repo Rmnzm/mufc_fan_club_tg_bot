@@ -37,6 +37,9 @@ class User(BaseModel):
     description = TextField(null=True)
     first_name = CharField(null=True)
     last_name = CharField(null=True)
+    birthday_date = DateTimeField(null=True)
+    favorite_player = CharField(null=True)
+    fantime_start = CharField(null=True)
 
     class Meta:
         table_name = 'users'

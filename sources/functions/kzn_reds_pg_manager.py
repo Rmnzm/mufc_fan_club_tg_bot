@@ -202,12 +202,21 @@ class KznRedsPGManager:
             logger.error("Error adding match day", exc_info=True)
             raise
 
+    async def get_user_info(self, user_id: int):
+        try:
+            return await objects.get(User, user_tg_id=user_id)
+        except User.DoesNotExist:
+            return
+
     async def add_user_info(
         self,
         user_id: int,
         user_name: str,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
+        birthday: Optional[datetime] = None,
+        favorite_player: Optional[str] = None,
+        start_fan: Optional[str] = None
     ):
         try:
             try:
@@ -231,7 +240,10 @@ class KznRedsPGManager:
                     username=user_name,
                     user_role=UserRoleEnum.USER.value,
                     first_name=first_name,
-                    last_name=last_name
+                    last_name=last_name,
+                    birthday_date=birthday,
+                    favorite_player=favorite_player,
+                    fantime_start=start_fan
                 )
                 
         except Exception as e:
