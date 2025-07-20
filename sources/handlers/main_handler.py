@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 
@@ -12,6 +13,9 @@ from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from lexicon.base_lexicon_ru import BASE_LEXICON_RU, BASE_ERROR_LEXICON_RU
 from schemes.scheme import MatchDaySchema
+from sources.lexicon.user_registration_lexicon import USER_REGISTRATION_LEXICON_RU
+from states.user_registration_state import UserRegistrationState
+from aiogram_calendar import DialogCalendar, get_user_locale
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +30,32 @@ match_day_manager = KznRedsPGManager()
 
 
 @router.message(CommandStart())
-async def process_start_command(message: Message):
+async def process_start_command(message: Message, state: FSMContext):
     user_id = message.from_user.id
     username = message.from_user.username
     first_name = message.from_user.first_name
     last_name = message.from_user.last_name
-    await match_day_manager.add_user_info(
-        user_id=user_id, user_name=username, first_name=first_name, last_name=last_name
+    if match_day_manager.get_user_info(user_id):
+        await match_day_manager.add_user_info(
+            user_id=user_id, user_name=username, first_name=first_name, last_name=last_name
+            )
+        await message.answer(
+            text=BASE_LEXICON_RU["/start"], reply_markup=main_keyboard.main_keyboard()
         )
-    await message.answer(
-        text=BASE_LEXICON_RU["/start"], reply_markup=main_keyboard.main_keyboard()
-    )
+    else:
+        await state.set_state(UserRegistrationState.start_state)
+        await state.set_data(
+            dict(
+                user_id=user_id, 
+                username=username, 
+                first_name=first_name, 
+                last_name=last_name
+                )
+            )
+        await message.answer(
+            text=USER_REGISTRATION_LEXICON_RU["add_birthday_date"], 
+            reply_markup=await DialogCalendar(locale=await get_user_locale(message.from_user)
+        ).start_calendar())
 
 
 @router.callback_query(F.data == "scheduled_match_days")

@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -19,6 +18,7 @@ from handlers.admin import watch_day_edition_handler
 from handlers.admin import watch_day_handler
 from handlers.customer import meeting_approvement_handler
 from handlers.customer import watch_day_registration_handler
+from sources.handlers.customer import user_registration_handler
 
 settings = get_settings()
 
@@ -95,6 +95,7 @@ async def run_bot(bot: Bot):
 
     dispatcher.include_router(main_handler.router)
     dispatcher.include_router(base_admin_handler.router)
+    dispatcher.include_router(user_registration_handler.router)
     dispatcher.include_router(watch_day_handler.router)
     dispatcher.include_router(watch_day_registration_handler.router)
     dispatcher.include_router(watch_day_edition_handler.router)
