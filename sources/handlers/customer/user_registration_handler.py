@@ -37,9 +37,11 @@ async def process_user_birthday_date(
     selected, date = await DialogCalendar().process_selection(callback_query, callback_data)
     if selected:    
         await state.set_state(UserRegistrationState.add_start_fan_state)
-        await state.update_data(birthday_date=date)
+        await state.update_data(birthday_date=date.isoformat())
 
-        await callback_query.message.answer(f'You selected {date.strftime("%d/%m/%Y")} {USER_REGISTRATION_LEXICON_RU["add_fan_start_date"]}')
+        await callback_query.message.answer(
+            f'Ваша дата рождения: {date.strftime("%d/%m/%Y")}\n\n{USER_REGISTRATION_LEXICON_RU["add_fan_start_date"]}'
+            )
 
 @router.message(UserRegistrationState.add_start_fan_state)
 async def process_user_start_fan_date(message: Message, state: FSMContext):
