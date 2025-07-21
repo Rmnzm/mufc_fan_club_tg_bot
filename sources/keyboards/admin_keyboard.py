@@ -1,22 +1,23 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from lexicon.button_lexicon_ru import ADMIN_KEYBOARD_BUTTON_LEXICON_RU
+
 
 class AdminKeyboard:
 
     @staticmethod
     def main_admin_keyboard():
-        # TODO: Переписать тексты кнопок
         show_users = InlineKeyboardButton(
-            text="Пользователи", callback_data="show_users"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["fan_list"], callback_data="show_users"
         )
         show_nearest_watching_days = InlineKeyboardButton(
-            text="Ближайшие просмотры", callback_data="show_nearest_watching_days"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["nearest_meetings"], callback_data="show_nearest_watching_days"
         )
         show_places = InlineKeyboardButton(
-            text="Места просмотров", callback_data="show_places"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["places"], callback_data="show_places"
         )
         add_watching_place = InlineKeyboardButton(
-            text="Добавить место просмотра", callback_data="add_watching_place"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["add_place"], callback_data="add_watching_place"
         )
 
         keyboard = InlineKeyboardMarkup(
