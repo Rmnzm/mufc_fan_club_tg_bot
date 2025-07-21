@@ -24,7 +24,7 @@ class KeyboardGenerator:
     ):
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [self.__button(factory_data, buttons_info)]
+                [self.__watch_day_keyboard_button(factory_data, buttons_info)]
                 for factory_data in data_factories
             ],
             resize_keyboard=True,
@@ -38,7 +38,7 @@ class KeyboardGenerator:
         add_watch_day: bool = False,
     ):
         inline_keyboard = [
-            [self.__button(factory_data, buttons_info)]
+            [self.__watch_day_keyboard_button(factory_data, buttons_info)]
             for factory_data in data_factories
         ]
         if add_watch_day:
@@ -65,7 +65,7 @@ class KeyboardGenerator:
         add_watch_day: bool = False,
     ):
         inline_keyboard = [
-            [self.__button_2(factory_data, buttons_info)]
+            [self.__match_day_keyboard_button(factory_data, buttons_info)]
             for factory_data in data_factories
         ]
         if add_watch_day:
@@ -89,7 +89,7 @@ class KeyboardGenerator:
         self, data_factories: List[PlacesFactory], buttons_info: List[PlacesSchema]
     ):
         inline_keyboard = [
-            [self.__button_3(factory_data, buttons_info)]
+            [self.__places_factory_keyboard_button(factory_data, buttons_info)]
             for factory_data in data_factories
         ]
         back_to_main_menu = InlineKeyboardButton(
@@ -120,7 +120,7 @@ class KeyboardGenerator:
         return keyboard
 
     @staticmethod
-    def __button(
+    def __watch_day_keyboard_button(
         callback_data: MatchDayCallbackFactory | AdminMatchDayCallbackFactory,
         button_data: list[NearestMeetingsSchema],
     ) -> InlineKeyboardButton:
@@ -137,7 +137,7 @@ class KeyboardGenerator:
             raise
 
     @staticmethod
-    def __button_2(
+    def __match_day_keyboard_button(
         callback_data: MatchDayCallbackFactory | AdminCreateWatchDayCallbackFactory,
         button_data: list[MatchDaySchema],
     ) -> InlineKeyboardButton:
@@ -154,7 +154,7 @@ class KeyboardGenerator:
             raise
 
     @staticmethod
-    def __button_3(
+    def __places_factory_keyboard_button(
         callback_data: PlacesFactory, button_data: list[PlacesSchema]
     ) -> InlineKeyboardButton:
         try:

@@ -85,9 +85,15 @@ async def process_nearest_meetings(callback: CallbackQuery):
         reply_keyboard = keyboard_generator.watch_day_keyboard(
             data_factories, nearest_match_day_context
         )
-        await callback.message.edit_text(
-            text=BASE_LEXICON_RU["nearest_meetings"], reply_markup=reply_keyboard
-        )
+        if nearest_match_day_context:
+            await callback.message.edit_text(
+                text=BASE_LEXICON_RU["nearest_meetings_footer"], reply_markup=reply_keyboard
+            )
+        else:
+            await callback.message.edit_text(
+                text=BASE_LEXICON_RU["has_no_nearest_meetings"],
+                reply_markup=main_keyboard.main_keyboard(),
+            )
     except Exception:
         await callback.message.edit_text(
             text=BASE_ERROR_LEXICON_RU["internal_error"],
@@ -102,4 +108,6 @@ def __fetched_nearest_matches(match_days: list[MatchDaySchema]):
         f"{match_day.tournament_name}\n{match_day.localed_match_day_name}\n"
         for match_day in match_days
     )
-    return return_string if return_string else "Нет ближайших матчей"
+    if return_string:
+        return f"""{BASE_LEXICON_RU["scheduled_match_days_header"]}\n\n{return_string}\n\n{BASE_LEXICON_RU["scheduled_match_days_footer"]}"""
+    return BASE_LEXICON_RU["has_no_nearest_meetings"]

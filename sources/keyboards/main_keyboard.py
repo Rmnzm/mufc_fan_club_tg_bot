@@ -8,10 +8,10 @@ class MainKeyboard:
     @staticmethod
     def main_keyboard():
         nearest_meetings = InlineKeyboardButton(
-            text=BASE_LEXICON_RU["nearest_meetings"], callback_data="nearest_meetings"
+            text=BASE_LEXICON_RU["nearest_meetings_header"], callback_data="nearest_meetings"
         )
         scheduled_match_days = InlineKeyboardButton(
-            text=BASE_LEXICON_RU["scheduled_match_days"],
+            text=BASE_LEXICON_RU["scheduled_match_days_header"],
             callback_data="scheduled_match_days",
         )
 
