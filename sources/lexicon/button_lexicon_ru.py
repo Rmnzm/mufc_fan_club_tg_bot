@@ -14,6 +14,9 @@ ADMIN_KEYBOARD_BUTTON_LEXICON_RU = {
 
 ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU = {
     "add_watch_day": "➕ Создать встречу",
-    
+    "start_meeting_poll": "📢 Анонсировать в чат",
+    "show_visitors": "👥 Показать участников",
+    "cancel_meeting": "❌ Отменить встречу",
+    "edit_watch_place": "✏️ Изменить локацию",
     "back_to_main_menu": "⬅️ **Назад в меню**  ",
 }

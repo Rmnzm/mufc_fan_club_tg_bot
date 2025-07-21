@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from lexicon.button_lexicon_ru import ADMIN_KEYBOARD_BUTTON_LEXICON_RU
+from lexicon.button_lexicon_ru import ADMIN_KEYBOARD_BUTTON_LEXICON_RU, ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU
 
 
 class AdminKeyboard:
@@ -34,19 +34,19 @@ class AdminKeyboard:
     @staticmethod
     def edit_meeting_keyboard():
         edit_place = InlineKeyboardButton(
-            text="Изменить место", callback_data="edit_watch_place"
+            text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["edit_watch_place"], callback_data="edit_watch_place"
         )
         cancel_meeting = InlineKeyboardButton(
-            text="Отменить встречу", callback_data="cancel_meeting"
+            text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["cancel_meeting"], callback_data="cancel_meeting"
         )
         show_visitors = InlineKeyboardButton(
-            text="Показать учатсников", callback_data="show_visitors"
+            text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["show_visitors"], callback_data="show_visitors"
         )
         start_meeting_poll = InlineKeyboardButton(
-            text="Запустить предварительный опрос", callback_data="start_meeting_poll"
+            text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["start_meeting_poll"], callback_data="start_meeting_poll"
         )
         back_to_main_menu = InlineKeyboardButton(
-            text="Назад в меню", callback_data="back_to_main_menu"
+            text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
         )
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
