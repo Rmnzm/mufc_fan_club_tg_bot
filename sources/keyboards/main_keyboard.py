@@ -1,18 +1,19 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from lexicon.base_lexicon_ru import BASE_LEXICON_RU
+from lexicon.button_lexicon_ru import MAIN_KEYBOARD_BUTTON_LEXICON_RU
 
 
 class MainKeyboard:
 
     @staticmethod
     def main_keyboard():
-        nearest_meetings = InlineKeyboardButton(
-            text=BASE_LEXICON_RU["nearest_meetings_header"], callback_data="nearest_meetings"
-        )
         scheduled_match_days = InlineKeyboardButton(
-            text=BASE_LEXICON_RU["scheduled_match_days_header"],
+            text=MAIN_KEYBOARD_BUTTON_LEXICON_RU["scheduled_match_days"],
             callback_data="scheduled_match_days",
+        )
+        nearest_meetings = InlineKeyboardButton(
+            text=MAIN_KEYBOARD_BUTTON_LEXICON_RU["nearest_meetings"], callback_data="nearest_meetings"
         )
 
         main_keyboard = InlineKeyboardMarkup(
