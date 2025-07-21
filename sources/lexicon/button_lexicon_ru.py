@@ -13,6 +13,7 @@ ADMIN_KEYBOARD_BUTTON_LEXICON_RU = {
 }
 
 ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU = {
-    "add_watch_day": "Добавить просмотр",
+    "add_watch_day": "➕ Создать встречу",
+    
     "back_to_main_menu": "⬅️ **Назад в меню**  ",
 }
