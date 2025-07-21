@@ -80,11 +80,12 @@ async def edit_place_name(message: Message, state: FSMContext):
         logger.debug(
             f"Step edit_place_name with context: {message.text} from user {message.from_user.id}"
         )
-        await match_day_manager.change_place_name(
+        old_place_name = await match_day_manager.change_place_name(
             place_id=place_id, new_place_name=new_place_name
         )
         await message.answer(
             text=BASE_ADMIN_LEXICON_RU["edit_place_name"].format(
+                old_place_name=old_place_name,
                 new_place_name=new_place_name
             ),
             reply_markup=admin_keyboard.edit_place_keyboard(address=True),
@@ -154,9 +155,11 @@ async def delete_place(callback: CallbackQuery, state: FSMContext):
             f"Step edit_place_name with context: {callback.data} from user {callback.from_user.id}"
         )
 
-        await match_day_manager.delete_place(place_id=place_id)
+        place_name = await match_day_manager.delete_place(place_id=place_id)
         await callback.message.answer(
-            text=BASE_ADMIN_LEXICON_RU["delete_place"],
+            text=BASE_ADMIN_LEXICON_RU["delete_place"].format(
+                place_name=place_name
+            ),
             reply_markup=admin_keyboard.main_admin_keyboard(),
         )
 

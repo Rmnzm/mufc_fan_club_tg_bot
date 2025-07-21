@@ -8,7 +8,7 @@ from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
-from lexicon.admin_lexicon_ru import ERROR_ADMIN_LEXICON_RU
+from lexicon.admin_lexicon_ru import BASE_ADMIN_LEXICON_RU, ERROR_ADMIN_LEXICON_RU
 from states.create_place_state import CreatePlaceStateGroup
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,9 @@ async def input_place_name(message: Message, state: FSMContext):
         await state.set_data(dict(add_place_state=message.text))
 
         await message.answer(
-            text=f"Введено название: {message.text}\n\nВведите адрес места сбора..."
+            text=BASE_ADMIN_LEXICON_RU["add_watching_place_step_2"].format(
+                place_name=message.text
+            )
         )
         logger.info(
             f"Successfully processed place name with context={message.text} from user={message.from_user.id}"
@@ -50,10 +52,13 @@ async def input_place_address(message: Message, state: FSMContext):
         await match_day_manager.add_watch_place(
             place_name=current_state_data["add_place_state"], place_address=message.text
         )
-        msg = f"Место сбора добавлено.\nНазвание - {current_state_data['add_place_state']}\nАдрес - {message.text}"
 
         await message.answer(
-            text=msg, reply_markup=admin_keyboard.main_admin_keyboard()
+            text=BASE_ADMIN_LEXICON_RU["add_watching_place_step_final"].format(
+                place_name=current_state_data["add_place_state"],
+                place_address=message.text,
+            ), 
+            reply_markup=admin_keyboard.main_admin_keyboard()
         )
         logger.info(
             f"Successfully processed place address with context={current_state_data}"

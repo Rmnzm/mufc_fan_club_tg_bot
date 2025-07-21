@@ -425,18 +425,25 @@ class KznRedsPGManager:
 
     async def delete_place(self, place_id: int):
         try:
+            place = await objects.get(Place.select().where(Place.id == place_id))
+            place_name_str = place.place_name
+
             await objects.execute(Place.delete().where(Place.id == place_id))
+            return place_name_str
         except Exception as e:
             logger.error(f"Error deleting place with ID {place_id}", exc_info=True)
             raise
 
     async def change_place_name(self, place_id: int, new_place_name: str):
         try:
+            place = await objects.get(Place.select().where(Place.id == place_id))
+            old_place_name = place.place_name
             await objects.execute(
                 Place
                 .update(place_name=new_place_name)
                 .where(Place.id == place_id)
             )
+            return old_place_name
         except Exception as e:
             logger.error(f"Error changing place name for place ID {place_id}", exc_info=True)
             raise
