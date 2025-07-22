@@ -1,4 +1,5 @@
 import logging
+import peewee
 from datetime import datetime, timedelta
 from typing import List, Optional
 
@@ -318,7 +319,14 @@ class KznRedsPGManager:
             raise
 
     async def register_user_to_watch(
-        self, user_id: int, watch_day_id: int, match_day_id: int, place_id: int
+        self, 
+        user_id: int, 
+        watch_day_id: int, 
+        match_day_id: int, 
+        place_id: int, 
+        is_approved: bool = False, 
+        is_canceled: bool = False, 
+        is_message_sent: bool = False
     ):
         try:
             await objects.create(
@@ -327,19 +335,29 @@ class KznRedsPGManager:
                 watch_day_id=watch_day_id,
                 match_day_id=match_day_id,
                 place_id=place_id,
-                is_approved=False,
-                is_canceled=False,
-                is_message_sent=False,
+                is_approved=is_approved,
+                is_canceled=is_canceled,
+                is_message_sent=is_message_sent,
                 on_conflict={
                     'update': {
                         'watch_day_id': watch_day_id,
                         'place_id': place_id,
-                        'is_approved': False,
-                        'is_canceled': False,
-                        'is_message_sent': False
+                        'is_approved': is_approved,
+                        'is_canceled': is_canceled,
+                        'is_message_sent': is_message_sent
                     }
                 }
             )
+        except peewee.IntegrityError as e:
+           await objects.execute(
+                UserRegistration
+                .update(is_approved=is_approved, is_canceled=is_canceled, is_message_sent=is_message_sent)
+                .where(
+                    (UserRegistration.user_id == user_id) &
+                    (UserRegistration.match_day_id == match_day_id)
+                )
+           )
+           logger.info(f"User {user_id} already registered for match {match_day_id}")
         except Exception as e:
             logger.error(f"Error registering user {user_id} for match {match_day_id}", exc_info=True)
             raise
