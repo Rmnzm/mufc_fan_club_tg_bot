@@ -21,12 +21,12 @@ class WatchDayHelper:
             watch_day_by_id[0].meeting_date
         )
         nearest_match_day = (
-            f"🔴 **Фан-встреча**\n "
-            f"**{watch_day_by_id[0].localed_match_day_name}**\n\n"
-            f"📅 *{date_str}* \n"
-            f"⏰ *{time_str}* (сбор с {gathering_str})\n\n"
-            f"🏟️ *{watch_day_by_id[0].place_name}*\n"
-            f"📍 *{watch_day_by_id[0].address}*"
+            f"🔴 Фан-встреча\n "
+            f"{watch_day_by_id[0].localed_match_day_name}\n\n"
+            f"📅 {date_str} \n"
+            f"⏰ {time_str} (сбор с {gathering_str})\n\n"
+            f"🏟️ {watch_day_by_id[0].place_name}\n"
+            f"📍 {watch_day_by_id[0].address}"
         )
 
         watch_day_by_id_dict = [

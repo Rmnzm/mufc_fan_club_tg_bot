@@ -163,17 +163,6 @@ class KznRedsPGManager:
             logger.error("Error fetching places", exc_info=True)
             raise
 
-    async def get_place_by_id(self, place_id: int) -> List[PlacesSchema]:
-        try:
-            query = Place.select().where(Place.id == place_id)
-            places = await objects.execute(query)
-            return self._schema_converter.convert_places(
-                [model.__data__ for model in places]
-            )
-        except Exception as e:
-            logger.error(f"Error fetching place with ID {place_id}", exc_info=True)
-            raise
-
     async def add_match_day(
         self,
         start_timestamp: datetime,
@@ -355,12 +344,18 @@ class KznRedsPGManager:
             logger.error(f"Error registering user {user_id} for match {match_day_id}", exc_info=True)
             raise
 
-    async def get_match_day_id_watch_day_id(self, watch_day_id: int) -> int:
+    async def get_watch_day_by_id(self, watch_day_id: int) -> WatchDay:
         try:
-            watch_day = await objects.get(WatchDay.select(WatchDay.match_day_id).where(WatchDay.id == watch_day_id))
-            return watch_day.match_day_id
+            return await objects.get(WatchDay.select().where(WatchDay.id == watch_day_id))
         except Exception as e:
-            logger.error(f"Error getting match day ID for watch day {watch_day_id}", exc_info=True)
+            logger.error(f"Error getting watch day by ID {watch_day_id}", exc_info=True)
+            raise
+
+    async def get_match_day(self, match_day_id: int) -> MatchDay:
+        try:
+            return await objects.get(MatchDay.select().where(MatchDay.id == match_day_id))
+        except Exception as e:
+            logger.error(f"Error getting match day by ID {match_day_id}", exc_info=True)
             raise
 
     async def get_match_day_name_by_id(self, match_day_id: int) -> str:
@@ -422,6 +417,21 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error("Error adding watch place", exc_info=True)
             raise
+
+    async def get_place(self, place_id: int) -> Place:
+        try:
+            return await objects.get(Place.select().where(Place.id == place_id))
+        except Exception as e:
+            logger.error(f"Error getting place with ID {place_id}", exc_info=True)
+            raise
+
+    # async def get_place_by_watch_day_id(self, watch_day_id: int) -> Place:
+    #     try:
+    #         watch_day = await self.get_watch_day_by_id(watch_day_id)
+    #         return await self.get_place(watch_day.place_id)
+    #     except Exception as e:
+    #         logger.error(f"Error getting place by watch day ID {watch_day_id}", exc_info=True)
+    #         raise
 
     async def delete_place(self, place_id: int):
         try:

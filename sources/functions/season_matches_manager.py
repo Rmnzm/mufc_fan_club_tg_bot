@@ -90,13 +90,13 @@ class SeasonMatchesManager:
         match_day_name = await match_day_manager.get_match_day_name_by_id(
             context[0].match_day_id
         )
-        place_info = await match_day_manager.get_place_by_id(context[0].place_id)
+        place_info = await match_day_manager.get_place(context[0].place_id)
 
         match_day_info = {
             "match_day_id": context[0].match_day_id,
             "match_day_name": match_day_name,
-            "place_name": place_info[0].place_name,
-            "address": place_info[0].address,
+            "place_name": place_info.place_name,
+            "address": place_info.address,
             "meeting_date": meeting_date,
         }
 

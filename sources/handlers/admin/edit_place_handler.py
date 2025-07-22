@@ -39,9 +39,10 @@ async def edit_place_process(
         place_id = callback_data.id
         await state.set_state(PlaceState.place_id)
         await state.update_data(place_id=place_id)
+        place = await match_day_manager.get_place(place_id)
 
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["edit_place_process"],
+            text=BASE_ADMIN_LEXICON_RU["edit_place_process"].format(place_name=place.place_name),
             reply_markup=admin_keyboard.edit_place_keyboard(name=True, address=True),
         )
     except Exception as error:
@@ -58,8 +59,12 @@ async def edit_place_name_process(callback: CallbackQuery, state: FSMContext):
     try:
         logger.debug(f"Step edit_place_name_process with context = {callback.data}")
         await state.set_state(PlaceState.edit_name)
+        place_id = await state.get_data()["place_id"]
+        place = await match_day_manager.get_place(place_id=place_id)
         await callback.message.answer(
-            text=BASE_ADMIN_LEXICON_RU["edit_place_name_process"]
+            text=BASE_ADMIN_LEXICON_RU["edit_place_name_process"].format(
+                old_place_name=place.place_name
+            ),
         )
     except Exception as error:
         logger.error(f"Failed to start editing place name. Err: {error}")
@@ -106,8 +111,12 @@ async def edit_address_place_process(callback: CallbackQuery, state: FSMContext)
             f"Step edit_place_name with context: {callback.data} from user {callback.from_user.id}"
         )
         await state.set_state(PlaceState.edit_address)
+        place_id = await state.get_data()["place_id"]
+        place = await match_day_manager.get_place(place_id=place_id)
         await callback.message.answer(
-            text=BASE_ADMIN_LEXICON_RU["edit_address_place_process"]
+            text=BASE_ADMIN_LEXICON_RU["edit_address_place_process"].format(
+                old_place_address=place.place_address
+            )
         )
     except Exception as error:
         logger.error(f"Failed to start editing place address process. Err: {error}")
