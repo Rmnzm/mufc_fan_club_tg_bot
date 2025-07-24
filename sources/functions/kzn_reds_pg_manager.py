@@ -443,14 +443,6 @@ class KznRedsPGManager:
             logger.error(f"Error getting place with ID {place_id}", exc_info=True)
             raise
 
-    # async def get_place_by_watch_day_id(self, watch_day_id: int) -> Place:
-    #     try:
-    #         watch_day = await self.get_watch_day_by_id(watch_day_id)
-    #         return await self.get_place(watch_day.place_id)
-    #     except Exception as e:
-    #         logger.error(f"Error getting place by watch day ID {watch_day_id}", exc_info=True)
-    #         raise
-
     async def delete_place(self, place_id: int):
         try:
             place = await objects.get(Place.select().where(Place.id == place_id))
