@@ -25,24 +25,6 @@ services:
     - app-network
    restart: always
    command: python /app/main.py
-# kzn_reds_pg:
-#   image: postgres:14.2
-#   hostname: kzn_reds_pg
-#   environment:
-#     POSTGRES_USER: postgres
-#     POSTGRES_PASSWORD: postgres
-#     POSTGRES_DB: postgres
-#   ports:
-#     - "5132:5432"
-#   volumes:
-# #      TODO: RENAME dlh_database_pg
-#     - ./data/dlh_database_pg/:/var/lib/postgresql/data
-#     - ./dlh_database_pg/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d
-#   healthcheck:
-#     test: [ "CMD", "pg_isready", "-U", "postgres" ]
-#     interval: 10s
-#     retries: 5
-#   restart: always
 
 volumes:
   redis_data:

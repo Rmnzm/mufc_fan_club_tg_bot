@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     update_match_job_timeout_in_sec: str = "36000"
     base_team_name: str
     base_team_located_ru_name: str
+    default_task_timeout_in_sec: str = "60"
+    update_matches_default_batch_size: str = "5"
 
     class Config:
         env_file = ".env"

@@ -8,7 +8,7 @@ from lexicon.watch_day_lexicon_ru import WATCH_DAY_LEXICON_RU
 class WatchDayHelper:
     @staticmethod
     def watch_day_by_id_context(watch_day_by_id: list[NearestMeetingsSchema]):
-        date_str, time_str, gathering_str = WatchDayHelper.__format_match_date(
+        date_str, time_str, gathering_str = WatchDayHelper.format_match_date(
             watch_day_by_id[0].meeting_date
         )
         nearest_match_day = WATCH_DAY_LEXICON_RU["nearest_match_day"].format(
@@ -29,7 +29,8 @@ class WatchDayHelper:
 
         return nearest_match_day, watch_day_by_id_dict
     
-    def __format_match_date(meeting_date, gathering_offset_hours=0.5):
+    @staticmethod
+    def format_match_date(meeting_date, gathering_offset_hours=0.5):
         weekday = WEEKDAYS_RU[meeting_date.weekday()]
         day = meeting_date.day
         month = MONTHS_RU[meeting_date.month]
@@ -37,7 +38,6 @@ class WatchDayHelper:
         formatted_date = f"{weekday}, {day} {month}"
         formatted_time = meeting_date.strftime("%H:%M")
         
-        # Рассчитываем время сбора
         gathering_time = (meeting_date - timedelta(hours=gathering_offset_hours)).strftime("%H:%M")
         
         return formatted_date, formatted_time, gathering_time
