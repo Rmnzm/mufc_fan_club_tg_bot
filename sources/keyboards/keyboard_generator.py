@@ -11,6 +11,7 @@ from callback_factory.callback_factory import (
     WatchPlaceChangeFactory,
 )
 from schemes.scheme import NearestMeetingsSchema, MatchDaySchema, PlacesSchema
+from lexicon.button_lexicon_ru import ADMIN_KEYBOARD_BUTTON_LEXICON_RU, ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU
 
 
 class KeyboardGenerator:
@@ -24,7 +25,7 @@ class KeyboardGenerator:
     ):
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [self.__button(factory_data, buttons_info)]
+                [self.__watch_day_keyboard_button(factory_data, buttons_info)]
                 for factory_data in data_factories
             ],
             resize_keyboard=True,
@@ -38,19 +39,19 @@ class KeyboardGenerator:
         add_watch_day: bool = False,
     ):
         inline_keyboard = [
-            [self.__button(factory_data, buttons_info)]
+            [self.__watch_day_keyboard_button(factory_data, buttons_info)]
             for factory_data in data_factories
         ]
         if add_watch_day:
             inline_keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text="Добавить просмотр", callback_data="add_watch_day"
+                        text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["add_watch_day"], callback_data="add_watch_day"
                     )
                 ]
             )
         back_to_main_menu = InlineKeyboardButton(
-            text="Назад в меню", callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -65,19 +66,19 @@ class KeyboardGenerator:
         add_watch_day: bool = False,
     ):
         inline_keyboard = [
-            [self.__button_2(factory_data, buttons_info)]
+            [self.__match_day_keyboard_button(factory_data, buttons_info)]
             for factory_data in data_factories
         ]
         if add_watch_day:
             inline_keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text="Добавить просмотр", callback_data="add_watch_day"
+                        text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["add_watch_day"], callback_data="add_watch_day"
                     )
                 ]
             )
         back_to_main_menu = InlineKeyboardButton(
-            text="Назад в меню", callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -89,11 +90,11 @@ class KeyboardGenerator:
         self, data_factories: List[PlacesFactory], buttons_info: List[PlacesSchema]
     ):
         inline_keyboard = [
-            [self.__button_3(factory_data, buttons_info)]
+            [self.__places_factory_keyboard_button(factory_data, buttons_info)]
             for factory_data in data_factories
         ]
         back_to_main_menu = InlineKeyboardButton(
-            text="Назад в меню", callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -111,7 +112,7 @@ class KeyboardGenerator:
             for factory_data in data_factories
         ]
         back_to_main_menu = InlineKeyboardButton(
-            text="Назад в меню", callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -120,7 +121,7 @@ class KeyboardGenerator:
         return keyboard
 
     @staticmethod
-    def __button(
+    def __watch_day_keyboard_button(
         callback_data: MatchDayCallbackFactory | AdminMatchDayCallbackFactory,
         button_data: list[NearestMeetingsSchema],
     ) -> InlineKeyboardButton:
@@ -137,7 +138,7 @@ class KeyboardGenerator:
             raise
 
     @staticmethod
-    def __button_2(
+    def __match_day_keyboard_button(
         callback_data: MatchDayCallbackFactory | AdminCreateWatchDayCallbackFactory,
         button_data: list[MatchDaySchema],
     ) -> InlineKeyboardButton:
@@ -154,7 +155,7 @@ class KeyboardGenerator:
             raise
 
     @staticmethod
-    def __button_3(
+    def __places_factory_keyboard_button(
         callback_data: PlacesFactory, button_data: list[PlacesSchema]
     ) -> InlineKeyboardButton:
         try:

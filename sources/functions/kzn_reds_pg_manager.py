@@ -1,4 +1,5 @@
 import logging
+import peewee
 from datetime import datetime, timedelta
 from typing import List, Optional
 
@@ -163,17 +164,6 @@ class KznRedsPGManager:
             logger.error("Error fetching places", exc_info=True)
             raise
 
-    async def get_place_by_id(self, place_id: int) -> List[PlacesSchema]:
-        try:
-            query = Place.select().where(Place.id == place_id)
-            places = await objects.execute(query)
-            return self._schema_converter.convert_places(
-                [model.__data__ for model in places]
-            )
-        except Exception as e:
-            logger.error(f"Error fetching place with ID {place_id}", exc_info=True)
-            raise
-
     async def add_match_day(
         self,
         start_timestamp: datetime,
@@ -329,7 +319,14 @@ class KznRedsPGManager:
             raise
 
     async def register_user_to_watch(
-        self, user_id: int, watch_day_id: int, match_day_id: int, place_id: int
+        self, 
+        user_id: int, 
+        watch_day_id: int, 
+        match_day_id: int, 
+        place_id: int, 
+        is_approved: bool = False, 
+        is_canceled: bool = False, 
+        is_message_sent: bool = False
     ):
         try:
             await objects.create(
@@ -338,29 +335,45 @@ class KznRedsPGManager:
                 watch_day_id=watch_day_id,
                 match_day_id=match_day_id,
                 place_id=place_id,
-                is_approved=False,
-                is_canceled=False,
-                is_message_sent=False,
+                is_approved=is_approved,
+                is_canceled=is_canceled,
+                is_message_sent=is_message_sent,
                 on_conflict={
                     'update': {
                         'watch_day_id': watch_day_id,
                         'place_id': place_id,
-                        'is_approved': False,
-                        'is_canceled': False,
-                        'is_message_sent': False
+                        'is_approved': is_approved,
+                        'is_canceled': is_canceled,
+                        'is_message_sent': is_message_sent
                     }
                 }
             )
+        except peewee.IntegrityError as e:
+           await objects.execute(
+                UserRegistration
+                .update(is_approved=is_approved, is_canceled=is_canceled, is_message_sent=is_message_sent)
+                .where(
+                    (UserRegistration.user_id == user_id) &
+                    (UserRegistration.match_day_id == match_day_id)
+                )
+           )
+           logger.info(f"User {user_id} already registered for match {match_day_id}")
         except Exception as e:
             logger.error(f"Error registering user {user_id} for match {match_day_id}", exc_info=True)
             raise
 
-    async def get_match_day_id_watch_day_id(self, watch_day_id: int) -> int:
+    async def get_watch_day_by_id(self, watch_day_id: int) -> WatchDay:
         try:
-            watch_day = await objects.get(WatchDay.select(WatchDay.match_day_id).where(WatchDay.id == watch_day_id))
-            return watch_day.match_day_id
+            return await objects.get(WatchDay.select().where(WatchDay.id == watch_day_id))
         except Exception as e:
-            logger.error(f"Error getting match day ID for watch day {watch_day_id}", exc_info=True)
+            logger.error(f"Error getting watch day by ID {watch_day_id}", exc_info=True)
+            raise
+
+    async def get_match_day(self, match_day_id: int) -> MatchDay:
+        try:
+            return await objects.get(MatchDay.select().where(MatchDay.id == match_day_id))
+        except Exception as e:
+            logger.error(f"Error getting match day by ID {match_day_id}", exc_info=True)
             raise
 
     async def get_match_day_name_by_id(self, match_day_id: int) -> str:
@@ -423,20 +436,34 @@ class KznRedsPGManager:
             logger.error("Error adding watch place", exc_info=True)
             raise
 
+    async def get_place(self, place_id: int) -> Place:
+        try:
+            return await objects.get(Place.select().where(Place.id == place_id))
+        except Exception as e:
+            logger.error(f"Error getting place with ID {place_id}", exc_info=True)
+            raise
+
     async def delete_place(self, place_id: int):
         try:
+            place = await objects.get(Place.select().where(Place.id == place_id))
+            place_name_str = place.place_name
+
             await objects.execute(Place.delete().where(Place.id == place_id))
+            return place_name_str
         except Exception as e:
             logger.error(f"Error deleting place with ID {place_id}", exc_info=True)
             raise
 
     async def change_place_name(self, place_id: int, new_place_name: str):
         try:
+            place = await objects.get(Place.select().where(Place.id == place_id))
+            old_place_name = place.place_name
             await objects.execute(
                 Place
                 .update(place_name=new_place_name)
                 .where(Place.id == place_id)
             )
+            return old_place_name
         except Exception as e:
             logger.error(f"Error changing place name for place ID {place_id}", exc_info=True)
             raise

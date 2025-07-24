@@ -173,16 +173,16 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
     except Exception as error:
         logger.error(f"Failed to process poll answer. Err: {error}")
 
-# TODO: rename method and lexicon
 @router.callback_query(F.data == "edit_watch_place", AdminFilter())
-async def process_go_button(callback: CallbackQuery, state: FSMContext):
+async def process_change_watching_place(callback: CallbackQuery, state: FSMContext):
     try:
-        logger.debug(f"Step process_go_button with context: {callback.data}")
+        logger.debug(f"Step process_change_watching_place with context: {callback.data}")
         await state.set_state(PlaceState.edit_watch_place)
         watch_day_state_data = await state.get_data()
         watch_day_info = watch_day_state_data["watch_day_by_id"]
-        logger.debug(f"Step process_go_button {watch_day_info=}")
+        logger.debug(f"Step process_change_watching_place {watch_day_info=}")
         watch_day_id = watch_day_info[0]["watch_day_id"]
+        current_place = await match_day_manager.get_place(watch_day_info[0]["place_id"])
 
         await state.update_data(watch_day_id=watch_day_id)
 
@@ -191,13 +191,16 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
         data_factories = [WatchPlaceChangeFactory(id=context.id) for context in places]
         reply_keyboard = places_keyboard.places_editor_keyboard(data_factories, places)
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["process_go_button"], reply_markup=reply_keyboard
+            text=BASE_ADMIN_LEXICON_RU["process_change_watching_place"].format(
+                current_place=current_place.place_name
+            ), 
+            reply_markup=reply_keyboard
         )
         logger.info(f"Successfully processed go button")
     except Exception as error:
         logger.error(f"Failed to processing go button. Err: {error}")
         await callback.message.edit_text(
-            text=ERROR_ADMIN_LEXICON_RU["failed_process_go_button"],
+            text=ERROR_ADMIN_LEXICON_RU["failed_process_change_watching_place"],
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
@@ -206,7 +209,7 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(
     WatchPlaceChangeFactory.filter(), PlaceState.edit_watch_place, AdminFilter()
 )
-async def change_watch_place_process(
+async def watching_place_changed(
     callback: CallbackQuery, callback_data: WatchPlaceChangeFactory, state: FSMContext
 ):
     place_id = callback_data.id
@@ -214,19 +217,22 @@ async def change_watch_place_process(
     watch_day_id = watch_day_state_data["watch_day_id"]
 
     try:
-        logger.debug(f"Step change_watch_place_process with context: {callback_data}")
+        logger.debug(f"Step watching_place_changed with context: {callback_data}")
         await match_day_manager.change_watch_day_place(
             watch_day_id=watch_day_id, place_id=place_id
         )
+        new_place = await match_day_manager.get_place(place_id)
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["change_watch_place_process"],
+            text=BASE_ADMIN_LEXICON_RU["watching_place_changed"].format(
+                new_place=new_place.place_name, address=new_place.address
+            ),
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
         logger.info(f"Successfully changed meeting place place on {watch_day_id=}")
     except Exception as error:
         logger.error(f"Failed to change meeting place. Err: {error}")
         await callback.message.edit_text(
-            text=ERROR_ADMIN_LEXICON_RU["failed_change_watch_place_process"],
+            text=ERROR_ADMIN_LEXICON_RU["failed_watching_place_changed"],
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
     await callback.answer()
@@ -242,8 +248,11 @@ async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
     try:
         logger.debug(f"Step process_cancel_meeting with context: {callback.data}")
         await match_day_manager.cancel_meeting(watch_day_id=watch_day_id)
+        match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info["match_day_id"])
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["process_cancel_meeting"],
+            text=BASE_ADMIN_LEXICON_RU["process_cancel_meeting"].format(
+                localed_match_day_name=match_day.localed_match_day_name
+            ),
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
         logger.info(f"Successfully canceled meeting with {watch_day_id=}")
@@ -266,6 +275,8 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     try:
         logger.debug(f"Step process_show_visitors with context: {callback.data}")
         users = await match_day_manager.show_visitors(match_day_id=watch_day_info[0]["match_day_id"])
+        match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info[0]["match_day_id"])
+        logger.info(f"{match_day.localed_match_day_name=}")
 
         users_string = "\n".join(
             [f"@{user.username} - {user.user_role}" for user in users]
@@ -273,7 +284,7 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
 
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["process_show_visitors"].format(
-                users_string=users_string
+                localed_match_day_name=match_day.localed_match_day_name, users_string=users_string
             ),
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
