@@ -1,7 +1,7 @@
 import logging
 import peewee
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from peewee import fn
 from database.models.models import MatchDay, User, WatchDay, Place, UserRegistration
@@ -490,23 +490,52 @@ class KznRedsPGManager:
             logger.error(f"Error changing watch day place for watch day ID {watch_day_id}", exc_info=True)
             raise
 
-    async def show_visitors(self, match_day_id: int) -> List[UsersSchema]:
-        try:
-            query = (User
-                     .select()
-                     .join(UserRegistration, on=(User.user_tg_id == UserRegistration.user_id))
-                     .where(
-                         (UserRegistration.match_day_id == match_day_id) &
-                         (UserRegistration.is_canceled == False))
-                     )
+    @staticmethod
+    async def get_visitors_with_status(match_day_id: int) -> Tuple[
+        List[UsersSchema],  # approved
+        List[UsersSchema],  # canceled
+        List[UsersSchema]   # pending
+    ]:
+        query = (User
+                .select(User, UserRegistration)
+                .join(UserRegistration, on=(User.user_tg_id == UserRegistration.user_id))
+                .where(UserRegistration.match_day_id == match_day_id))
+        
+        users = await objects.execute(query)
+        
+        approved = []
+        canceled = []
+        pending = []
+        
+        for user in users:
+            user_data = user.__data__
+            reg_data = user.userregistration.__data__
             
-            users = await objects.execute(query)
-            return self._schema_converter.convert_users_info(
-                [model.__data__ for model in users]
+            user_schema = UsersSchema(
+                **user_data,
+                is_approved=reg_data['is_approved'],
+                is_canceled=reg_data['is_canceled']
             )
-        except Exception as e:
-            logger.error(f"Error fetching visitors for match {match_day_id}", exc_info=True)
-            raise
+            
+            if reg_data['is_canceled']:
+                canceled.append(user_schema)
+            elif reg_data['is_approved']:
+                approved.append(user_schema)
+            else:
+                pending.append(user_schema)
+        
+        return approved, canceled, pending
+
+    async def show_visitors(self, match_day_id: int) -> Dict[str, List[UsersSchema]]:
+        approved, canceled, pending = await self.get_visitors_with_status(match_day_id)
+        return {
+            'approved': approved,
+            'canceled': canceled,
+            'pending': pending,
+            'approved_count': len(approved),
+            'canceled_count': len(canceled),
+            'pending_count': len(pending)
+        }
 
     async def register_user(self, user_tg_id: int, user_schema: UsersSchema):
         try:
@@ -554,6 +583,36 @@ class KznRedsPGManager:
         except Exception as e:
             logger.error(f"Error fetching users for match {match_day_id}", exc_info=True)
             raise
+
+    async def count_registered_meeting_users(self, watch_day_id: int) -> int:
+        try:
+            return await objects.count(UserRegistration.select().where(UserRegistration.watch_day_id == watch_day_id))
+        except Exception as e:
+            logger.error(f"Error counting registered users for meeting {watch_day_id}", exc_info=True)
+            raise
+
+    async def get_registered_match_day_users_by_status(
+            self, user_ids: List[int], watch_day_id: int, is_canceled: bool = False, is_approved: bool = False
+            ) -> Tuple[int, List[UserRegistrationSchema]]:
+        try:
+            query = (UserRegistration
+                     .select()
+                     .where(
+                         (UserRegistration.is_canceled == is_canceled) &
+                         (UserRegistration.is_approved == is_approved) &
+                         (UserRegistration.watch_day_id == watch_day_id) &
+                         (UserRegistration.user_id in user_ids)
+                         )
+                     )
+            
+            registrations = await objects.execute(query)
+            return sum(registrations), self._schema_converter.convert_users_registration(
+                [model.__data__ for model in registrations]
+            )
+        except Exception as e:
+            logger.error(f"Error fetching confirmed users for meeting {watch_day_id}", exc_info=True)
+            raise
+
 
     async def cancel_meeting(self, watch_day_id: int):
         try:

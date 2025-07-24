@@ -1,5 +1,5 @@
-import datetime
 import logging
+from typing import Dict, List
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -24,6 +24,7 @@ from lexicon.admin_lexicon_ru import (
     ADMIN_MATCH_INVITE_POLL_OPTIONS,
 )
 from schemes.scheme import UsersSchema, NearestMeetingsSchema
+from database.models.models import MatchDay
 from states.main_states import WatchDayInfoStateGroup
 
 logger = logging.getLogger(__name__)
@@ -247,11 +248,15 @@ async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
     logger.debug(f"Step process_cancel_meeting {watch_day_info=}")
     try:
         logger.debug(f"Step process_cancel_meeting with context: {callback.data}")
+        count_registered_users = await match_day_manager.count_registered_meeting_users(
+            watch_day_id=watch_day_id
+        )
         await match_day_manager.cancel_meeting(watch_day_id=watch_day_id)
         match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info["match_day_id"])
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["process_cancel_meeting"].format(
-                localed_match_day_name=match_day.localed_match_day_name
+                localed_match_day_name=match_day.localed_match_day_name, 
+                count_registered_users=count_registered_users
             ),
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
@@ -274,23 +279,19 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
 
     try:
         logger.debug(f"Step process_show_visitors with context: {callback.data}")
-        users = await match_day_manager.show_visitors(match_day_id=watch_day_info[0]["match_day_id"])
-        match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info[0]["match_day_id"])
-        logger.info(f"{match_day.localed_match_day_name=}")
 
-        users_string = "\n".join(
-            [f"@{user.username} - {user.user_role}" for user in users]
-        )
+        visitors_data = await match_day_manager.show_visitors(match_day_id=watch_day_info[0]["match_day_id"])
+        match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info[0]["match_day_id"])
+
+        message_text = _prepare_visitors_message_text(visitors_data=visitors_data, match_day=match_day)
 
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["process_show_visitors"].format(
-                localed_match_day_name=match_day.localed_match_day_name, users_string=users_string
-            ),
+            text=message_text,
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
-        logger.info(f"Successfully received and showed approved users. {users_string=}")
+        logger.info(f"Successfully received and showed visitors. {message_text=}")
     except Exception as error:
-        logger.error(f"Failed to receive or show approved users. Err: {error}")
+        logger.error(f"Failed to receive or show visitors. Err: {error}")
         await callback.message.edit_text(
             text=ERROR_ADMIN_LEXICON_RU["failed_process_show_visitors"],
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
@@ -377,3 +378,26 @@ async def _register_user_poll_answer(poll_answer, watch_day_info):
         )
     except Exception as error:
         logger.exception(f"Failed to register user to watch. Err: {error}")
+
+def _prepare_visitors_message_text(
+        visitors_data: Dict[str, List[UsersSchema]], match_day: MatchDay
+        ):
+    approved_users_string = "\n".join(
+        [f"@{user.username} - {user.user_role}" for user in visitors_data['approved']]
+    )
+    declined_users_string = "\n".join(
+        [f"@{user.username} - {user.user_role}" for user in visitors_data['canceled']]
+    )
+    pending_users_string = "\n".join(
+        [f"@{user.username} - {user.user_role}" for user in visitors_data['pending']]
+    )
+
+    return BASE_ADMIN_LEXICON_RU["process_show_visitors"].format(
+            localed_match_day_name=match_day.localed_match_day_name, 
+            confirmed_users_count=visitors_data["approved_count"],
+            confirmed_users=approved_users_string,
+            declined_users_count=visitors_data["canceled_count"],
+            declined_users=declined_users_string,
+            pending_users_count=visitors_data["pending_count"],
+            pending_users=pending_users_string
+        )
