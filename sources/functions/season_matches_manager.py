@@ -111,15 +111,22 @@ class SeasonMatchesManager:
 
     @staticmethod
     def __check_match_day_has_changes(
-        event: EventDTO, match_day_schema: MatchDaySchema
+        event: EventDTO, 
+        match_day_schema: MatchDaySchema
     ) -> bool:
-        try:
-            # TODO: add more checks and remove asserts
-            assert event.date.timestamp() == match_day_schema.start_timestamp
-            assert event.eventId == match_day_schema.event_id
-            return True
-        except AssertionError:
-            return False
+        """Checks if critical match day data has changed.
+        
+        Args:
+            event: Event data transfer object
+            match_day_schema: Current match day schema
+            
+        Returns:
+            bool: True if data remains unchanged, False if changes detected
+        """
+        return (
+            event.date.timestamp() == match_day_schema.start_timestamp
+            and event.eventId == match_day_schema.event_id
+        )
 
     async def get_next_matches(self):
         async with aiohttp.ClientSession() as session:

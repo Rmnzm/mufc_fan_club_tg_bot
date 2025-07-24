@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 
 from aiogram import Bot
@@ -6,6 +7,8 @@ from aiogram.fsm.state import State, StatesGroup
 
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.meeting_approvement_keyboard import MeetingApprovementKeyboard
+from lexicon.watch_day_lexicon_ru import WATCH_DAY_LEXICON_RU
+from functions.helpers.watch_day_helper import WatchDayHelper
 
 logger = logging.getLogger(__name__)
 
@@ -44,15 +47,13 @@ class MeetingInvitesManager:
         match_name = context.get("match_day_name")
         place_name = context.get("place_name")
         address = context.get("address")
-        meeting_date = context.get("meeting_date")
-        # TODO: переписать под макроподстановки и базовое сообщение из БД
-        return (
-            f"Матч\n"
-            f"{match_name} \n"
-            f"\n"
-            f"приглашает Вас к просмотру\n"
-            f"\n"
-            f"{meeting_date}\n"
-            f"{place_name}\n"
-            f"{address}"
+        match_day_datetime = datetime.strptime(context.get("meeting_date"), "%a, %d %b %H:%M")
+        date_str, time_str, gathering_str = WatchDayHelper.format_match_date(match_day_datetime)
+        return WATCH_DAY_LEXICON_RU["meeting_invite_message"].format(
+            match_name=match_name,
+            date_str=date_str,
+            time_str=time_str,
+            gathering_str=gathering_str,
+            place_name=place_name,
+            address=address,
         )

@@ -44,6 +44,8 @@ class UsersSchema(BaseModel):
     user_role: str = "USER"
     first_name: str | None
     last_name: str | None
+    is_approved: bool = False
+    is_canceled: bool = False
 
 
 class PlacesSchema(BaseModel):

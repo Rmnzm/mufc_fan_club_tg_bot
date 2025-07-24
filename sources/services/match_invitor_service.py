@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot
 from redis.asyncio import Redis
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from config.config import get_settings
 from functions.meeting_invites_manager import MeetingInvitesManager
 from functions.season_matches_manager import SeasonMatchesManager
@@ -59,12 +59,12 @@ class MatchInvitorManager:
         if match_day_datetime.tzinfo is None:
             match_day_datetime = match_day_datetime.replace(
                 tzinfo=timezone.utc
-            ) + timedelta(hours=3)
-        current_time = datetime.now(timezone.utc) + timedelta(hours=3)
+            )
+        current_time = datetime.now(timezone.utc)
         logger.info(
             f"Checking current time current_time={current_time.strftime('%a, %d %b %H:%M')} "
         )
-        meeting_timedelta = match_day_datetime - current_time + timedelta(hours=4)
+        meeting_timedelta = match_day_datetime - current_time
         meeting_delta_hours = meeting_timedelta.total_seconds() // 3600
 
         if meeting_delta_hours <= int(settings.timedelta_to_start_sending_in_hours):

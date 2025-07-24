@@ -36,7 +36,7 @@ async def create_or_update_matches():
     while True:
         try:
             task = asyncio.create_task(_process_matches_update())
-            await asyncio.wait_for(task, timeout=60)  # TODO: move to config
+            await asyncio.wait_for(task, timeout=int(settings.default_task_timeout_in_sec))
             
         except asyncio.TimeoutError:
             logger.warning("Match update task timed out")
@@ -56,7 +56,7 @@ async def _process_matches_update():
             logger.info("No matches to update")
             return
 
-        batch_size = 10  # TODO: move to config
+        batch_size = int(settings.update_matches_default_batch_size)
         processed_matches = 0
         
         for i in range(0, len(matches), batch_size):
