@@ -112,6 +112,20 @@ ERROR_ADMIN_LEXICON_RU = {
     "failed_process_show_visitors": "👥 Ошибка загрузки участников\nДанные временно недоступны",
 }
 
+ADMIN_MATCH_INVITE_POLL_ANNOUCEMENT_LEXICON_RU = {
+    "match_invitation": (
+        "🔴⚪ *СБОР НА МАТЧ!* ⚪🔴\n\n"
+        "🏆 *{tournament_name}*\n"
+        "⚔️ *{located_match_day_name}*\n\n"
+        "⏰ *{meeting_date}*\n"
+        "📍 *{place_name}*\n"
+        "🏠 {address}\n\n"
+        "❗ *Сбор за 30 минут до начала*\n"
+        "👇 Кто идёт? Отмечайтесь в комментариях!\n"
+        "✅ Буду | ❌ Не смогу"
+    )
+}
+
 ADMIN_MATCH_INVITE_POLL_OPTIONS = {
     "agree": "✅ Иду!",
     "cancel": "❌ Не смогу"

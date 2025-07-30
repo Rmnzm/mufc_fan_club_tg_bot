@@ -19,6 +19,7 @@ from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
 from lexicon.admin_lexicon_ru import (
+    ADMIN_MATCH_INVITE_POLL_ANNOUCEMENT_LEXICON_RU,
     ERROR_ADMIN_LEXICON_RU,
     BASE_ADMIN_LEXICON_RU,
     ADMIN_MATCH_INVITE_POLL_OPTIONS,
@@ -310,18 +311,12 @@ async def process_menu_button(callback: CallbackQuery):
 
 
 def _create_poll_question(watch_day_info):
-    tournament_name = watch_day_info[0].get("tournament_name")
-    located_match_day_name = watch_day_info[0].get("localed_match_day_name")
-    meeting_date = watch_day_info[0].get("meeting_date")
-    place_name = watch_day_info[0].get("place_name")
-    address = watch_day_info[0].get("address")
-    question = (
-        f"СРОЧНОСБОР\n"
-        f"{tournament_name}\n"
-        f"{located_match_day_name}\n"
-        f"\n"
-        f"{meeting_date}\n"
-        f"{place_name} - {address}"
+    question = ADMIN_MATCH_INVITE_POLL_ANNOUCEMENT_LEXICON_RU["match_invitation"].format(
+        tournament_name=watch_day_info[0].get("tournament_name").upper(),
+        located_match_day_name=watch_day_info[0].get("localed_match_day_name"),
+        meeting_date=watch_day_info[0].get("meeting_date").strftime('%A, %d %B | %H:%M'),
+        place_name=watch_day_info[0].get("place_name"),
+        address=watch_day_info[0].get("address")
     )
 
     return question
