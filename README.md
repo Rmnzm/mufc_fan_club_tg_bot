@@ -18,7 +18,7 @@
 
 - Poetry (для управления зависимостями)
 
-- Telegram Bot Token (получить у @BotFather)
+- Telegram Bot Token (получить у [@BotFather](https://telegram.me/BotFather))
 
 #### Установка
 
@@ -43,9 +43,9 @@
 
 2. Заполните необходимые переменные:
 
-- TELEGRAM_BOT_TOKEN - токен вашего бота
+- `TELEGRAM_BOT_TOKEN` - токен вашего бота
 
-- ADMIN_ID - ID администратора бота
+- `ADMIN_IDs` - список ID администраторов бота например ["123", "456"]
 
 - (другие переменные по необходимости)
 
