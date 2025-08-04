@@ -15,12 +15,12 @@ from schemes.scheme import (
     PlacesSchema,
     UserRegistrationSchema,
 )
-from functions.schema_converter import SchemaConverter
+from functions.schema_convertion_function import SchemaConvertionFunction
 
 logger = logging.getLogger(__name__)
 
 class KznRedsPGManager:
-    _schema_converter = SchemaConverter()
+    _schema_converter = SchemaConvertionFunction()
 
     async def get_match_days(self) -> List[MatchDaySchema]:
         try:

@@ -13,7 +13,7 @@ from callback_factory.callback_factory import (
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.kzn_reds_pg_manager import KznRedsPGManager
-from functions.schema_converter import SchemaConverter
+from functions.schema_convertion_function import SchemaConvertionFunction
 from handlers.admin.base_admin_handler import admin_keyboard
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -31,7 +31,7 @@ settings = get_settings()
 router = Router()
 
 match_day_manager = KznRedsPGManager()
-schema_converter = SchemaConverter()
+schema_converter = SchemaConvertionFunction()
 
 watch_day_keyboard = WatchDayKeyboard().watch_day_keyboard()
 main_keyboard = AdminKeyboard()

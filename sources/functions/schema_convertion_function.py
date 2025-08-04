@@ -10,7 +10,7 @@ from schemes.scheme import (
 )
 
 
-class SchemaConverter:
+class SchemaConvertionFunction:
     @staticmethod
     def convert_users_info(users):
         return [UsersSchema(**user) for user in users]

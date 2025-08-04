@@ -8,7 +8,7 @@ from callback_factory.callback_factory import MatchDayCallbackFactory
 from config.config import get_settings
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from functions.helpers.watch_day_helper import WatchDayHelper
-from functions.schema_converter import SchemaConverter
+from functions.schema_convertion_function import SchemaConvertionFunction
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.watch_day_keyboard import WatchDayKeyboard
 from lexicon.base_lexicon_ru import BASE_LEXICON_RU
@@ -25,7 +25,7 @@ main_keyboard = MainKeyboard()
 watch_day_keyboard = WatchDayKeyboard()
 
 match_day_manager = KznRedsPGManager()
-schema_converter = SchemaConverter()
+schema_converter = SchemaConvertionFunction()
 
 
 @router.callback_query(MatchDayCallbackFactory.filter())

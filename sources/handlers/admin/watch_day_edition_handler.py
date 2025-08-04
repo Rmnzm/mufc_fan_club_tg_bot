@@ -14,7 +14,7 @@ from callback_factory.callback_factory import (
 from config.config import get_settings
 from functions.admin_checker import AdminFilter
 from functions.helpers.watch_day_helper import WatchDayHelper
-from functions.schema_converter import SchemaConverter
+from functions.schema_convertion_function import SchemaConvertionFunction
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from keyboards.admin_keyboard import AdminKeyboard
 from keyboards.keyboard_generator import KeyboardGenerator
@@ -37,7 +37,7 @@ admin_watch_day_keyboard = AdminKeyboard()
 places_keyboard = KeyboardGenerator()
 
 match_day_manager = KznRedsPGManager()
-schema_converter = SchemaConverter()
+schema_converter = SchemaConvertionFunction()
 
 
 class PlaceState(StatesGroup):
