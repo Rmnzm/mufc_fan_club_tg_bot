@@ -7,9 +7,6 @@ class Settings(BaseSettings):
     tg_token: str
     tg_bot_id: str
     tg_kzn_reds_chat_id: str
-    sofascore_rapidapi_url: str
-    x_rapidapi_host: str
-    x_rapidapi_key: str
     sofascore_team_id: str = "35"
     database: str
     login: str
