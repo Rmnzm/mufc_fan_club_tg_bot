@@ -61,7 +61,8 @@ async def edit_place_name_process(callback: CallbackQuery, state: FSMContext):
     try:
         logger.debug(f"Step edit_place_name_process with context = {callback.data}")
         await state.set_state(PlaceState.edit_name)
-        place_id = await state.get_data()["place_id"]
+        place_data = await state.get_data()
+        place_id = place_data["place_id"]
         place = await match_day_manager.get_place(place_id=place_id)
         await callback.message.answer(
             text=BASE_ADMIN_LEXICON_RU["edit_place_name_process"].format(
@@ -112,11 +113,12 @@ async def edit_address_place_process(callback: CallbackQuery, state: FSMContext)
             f"Step edit_place_name with context: {callback.data} from user {callback.from_user.id}"
         )
         await state.set_state(PlaceState.edit_address)
-        place_id = await state.get_data()["place_id"]
+        place_data = await state.get_data()
+        place_id = place_data["place_id"]
         place = await match_day_manager.get_place(place_id=place_id)
         await callback.message.answer(
             text=BASE_ADMIN_LEXICON_RU["edit_address_place_process"].format(
-                old_place_address=place.address
+                place_name=place.place_name, old_place_address=place.address
             )
         )
     except Exception as error:
