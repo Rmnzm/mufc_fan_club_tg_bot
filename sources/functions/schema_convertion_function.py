@@ -44,7 +44,10 @@ class SchemaConvertionFunction:
 
     @staticmethod
     def convert_registration_table(registrations):
-        return [UserRegistrationTableSchema(**registration) for registration in registrations]
+        return [
+            UserRegistrationTableSchema(**registration)
+            for registration in registrations
+        ]
 
     @staticmethod
     def convert_model_to_dict(model):

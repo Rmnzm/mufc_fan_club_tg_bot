@@ -42,7 +42,9 @@ async def edit_place_process(
         place = await match_day_manager.get_place(place_id)
 
         await callback.message.edit_text(
-            text=BASE_ADMIN_LEXICON_RU["edit_place_process"].format(place_name=place.place_name),
+            text=BASE_ADMIN_LEXICON_RU["edit_place_process"].format(
+                place_name=place.place_name
+            ),
             reply_markup=admin_keyboard.edit_place_keyboard(name=True, address=True),
         )
     except Exception as error:
@@ -90,8 +92,7 @@ async def edit_place_name(message: Message, state: FSMContext):
         )
         await message.answer(
             text=BASE_ADMIN_LEXICON_RU["edit_place_name"].format(
-                old_place_name=old_place_name,
-                new_place_name=new_place_name
+                old_place_name=old_place_name, new_place_name=new_place_name
             ),
             reply_markup=admin_keyboard.edit_place_keyboard(address=True),
         )
@@ -115,7 +116,7 @@ async def edit_address_place_process(callback: CallbackQuery, state: FSMContext)
         place = await match_day_manager.get_place(place_id=place_id)
         await callback.message.answer(
             text=BASE_ADMIN_LEXICON_RU["edit_address_place_process"].format(
-                old_place_address=place.place_address
+                old_place_address=place.address
             )
         )
     except Exception as error:
@@ -166,9 +167,7 @@ async def delete_place(callback: CallbackQuery, state: FSMContext):
 
         place_name = await match_day_manager.delete_place(place_id=place_id)
         await callback.message.answer(
-            text=BASE_ADMIN_LEXICON_RU["delete_place"].format(
-                place_name=place_name
-            ),
+            text=BASE_ADMIN_LEXICON_RU["delete_place"].format(place_name=place_name),
             reply_markup=admin_keyboard.main_admin_keyboard(),
         )
 

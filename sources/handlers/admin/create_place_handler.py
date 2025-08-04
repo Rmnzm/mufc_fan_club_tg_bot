@@ -57,8 +57,8 @@ async def input_place_address(message: Message, state: FSMContext):
             text=BASE_ADMIN_LEXICON_RU["add_watching_place_step_final"].format(
                 place_name=current_state_data["add_place_state"],
                 place_address=message.text,
-            ), 
-            reply_markup=admin_keyboard.main_admin_keyboard()
+            ),
+            reply_markup=admin_keyboard.main_admin_keyboard(),
         )
         logger.info(
             f"Successfully processed place address with context={current_state_data}"

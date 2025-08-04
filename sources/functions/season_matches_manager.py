@@ -28,18 +28,22 @@ class SeasonMatchesManager:
         for event in events:
             task = asyncio.create_task(self._process_single_match(event))
             tasks.append(task)
-        
+
         await asyncio.gather(*tasks, return_exceptions=True)
 
     async def _process_single_match(self, event: EventDTO):
         try:
             match_day = await match_day_manager.get_match_day_by_event_id(event.eventId)
-            match_status = MatchDayStatusEnum.PASSED if event.score else MatchDayStatusEnum.NOTSTARTED
+            match_status = (
+                MatchDayStatusEnum.PASSED
+                if event.score
+                else MatchDayStatusEnum.NOTSTARTED
+            )
             opponent_name, opponent_name_slug = event.rival.name, event.rival.name_eng
             tournament_name = event.competition.short
             tournament_name_slug = event.competition.id
             localed_match_day_name = self.__get_localed_match_day_name(event)
-            
+
             if not match_day:
                 await match_day_manager.add_match_day(
                     start_timestamp=event.date,
@@ -67,7 +71,7 @@ class SeasonMatchesManager:
                         match_day_manager.update_meeting_date(
                             match_id=match_day[0].id,
                             new_date=event.date - timedelta(minutes=30),
-                        )
+                        ),
                     )
                 else:
                     logger.debug(f"No changes for event {event.eventId}")
@@ -84,7 +88,9 @@ class SeasonMatchesManager:
 
         meeting_date = context[0].meeting_date.strftime("%a, %d %b %H:%M")
 
-        users = await match_day_manager.get_users_to_send_invitations(context[0].match_day_id)
+        users = await match_day_manager.get_users_to_send_invitations(
+            context[0].match_day_id
+        )
         match_day_name = await match_day_manager.get_match_day_name_by_id(
             context[0].match_day_id
         )
@@ -109,15 +115,14 @@ class SeasonMatchesManager:
 
     @staticmethod
     def __check_match_day_has_changes(
-        event: EventDTO, 
-        match_day_schema: MatchDaySchema
+        event: EventDTO, match_day_schema: MatchDaySchema
     ) -> bool:
         """Checks if critical match day data has changed.
-        
+
         Args:
             event: Event data transfer object
             match_day_schema: Current match day schema
-            
+
         Returns:
             bool: True if data remains unchanged, False if changes detected
         """
@@ -144,9 +149,7 @@ class SeasonMatchesManager:
         try:
             events = []
             for match_day in match_days:
-                events.append(
-                    EventDTO(**match_day)
-                )
+                events.append(EventDTO(**match_day))
             return events
         except Exception as e:
             logger.error(e)
