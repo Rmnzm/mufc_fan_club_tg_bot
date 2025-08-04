@@ -24,8 +24,7 @@ settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
-# redis = Redis(host=settings.redis_host, port=settings.redis_port)
-redis = Redis(host="localhost")
+redis = Redis(host=settings.redis_host, port=settings.redis_port)
 redis_storage = RedisStorage(redis=redis)
 
 season_manager = SeasonMatchesManager()
@@ -37,7 +36,7 @@ async def create_or_update_matches():
         try:
             task = asyncio.create_task(_process_matches_update())
             await asyncio.wait_for(task, timeout=int(settings.default_task_timeout_in_sec))
-            
+
         except asyncio.TimeoutError:
             logger.warning("Match update task timed out")
         except Exception as e:
@@ -51,27 +50,27 @@ async def _process_matches_update():
     try:
         matches = await season_manager.get_next_matches()
         logger.info(f"Found {len(matches)} matches to update")
-        
+
         if not matches:
             logger.info("No matches to update")
             return
 
         batch_size = int(settings.update_matches_default_batch_size)
         processed_matches = 0
-        
+
         for i in range(0, len(matches), batch_size):
             chunk = matches[i:i + batch_size]
             logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
-            
+
             try:
                 await asyncio.sleep(0.1)
                 await season_manager.update_next_matches(chunk)
                 processed_matches += len(chunk)
             except Exception as e:
                 logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
-            
+
             logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
-        
+
         logger.info("All matches processed!")
     except Exception as e:
         logger.error(f"Error in matches processing: {e}")

@@ -1,8 +1,9 @@
 import logging
+
 import peewee
-import peewee_async
-from config.config import get_settings
 from peewee_async import Manager, PostgresqlDatabase
+
+from config.config import get_settings
 
 settings = get_settings()
 logger = logging.getLogger(__name__)

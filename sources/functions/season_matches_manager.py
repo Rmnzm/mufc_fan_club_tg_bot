@@ -1,17 +1,15 @@
 import asyncio
 import logging
-import aiohttp
-from datetime import timedelta, datetime
+from datetime import timedelta
 from typing import List
 
-import requests
+import aiohttp
 
+from config.config import get_settings
+from enums import EventPlaceEnum, MatchDayStatusEnum
 from functions.kzn_reds_pg_manager import KznRedsPGManager
 from schemes.matchday_dto import EventDTO
-from config.config import get_settings
-from schemes.scheme import MatchDaySchema, InvitationContextSchema
-from enums import EventPlaceEnum, MatchDayStatusEnum
-from tools.helpers import CommonHelpers
+from schemes.scheme import MatchDaySchema
 
 settings = get_settings()
 

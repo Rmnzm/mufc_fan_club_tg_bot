@@ -1,5 +1,5 @@
 from datetime import timedelta
-from functions.schema_converter import SchemaConverter
+from functions.schema_convertion_function import SchemaConvertionFunction
 from schemes.scheme import NearestMeetingsSchema
 from lexicon.calendar_lexicon_ru import MONTHS_RU, WEEKDAYS_RU
 from lexicon.watch_day_lexicon_ru import WATCH_DAY_LEXICON_RU
@@ -21,7 +21,7 @@ class WatchDayHelper:
         )
 
         watch_day_by_id_dict = [
-            SchemaConverter().convert_model_to_dict(watch_day)
+            SchemaConvertionFunction().convert_model_to_dict(watch_day)
             for watch_day in watch_day_by_id
         ]
         for watch_day in watch_day_by_id_dict:
