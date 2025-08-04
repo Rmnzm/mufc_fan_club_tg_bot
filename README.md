@@ -29,7 +29,7 @@
 `source venv/bin/activate`
 
 3. Проверка pip
-`pip --version`  # Должна быть выведена версия pip
+`pip --version  # Должна быть выведена версия pip`
 
 4. Установка Poetry
 `pip install poetry`
