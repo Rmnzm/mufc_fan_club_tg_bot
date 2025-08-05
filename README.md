@@ -18,7 +18,9 @@
 
 - Poetry (для управления зависимостями)
 
-- Redis (для стейтов и хранилище)
+- Redis (для стейтов и внутреннее хранилище)
+
+- Postgres для таблиц матчей, мест, пользоватлей
 
 - Telegram Bot Token (получить у [@BotFather](https://telegram.me/BotFather))
 
