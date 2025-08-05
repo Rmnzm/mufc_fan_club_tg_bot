@@ -78,11 +78,11 @@ async def process_go_button(callback: CallbackQuery, state: FSMContext):
         logger.debug(f"Step {F.data=} by {user_id}")
 
         await match_day_manager.register_user_to_watch(
-            user_id=user_id, 
+            user_id=user_id,
             place_id=state_data["place_id"],
             match_day_id=state_data["match_day_id"],
-            watch_day_id=state_data["watch_day_id"], 
-            is_approved=True
+            watch_day_id=state_data["watch_day_id"],
+            is_approved=True,
         )
 
         await callback.message.edit_text(
@@ -108,11 +108,11 @@ async def process_not_go_button(callback: CallbackQuery, state: FSMContext):
         logger.debug(f"Step {F.data=} by {user_id=}")
 
         await match_day_manager.register_user_to_watch(
-            user_id=user_id, 
+            user_id=user_id,
             place_id=state_data["place_id"],
             match_day_id=state_data["match_day_id"],
             watch_day_id=state_data["watch_day_id"],
-            is_canceled=True
+            is_canceled=True,
         )
         await callback.message.edit_text(
             text=CUSTOMER_LEXICON_RU["first_cancel_invitation"],

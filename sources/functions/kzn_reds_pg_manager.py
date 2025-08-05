@@ -19,21 +19,23 @@ from functions.schema_convertion_function import SchemaConvertionFunction
 
 logger = logging.getLogger(__name__)
 
+
 class KznRedsPGManager:
     _schema_converter = SchemaConvertionFunction()
 
     async def get_match_days(self) -> List[MatchDaySchema]:
         try:
             current_date = datetime.now()
-            query = (MatchDay
-                    .select()
-                    .where(
-                        (MatchDay.match_status == 'notstarted') &
-                        (MatchDay.start_timestamp > current_date)
-                    )
-                    .order_by(MatchDay.start_timestamp)
-                    .limit(5))
-            
+            query = (
+                MatchDay.select()
+                .where(
+                    (MatchDay.match_status == "notstarted")
+                    & (MatchDay.start_timestamp > current_date)
+                )
+                .order_by(MatchDay.start_timestamp)
+                .limit(5)
+            )
+
             match_days = await objects.execute(query)
             return self._schema_converter.convert_match_day_info(
                 [model.__data__ for model in match_days]
@@ -44,52 +46,62 @@ class KznRedsPGManager:
 
     async def get_match_day_by_event_id(self, event_id: str) -> List[MatchDaySchema]:
         try:
-            query = (MatchDay
-                     .select()
-                     .where(MatchDay.event_id == event_id)
-                     .order_by(MatchDay.start_timestamp)
-                     .limit(5))
-            
+            query = (
+                MatchDay.select()
+                .where(MatchDay.event_id == event_id)
+                .order_by(MatchDay.start_timestamp)
+                .limit(5)
+            )
+
             match_days = await objects.execute(query)
             return (
                 self._schema_converter.convert_match_day_info(
                     [model.__data__ for model in match_days]
-                ) if match_days else []
+                )
+                if match_days
+                else []
             )
         except Exception as e:
-            logger.error(f"Error fetching match day by event ID {event_id}", exc_info=True)
+            logger.error(
+                f"Error fetching match day by event ID {event_id}", exc_info=True
+            )
             raise
 
     async def get_nearest_watching_day(self) -> List[InvitationContextSchema]:
         try:
-            query = (WatchDay
-                     .select(WatchDay.meeting_date, WatchDay.match_day_id, WatchDay.place_id)
-                     .where(WatchDay.meeting_date > datetime.now())
-                     .order_by(WatchDay.meeting_date)
-                     .limit(1))
-            
+            query = (
+                WatchDay.select(
+                    WatchDay.meeting_date, WatchDay.match_day_id, WatchDay.place_id
+                )
+                .where(WatchDay.meeting_date > datetime.now())
+                .order_by(WatchDay.meeting_date)
+                .limit(1)
+            )
+
             watch_days = await objects.execute(query)
             return (
                 self._schema_converter.convert_invitations_context(
                     [model.__data__ for model in watch_days]
-                ) if watch_days else []
+                )
+                if watch_days
+                else []
             )
         except Exception as e:
             logger.error("Error fetching nearest watching day", exc_info=True)
             raise
 
-    async def update_message_sent_status(self, user_id: int, match_day_id: int):        
+    async def update_message_sent_status(self, user_id: int, match_day_id: int):
         try:
             await objects.execute(
-                UserRegistration
-                .update(is_message_sent=True)
-                .where(
-                    (UserRegistration.user_id == user_id) &
-                    (UserRegistration.match_day_id == match_day_id)
+                UserRegistration.update(is_message_sent=True).where(
+                    (UserRegistration.user_id == user_id)
+                    & (UserRegistration.match_day_id == match_day_id)
                 )
             )
         except Exception as e:
-            logger.error(f"Error updating message status for user {user_id}", exc_info=True)
+            logger.error(
+                f"Error updating message status for user {user_id}", exc_info=True
+            )
             raise
 
     async def update_match_day_info(
@@ -105,17 +117,15 @@ class KznRedsPGManager:
     ):
         try:
             await objects.execute(
-                MatchDay
-                .update(
+                MatchDay.update(
                     start_timestamp=start_timestamp,
                     match_status=match_status.value,
                     opponent_name=opponent_name,
                     opponent_name_slug=opponent_name_slug,
                     tournament_name=tournament_name,
                     tournament_name_slug=tournament_name_slug,
-                    localed_match_day_name=localed_match_day_name
-                )
-                .where(MatchDay.event_id == event_id)
+                    localed_match_day_name=localed_match_day_name,
+                ).where(MatchDay.event_id == event_id)
             )
         except Exception as e:
             logger.error("Error updating match day info", exc_info=True)
@@ -124,27 +134,30 @@ class KznRedsPGManager:
     async def update_meeting_date(self, new_date: datetime, match_id: int):
         try:
             await objects.execute(
-                WatchDay
-                .update(meeting_date=new_date)
-                .where(WatchDay.match_day_id == match_id)
+                WatchDay.update(meeting_date=new_date).where(
+                    WatchDay.match_day_id == match_id
+                )
             )
         except Exception as e:
-            logger.error(f"Error updating meeting date for match {match_id}", exc_info=True)
+            logger.error(
+                f"Error updating meeting date for match {match_id}", exc_info=True
+            )
             raise
 
     async def get_nearest_match_day(self) -> List[MatchDaySchema]:
         try:
             subquery = WatchDay.select(WatchDay.match_day_id)
-            query = (MatchDay
-                     .select()
-                     .where(
-                         (MatchDay.match_status == 'notstarted') &
-                         (MatchDay.start_timestamp > fn.now()) &
-                         ~(MatchDay.id.in_(subquery))
-                     )
-                     .order_by(MatchDay.start_timestamp)
-                     .limit(5))
-            
+            query = (
+                MatchDay.select()
+                .where(
+                    (MatchDay.match_status == "notstarted")
+                    & (MatchDay.start_timestamp > fn.now())
+                    & ~(MatchDay.id.in_(subquery))
+                )
+                .order_by(MatchDay.start_timestamp)
+                .limit(5)
+            )
+
             match_days = await objects.execute(query)
             return self._schema_converter.convert_match_day_info(
                 [model.__data__ for model in match_days]
@@ -186,7 +199,7 @@ class KznRedsPGManager:
                 tournament_name_slug=tournament_name_slug,
                 localed_match_day_name=localed_match_day_name,
                 event_id=event_id,
-                on_conflict='update'
+                on_conflict="update",
             )
         except Exception as e:
             logger.error("Error adding match day", exc_info=True)
@@ -206,23 +219,23 @@ class KznRedsPGManager:
         last_name: Optional[str] = None,
         birthday: Optional[datetime] = None,
         favorite_player: Optional[str] = None,
-        start_fan: Optional[str] = None
+        start_fan: Optional[str] = None,
     ):
         try:
             try:
                 user = await objects.get(User, user_tg_id=user_id)
-                
-                update_fields = {'username': user_name}
+
+                update_fields = {"username": user_name}
                 if first_name:
-                    update_fields['first_name'] = first_name
+                    update_fields["first_name"] = first_name
                 if last_name:
-                    update_fields['last_name'] = last_name
-                    
+                    update_fields["last_name"] = last_name
+
                 for field, value in update_fields.items():
                     setattr(user, field, value)
-                    
+
                 await objects.update(user)
-                
+
             except User.DoesNotExist:
                 await objects.create(
                     User,
@@ -233,9 +246,9 @@ class KznRedsPGManager:
                     last_name=last_name,
                     birthday_date=birthday,
                     favorite_player=favorite_player,
-                    fantime_start=start_fan
+                    fantime_start=start_fan,
                 )
-                
+
         except Exception as e:
             logger.error(f"Error in add_user_info: {str(e)}", exc_info=True)
             raise
@@ -247,8 +260,8 @@ class KznRedsPGManager:
                 meeting_date=match_day_context.start_timestamp - timedelta(minutes=30),
                 match_day_id=match_day_context.id,
                 place_id=place_id,
-                watch_status='notstarted',
-                on_conflict='ignore'
+                watch_status="notstarted",
+                on_conflict="ignore",
             )
         except Exception as e:
             logger.error("Error adding watch day", exc_info=True)
@@ -257,34 +270,33 @@ class KznRedsPGManager:
     async def get_nearest_meetings(self) -> List[NearestMeetingsSchema]:
         try:
             query = (
-                WatchDay
-                    .select(
-                        WatchDay.id.alias('watch_day_id'),
-                        WatchDay.meeting_date,
-                        WatchDay.watch_status,
-                        MatchDay.id.alias('match_day_id'),
-                        MatchDay.start_timestamp,
-                        MatchDay.opponent_name,
-                        MatchDay.tournament_name,
-                        MatchDay.localed_match_day_name,
-                        Place.id.alias('place_id'),
-                        Place.place_name,
-                        Place.address
-                    )
-                    .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
-                    .join(Place, on=(WatchDay.place_id == Place.id))
-                    .where(
-                        (WatchDay.watch_status == 'notstarted') &
-                        (MatchDay.match_status == 'notstarted') &
-                        (WatchDay.meeting_date > datetime.now())
-                    )
-                    .limit(5)
+                WatchDay.select(
+                    WatchDay.id.alias("watch_day_id"),
+                    WatchDay.meeting_date,
+                    WatchDay.watch_status,
+                    MatchDay.id.alias("match_day_id"),
+                    MatchDay.start_timestamp,
+                    MatchDay.opponent_name,
+                    MatchDay.tournament_name,
+                    MatchDay.localed_match_day_name,
+                    Place.id.alias("place_id"),
+                    Place.place_name,
+                    Place.address,
                 )
-            
+                .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
+                .join(Place, on=(WatchDay.place_id == Place.id))
+                .where(
+                    (WatchDay.watch_status == "notstarted")
+                    & (MatchDay.match_status == "notstarted")
+                    & (WatchDay.meeting_date > datetime.now())
+                )
+                .limit(5)
+            )
+
             meetings = await objects.execute(query.dicts())
-            
+
             return self._schema_converter.convert_nearest_meetings(list(meetings))
-            
+
         except Exception as e:
             logger.error(f"Error in get_nearest_meetings: {str(e)}", exc_info=True)
             raise
@@ -293,40 +305,43 @@ class KznRedsPGManager:
         self, match_day_id: int
     ) -> List[NearestMeetingsSchema]:
         try:
-            query = (WatchDay
-                     .select(
-                        WatchDay.id.alias('watch_day_id'),
-                        WatchDay.meeting_date,
-                        WatchDay.watch_status,
-                        MatchDay.id.alias('match_day_id'),
-                        MatchDay.start_timestamp,
-                        MatchDay.opponent_name,
-                        MatchDay.tournament_name,
-                        MatchDay.localed_match_day_name,
-                        Place.id.alias('place_id'),
-                        Place.place_name,
-                        Place.address
-                    )
-                     .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
-                     .join(Place, on=(WatchDay.place_id == Place.id))
-                     .where(MatchDay.id == match_day_id))
-            
+            query = (
+                WatchDay.select(
+                    WatchDay.id.alias("watch_day_id"),
+                    WatchDay.meeting_date,
+                    WatchDay.watch_status,
+                    MatchDay.id.alias("match_day_id"),
+                    MatchDay.start_timestamp,
+                    MatchDay.opponent_name,
+                    MatchDay.tournament_name,
+                    MatchDay.localed_match_day_name,
+                    Place.id.alias("place_id"),
+                    Place.place_name,
+                    Place.address,
+                )
+                .join(MatchDay, on=(WatchDay.match_day_id == MatchDay.id))
+                .join(Place, on=(WatchDay.place_id == Place.id))
+                .where(MatchDay.id == match_day_id)
+            )
+
             meetings = await objects.execute(query.dicts())
             return self._schema_converter.convert_nearest_meetings(list(meetings))
-        
+
         except Exception as e:
-            logger.error(f"Error fetching watch day for match {match_day_id}", exc_info=True)
+            logger.error(
+                f"Error fetching watch day for match {match_day_id}", exc_info=True
+            )
             raise
 
     async def register_user_to_watch(
-        self, 
-        user_id: int, 
-        watch_day_id: int, 
-        match_day_id: int, 
-        place_id: int, 
-        is_approved: bool = False, 
-        is_canceled: bool = False, 
-        is_message_sent: bool = False
+        self,
+        user_id: int,
+        watch_day_id: int,
+        match_day_id: int,
+        place_id: int,
+        is_approved: bool = False,
+        is_canceled: bool = False,
+        is_message_sent: bool = False,
     ):
         try:
             await objects.create(
@@ -339,49 +354,64 @@ class KznRedsPGManager:
                 is_canceled=is_canceled,
                 is_message_sent=is_message_sent,
                 on_conflict={
-                    'update': {
-                        'watch_day_id': watch_day_id,
-                        'place_id': place_id,
-                        'is_approved': is_approved,
-                        'is_canceled': is_canceled,
-                        'is_message_sent': is_message_sent
+                    "update": {
+                        "watch_day_id": watch_day_id,
+                        "place_id": place_id,
+                        "is_approved": is_approved,
+                        "is_canceled": is_canceled,
+                        "is_message_sent": is_message_sent,
                     }
-                }
+                },
             )
         except peewee.IntegrityError as e:
-           await objects.execute(
-                UserRegistration
-                .update(is_approved=is_approved, is_canceled=is_canceled, is_message_sent=is_message_sent)
-                .where(
-                    (UserRegistration.user_id == user_id) &
-                    (UserRegistration.match_day_id == match_day_id)
+            await objects.execute(
+                UserRegistration.update(
+                    is_approved=is_approved,
+                    is_canceled=is_canceled,
+                    is_message_sent=is_message_sent,
+                ).where(
+                    (UserRegistration.user_id == user_id)
+                    & (UserRegistration.match_day_id == match_day_id)
                 )
-           )
-           logger.info(f"User {user_id} already registered for match {match_day_id}")
+            )
+            logger.info(f"User {user_id} already registered for match {match_day_id}")
         except Exception as e:
-            logger.error(f"Error registering user {user_id} for match {match_day_id}", exc_info=True)
+            logger.error(
+                f"Error registering user {user_id} for match {match_day_id}",
+                exc_info=True,
+            )
             raise
 
     async def get_watch_day_by_id(self, watch_day_id: int) -> WatchDay:
         try:
-            return await objects.get(WatchDay.select().where(WatchDay.id == watch_day_id))
+            return await objects.get(
+                WatchDay.select().where(WatchDay.id == watch_day_id)
+            )
         except Exception as e:
             logger.error(f"Error getting watch day by ID {watch_day_id}", exc_info=True)
             raise
 
     async def get_match_day(self, match_day_id: int) -> MatchDay:
         try:
-            return await objects.get(MatchDay.select().where(MatchDay.id == match_day_id))
+            return await objects.get(
+                MatchDay.select().where(MatchDay.id == match_day_id)
+            )
         except Exception as e:
             logger.error(f"Error getting match day by ID {match_day_id}", exc_info=True)
             raise
 
     async def get_match_day_name_by_id(self, match_day_id: int) -> str:
         try:
-            match_day = await objects.get(MatchDay.select(MatchDay.localed_match_day_name).where(MatchDay.id == match_day_id))
+            match_day = await objects.get(
+                MatchDay.select(MatchDay.localed_match_day_name).where(
+                    MatchDay.id == match_day_id
+                )
+            )
             return match_day.localed_match_day_name
         except Exception as e:
-            logger.error(f"Error getting match day name for ID {match_day_id}", exc_info=True)
+            logger.error(
+                f"Error getting match day name for ID {match_day_id}", exc_info=True
+            )
             raise
 
     async def get_users(self) -> List[UsersSchema]:
@@ -395,38 +425,36 @@ class KznRedsPGManager:
             logger.error("Error fetching users", exc_info=True)
             raise
 
-    async def approve_watch_day_by_user_invitation_info(self, user_id: int, match_day_id: int):
+    async def approve_watch_day_by_user_invitation_info(
+        self, user_id: int, match_day_id: int
+    ):
         try:
             await objects.execute(
-                UserRegistration
-                .update(
-                    is_approved=True,
-                    is_canceled=False
-                )
-                .where(
-                    (UserRegistration.user_id == user_id) &
-                    (UserRegistration.match_day_id == match_day_id)
+                UserRegistration.update(is_approved=True, is_canceled=False).where(
+                    (UserRegistration.user_id == user_id)
+                    & (UserRegistration.match_day_id == match_day_id)
                 )
             )
         except Exception as e:
-            logger.error(f"Error approving registration for user {user_id}", exc_info=True)
+            logger.error(
+                f"Error approving registration for user {user_id}", exc_info=True
+            )
             raise
 
-    async def cancel_watch_day_by_user_invitation_info(self, user_id: int, match_day_id: int):
+    async def cancel_watch_day_by_user_invitation_info(
+        self, user_id: int, match_day_id: int
+    ):
         try:
             await objects.execute(
-                UserRegistration
-                .update(
-                    is_canceled=True,
-                    is_approved=False
-                )
-                .where(
-                    (UserRegistration.user_id == user_id) &
-                    (UserRegistration.match_day_id == match_day_id)
+                UserRegistration.update(is_canceled=True, is_approved=False).where(
+                    (UserRegistration.user_id == user_id)
+                    & (UserRegistration.match_day_id == match_day_id)
                 )
             )
         except Exception as e:
-            logger.error(f"Error canceling registration for user {user_id}", exc_info=True)
+            logger.error(
+                f"Error canceling registration for user {user_id}", exc_info=True
+            )
             raise
 
     async def add_watch_place(self, place_name: str, place_address: str):
@@ -459,82 +487,86 @@ class KznRedsPGManager:
             place = await objects.get(Place.select().where(Place.id == place_id))
             old_place_name = place.place_name
             await objects.execute(
-                Place
-                .update(place_name=new_place_name)
-                .where(Place.id == place_id)
+                Place.update(place_name=new_place_name).where(Place.id == place_id)
             )
             return old_place_name
         except Exception as e:
-            logger.error(f"Error changing place name for place ID {place_id}", exc_info=True)
+            logger.error(
+                f"Error changing place name for place ID {place_id}", exc_info=True
+            )
             raise
 
     async def change_place_address(self, place_id: int, new_place_address: str):
         try:
             await objects.execute(
-                Place
-                .update(address=new_place_address)
-                .where(Place.id == place_id)
+                Place.update(address=new_place_address).where(Place.id == place_id)
             )
         except Exception as e:
-            logger.error(f"Error changing place address for place ID {place_id}", exc_info=True)
+            logger.error(
+                f"Error changing place address for place ID {place_id}", exc_info=True
+            )
             raise
 
     async def change_watch_day_place(self, watch_day_id: int, place_id: int):
         try:
             await objects.execute(
-                WatchDay
-                .update(place_id=place_id)
-                .where(WatchDay.id == watch_day_id)
+                WatchDay.update(place_id=place_id).where(WatchDay.id == watch_day_id)
             )
         except Exception as e:
-            logger.error(f"Error changing watch day place for watch day ID {watch_day_id}", exc_info=True)
+            logger.error(
+                f"Error changing watch day place for watch day ID {watch_day_id}",
+                exc_info=True,
+            )
             raise
 
     @staticmethod
-    async def get_visitors_with_status(match_day_id: int) -> Tuple[
+    async def get_visitors_with_status(
+        match_day_id: int,
+    ) -> Tuple[
         List[UsersSchema],  # approved
         List[UsersSchema],  # canceled
-        List[UsersSchema]   # pending
+        List[UsersSchema],  # pending
     ]:
-        query = (User
-                .select(User, UserRegistration)
-                .join(UserRegistration, on=(User.user_tg_id == UserRegistration.user_id))
-                .where(UserRegistration.match_day_id == match_day_id))
-        
+        query = (
+            User.select(User, UserRegistration)
+            .join(UserRegistration, on=(User.user_tg_id == UserRegistration.user_id))
+            .where(UserRegistration.match_day_id == match_day_id)
+        )
+
         users = await objects.execute(query)
-        
+
         approved = []
         canceled = []
         pending = []
-        
+
         for user in users:
             user_data = user.__data__
             reg_data = user.userregistration.__data__
-            
+
             user_schema = UsersSchema(
                 **user_data,
-                is_approved=reg_data['is_approved'],
-                is_canceled=reg_data['is_canceled']
+                is_approved=reg_data["is_approved"],
+                is_canceled=reg_data["is_canceled"],
             )
-            
-            if reg_data['is_canceled']:
+
+            if reg_data["is_canceled"]:
                 canceled.append(user_schema)
-            elif reg_data['is_approved']:
+            elif reg_data["is_approved"]:
                 approved.append(user_schema)
             else:
                 pending.append(user_schema)
-        
+
         return approved, canceled, pending
 
     async def show_visitors(self, match_day_id: int) -> Dict[str, List[UsersSchema]]:
         approved, canceled, pending = await self.get_visitors_with_status(match_day_id)
         return {
-            'approved': approved,
-            'canceled': canceled,
-            'pending': pending,
-            'approved_count': len(approved),
-            'canceled_count': len(canceled),
-            'pending_count': len(pending)
+            "approved": approved,
+            "canceled": canceled,
+            "pending": pending,
+            "approved_count": len(approved),
+            "canceled_count": len(canceled),
+            "pending_count": len(pending),
         }
 
     async def register_user(self, user_tg_id: int, user_schema: UsersSchema):
@@ -542,16 +574,14 @@ class KznRedsPGManager:
             exists = await objects.count(
                 User.select().where(User.user_tg_id == user_tg_id)
             )
-            
+
             if exists:
                 await objects.execute(
-                    User
-                    .update(
+                    User.update(
                         username=user_schema.username,
                         first_name=user_schema.first_name,
-                        last_name=user_schema.last_name
-                    )
-                    .where(User.user_tg_id == user_tg_id)
+                        last_name=user_schema.last_name,
+                    ).where(User.user_tg_id == user_tg_id)
                 )
             else:
                 await objects.create(
@@ -560,66 +590,88 @@ class KznRedsPGManager:
                     username=user_schema.username,
                     first_name=user_schema.first_name,
                     last_name=user_schema.last_name,
-                    user_role=user_schema.user_role
+                    user_role=user_schema.user_role,
                 )
         except Exception as e:
-            logger.error(f"Error registering user with TG ID {user_tg_id}", exc_info=True)
+            logger.error(
+                f"Error registering user with TG ID {user_tg_id}", exc_info=True
+            )
             raise
 
-    async def get_users_to_send_invitations(self, match_day_id: int) -> List[UserRegistrationSchema]:
+    async def get_users_to_send_invitations(
+        self, match_day_id: int
+    ) -> List[UserRegistrationSchema]:
         try:
-            query = (UserRegistration
-                     .select()
-                     .where(
-                         (UserRegistration.is_canceled == False) &
-                         (UserRegistration.match_day_id == match_day_id) &
-                         (UserRegistration.is_message_sent == False))
-                     )
-            
+            query = UserRegistration.select().where(
+                (UserRegistration.is_canceled == False)
+                & (UserRegistration.match_day_id == match_day_id)
+                & (UserRegistration.is_message_sent == False)
+            )
+
             registrations = await objects.execute(query)
             return self._schema_converter.convert_users_registration(
                 [model.__data__ for model in registrations]
             )
         except Exception as e:
-            logger.error(f"Error fetching users for match {match_day_id}", exc_info=True)
+            logger.error(
+                f"Error fetching users for match {match_day_id}", exc_info=True
+            )
             raise
 
     async def count_registered_meeting_users(self, watch_day_id: int) -> int:
         try:
-            return await objects.count(UserRegistration.select().where(UserRegistration.watch_day_id == watch_day_id))
+            return await objects.count(
+                UserRegistration.select().where(
+                    UserRegistration.watch_day_id == watch_day_id
+                )
+            )
         except Exception as e:
-            logger.error(f"Error counting registered users for meeting {watch_day_id}", exc_info=True)
+            logger.error(
+                f"Error counting registered users for meeting {watch_day_id}",
+                exc_info=True,
+            )
             raise
 
     async def get_registered_match_day_users_by_status(
-            self, user_ids: List[int], watch_day_id: int, is_canceled: bool = False, is_approved: bool = False
-            ) -> Tuple[int, List[UserRegistrationSchema]]:
+        self,
+        user_ids: List[int],
+        watch_day_id: int,
+        is_canceled: bool = False,
+        is_approved: bool = False,
+    ) -> Tuple[int, List[UserRegistrationSchema]]:
         try:
-            query = (UserRegistration
-                     .select()
-                     .where(
-                         (UserRegistration.is_canceled == is_canceled) &
-                         (UserRegistration.is_approved == is_approved) &
-                         (UserRegistration.watch_day_id == watch_day_id) &
-                         (UserRegistration.user_id in user_ids)
-                         )
-                     )
-            
+            query = UserRegistration.select().where(
+                (UserRegistration.is_canceled == is_canceled)
+                & (UserRegistration.is_approved == is_approved)
+                & (UserRegistration.watch_day_id == watch_day_id)
+                & (UserRegistration.user_id in user_ids)
+            )
+
             registrations = await objects.execute(query)
-            return sum(registrations), self._schema_converter.convert_users_registration(
+            return sum(
+                registrations
+            ), self._schema_converter.convert_users_registration(
                 [model.__data__ for model in registrations]
             )
         except Exception as e:
-            logger.error(f"Error fetching confirmed users for meeting {watch_day_id}", exc_info=True)
+            logger.error(
+                f"Error fetching confirmed users for meeting {watch_day_id}",
+                exc_info=True,
+            )
             raise
-
 
     async def cancel_meeting(self, watch_day_id: int):
         try:
             logger.debug(f"Step cancel_meeting with context: {watch_day_id}")
-            await objects.execute(UserRegistration.delete().where(UserRegistration.watch_day_id == watch_day_id))
+            await objects.execute(
+                UserRegistration.delete().where(
+                    UserRegistration.watch_day_id == watch_day_id
+                )
+            )
             await objects.execute(WatchDay.delete().where(WatchDay.id == watch_day_id))
             logger.info(f"Successfully canceled meeting with {watch_day_id=}")
         except Exception as e:
-            logger.error(f"Error canceling meeting with id={watch_day_id}", exc_info=True)
+            logger.error(
+                f"Error canceling meeting with id={watch_day_id}", exc_info=True
+            )
             raise

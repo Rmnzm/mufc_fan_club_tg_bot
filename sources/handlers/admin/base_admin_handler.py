@@ -16,7 +16,11 @@ from keyboards.keyboard_generator import KeyboardGenerator
 from keyboards.main_keyboard import MainKeyboard
 from schemes.scheme import UsersSchema
 from states.create_place_state import CreatePlaceStateGroup
-from lexicon.admin_lexicon_ru import ADMIN_WATCH_DAY_HANDLER_LEXICON_RU, BASE_ADMIN_LEXICON_RU, ERROR_ADMIN_LEXICON_RU
+from lexicon.admin_lexicon_ru import (
+    ADMIN_WATCH_DAY_HANDLER_LEXICON_RU,
+    BASE_ADMIN_LEXICON_RU,
+    ERROR_ADMIN_LEXICON_RU,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -175,10 +175,13 @@ async def poll_answers(poll_answer: PollAnswer, state: FSMContext):
     except Exception as error:
         logger.error(f"Failed to process poll answer. Err: {error}")
 
+
 @router.callback_query(F.data == "edit_watch_place", AdminFilter())
 async def process_change_watching_place(callback: CallbackQuery, state: FSMContext):
     try:
-        logger.debug(f"Step process_change_watching_place with context: {callback.data}")
+        logger.debug(
+            f"Step process_change_watching_place with context: {callback.data}"
+        )
         await state.set_state(PlaceState.edit_watch_place)
         watch_day_state_data = await state.get_data()
         watch_day_info = watch_day_state_data["watch_day_by_id"]
@@ -195,8 +198,8 @@ async def process_change_watching_place(callback: CallbackQuery, state: FSMConte
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["process_change_watching_place"].format(
                 current_place=current_place.place_name
-            ), 
-            reply_markup=reply_keyboard
+            ),
+            reply_markup=reply_keyboard,
         )
         logger.info(f"Successfully processed go button")
     except Exception as error:
@@ -253,11 +256,13 @@ async def process_cancel_meeting(callback: CallbackQuery, state: FSMContext):
             watch_day_id=watch_day_id
         )
         await match_day_manager.cancel_meeting(watch_day_id=watch_day_id)
-        match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info["match_day_id"])
+        match_day = await match_day_manager.get_match_day(
+            match_day_id=watch_day_info["match_day_id"]
+        )
         await callback.message.edit_text(
             text=BASE_ADMIN_LEXICON_RU["process_cancel_meeting"].format(
-                localed_match_day_name=match_day.localed_match_day_name, 
-                count_registered_users=count_registered_users
+                localed_match_day_name=match_day.localed_match_day_name,
+                count_registered_users=count_registered_users,
             ),
             reply_markup=admin_watch_day_keyboard.main_admin_keyboard(),
         )
@@ -281,10 +286,16 @@ async def process_show_visitors(callback: CallbackQuery, state: FSMContext):
     try:
         logger.debug(f"Step process_show_visitors with context: {callback.data}")
 
-        visitors_data = await match_day_manager.show_visitors(match_day_id=watch_day_info[0]["match_day_id"])
-        match_day = await match_day_manager.get_match_day(match_day_id=watch_day_info[0]["match_day_id"])
+        visitors_data = await match_day_manager.show_visitors(
+            match_day_id=watch_day_info[0]["match_day_id"]
+        )
+        match_day = await match_day_manager.get_match_day(
+            match_day_id=watch_day_info[0]["match_day_id"]
+        )
 
-        message_text = _prepare_visitors_message_text(visitors_data=visitors_data, match_day=match_day)
+        message_text = _prepare_visitors_message_text(
+            visitors_data=visitors_data, match_day=match_day
+        )
 
         await callback.message.edit_text(
             text=message_text,
@@ -311,12 +322,16 @@ async def process_menu_button(callback: CallbackQuery):
 
 
 def _create_poll_question(watch_day_info):
-    question = ADMIN_MATCH_INVITE_POLL_ANNOUCEMENT_LEXICON_RU["match_invitation"].format(
+    question = ADMIN_MATCH_INVITE_POLL_ANNOUCEMENT_LEXICON_RU[
+        "match_invitation"
+    ].format(
         tournament_name=watch_day_info[0].get("tournament_name").upper(),
         located_match_day_name=watch_day_info[0].get("localed_match_day_name"),
-        meeting_date=watch_day_info[0].get("meeting_date").strftime('%A, %d %B | %H:%M'),
+        meeting_date=watch_day_info[0]
+        .get("meeting_date")
+        .strftime("%A, %d %B | %H:%M"),
         place_name=watch_day_info[0].get("place_name"),
-        address=watch_day_info[0].get("address")
+        address=watch_day_info[0].get("address"),
     )
 
     return question
@@ -374,25 +389,26 @@ async def _register_user_poll_answer(poll_answer, watch_day_info):
     except Exception as error:
         logger.exception(f"Failed to register user to watch. Err: {error}")
 
+
 def _prepare_visitors_message_text(
-        visitors_data: Dict[str, List[UsersSchema]], match_day: MatchDay
-        ):
+    visitors_data: Dict[str, List[UsersSchema]], match_day: MatchDay
+):
     approved_users_string = "\n".join(
-        [f"@{user.username} - {user.user_role}" for user in visitors_data['approved']]
+        [f"@{user.username} - {user.user_role}" for user in visitors_data["approved"]]
     )
     declined_users_string = "\n".join(
-        [f"@{user.username} - {user.user_role}" for user in visitors_data['canceled']]
+        [f"@{user.username} - {user.user_role}" for user in visitors_data["canceled"]]
     )
     pending_users_string = "\n".join(
-        [f"@{user.username} - {user.user_role}" for user in visitors_data['pending']]
+        [f"@{user.username} - {user.user_role}" for user in visitors_data["pending"]]
     )
 
     return BASE_ADMIN_LEXICON_RU["process_show_visitors"].format(
-            localed_match_day_name=match_day.localed_match_day_name, 
-            confirmed_users_count=visitors_data["approved_count"],
-            confirmed_users=approved_users_string,
-            declined_users_count=visitors_data["canceled_count"],
-            declined_users=declined_users_string,
-            pending_users_count=visitors_data["pending_count"],
-            pending_users=pending_users_string
-        )
+        localed_match_day_name=match_day.localed_match_day_name,
+        confirmed_users_count=visitors_data["approved_count"],
+        confirmed_users=approved_users_string,
+        declined_users_count=visitors_data["canceled_count"],
+        declined_users=declined_users_string,
+        pending_users_count=visitors_data["pending_count"],
+        pending_users=pending_users_string,
+    )

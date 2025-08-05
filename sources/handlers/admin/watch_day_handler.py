@@ -78,7 +78,9 @@ async def watch_day_register(callback: CallbackQuery, state: FSMContext):
             reply_markup=main_keyboard.main_admin_keyboard(),
         )
     except Exception as error:
-        logger.error(f"Failed to react on action watch_day_register. Err: {error.with_traceback}")
+        logger.error(
+            f"Failed to react on action watch_day_register. Err: {error.with_traceback}"
+        )
         await callback.message.edit_text(
             text=ADMIN_WATCH_DAY_HANDLER_ERROR_LEXICON_RU["watch_day_register_error"],
             reply_markup=main_keyboard.main_admin_keyboard(),
@@ -96,7 +98,9 @@ async def choose_place(
         logger.debug(
             f"Step choose_place with context {callback.data} and {callback_data=}"
         )
-        match_day_by_id = await match_day_manager.get_match_day_by_event_id(callback_data.id)
+        match_day_by_id = await match_day_manager.get_match_day_by_event_id(
+            callback_data.id
+        )
 
         match_day_by_id_dict = schema_converter.convert_model_to_dict(
             match_day_by_id[0]
@@ -104,9 +108,7 @@ async def choose_place(
         match_day_by_id_dict["start_timestamp"] = match_day_by_id_dict[
             "start_timestamp"
         ].isoformat()
-        match_day_by_id_dict["match_status"] = match_day_by_id_dict[
-            "match_status"
-        ]
+        match_day_by_id_dict["match_status"] = match_day_by_id_dict["match_status"]
 
         await state.set_state(WatchDay.choose_place)
         await state.update_data(match_day_by_id=match_day_by_id_dict)

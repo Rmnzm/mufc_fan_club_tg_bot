@@ -24,7 +24,9 @@ class MatchInvitorManager:
         self.bot = bot
 
     async def send(self):
-        users, match_day_context = await season_manager.create_context_to_send_invitations()
+        users, match_day_context = (
+            await season_manager.create_context_to_send_invitations()
+        )
         if not match_day_context:
             logger.info("No matches to send invitations. Skipping ...")
             return
@@ -54,12 +56,10 @@ class MatchInvitorManager:
         if not match_day_time:
             logger.info("Match day time not found or match_day is not exists")
             return False
-        
+
         match_day_datetime = datetime.strptime(match_day_time, "%a, %d %b %H:%M")
         if match_day_datetime.tzinfo is None:
-            match_day_datetime = match_day_datetime.replace(
-                tzinfo=timezone.utc
-            )
+            match_day_datetime = match_day_datetime.replace(tzinfo=timezone.utc)
         current_time = datetime.now(timezone.utc)
         logger.info(
             f"Checking current time current_time={current_time.strftime('%a, %d %b %H:%M')} "
