@@ -47,8 +47,12 @@ class MeetingInvitesManager:
         match_name = context.get("match_day_name")
         place_name = context.get("place_name")
         address = context.get("address")
-        match_day_datetime = datetime.strptime(context.get("meeting_date"), "%a, %d %b %H:%M")
-        date_str, time_str, gathering_str = WatchDayHelper.format_match_date(match_day_datetime)
+        match_day_datetime = datetime.strptime(
+            context.get("meeting_date"), "%a, %d %b %H:%M"
+        )
+        date_str, time_str, gathering_str = WatchDayHelper.format_match_date(
+            match_day_datetime
+        )
         return WATCH_DAY_LEXICON_RU["meeting_invite_message"].format(
             match_name=match_name,
             date_str=date_str,

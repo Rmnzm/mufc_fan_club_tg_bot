@@ -37,8 +37,11 @@ async def process_start_command(message: Message, state: FSMContext):
     last_name = message.from_user.last_name
     if await match_day_manager.get_user_info(user_id):
         await match_day_manager.add_user_info(
-            user_id=user_id, user_name=username, first_name=first_name, last_name=last_name
-            )
+            user_id=user_id,
+            user_name=username,
+            first_name=first_name,
+            last_name=last_name,
+        )
         await message.answer(
             text=BASE_LEXICON_RU["/start"], reply_markup=main_keyboard.main_keyboard()
         )
@@ -46,16 +49,16 @@ async def process_start_command(message: Message, state: FSMContext):
         await state.set_state(UserRegistrationState.start_state)
         await state.set_data(
             dict(
-                user_id=user_id, 
-                username=username, 
-                first_name=first_name, 
-                last_name=last_name
-                )
+                user_id=user_id,
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
             )
+        )
         await message.answer(
-            text=USER_REGISTRATION_LEXICON_RU["add_birthday_date"], 
-            reply_markup=await DialogCalendar().start_calendar(2000)
-            )
+            text=USER_REGISTRATION_LEXICON_RU["add_birthday_date"],
+            reply_markup=await DialogCalendar().start_calendar(2000),
+        )
 
 
 @router.callback_query(F.data == "scheduled_match_days")
@@ -87,7 +90,8 @@ async def process_nearest_meetings(callback: CallbackQuery):
         )
         if nearest_match_day_context:
             await callback.message.edit_text(
-                text=BASE_LEXICON_RU["nearest_meetings_footer"], reply_markup=reply_keyboard
+                text=BASE_LEXICON_RU["nearest_meetings_footer"],
+                reply_markup=reply_keyboard,
             )
         else:
             await callback.message.edit_text(

@@ -19,6 +19,7 @@ pg_db = PostgresqlDatabase(
 objects = Manager(pg_db)
 pg_db.set_allow_sync(False)
 
+
 class BaseModel(peewee.Model):
     class Meta:
         database = pg_db

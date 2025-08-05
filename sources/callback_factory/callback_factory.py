@@ -9,7 +9,9 @@ class AdminMatchDayCallbackFactory(CallbackData, prefix="admin_watch_days"):
     id: int
 
 
-class AdminCreateWatchDayCallbackFactory(CallbackData, prefix="admin_watch_days_creator"):
+class AdminCreateWatchDayCallbackFactory(
+    CallbackData, prefix="admin_watch_days_creator"
+):
     id: str
 
 

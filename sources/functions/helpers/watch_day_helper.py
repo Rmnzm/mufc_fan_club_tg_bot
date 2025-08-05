@@ -17,7 +17,7 @@ class WatchDayHelper:
             time_str=time_str,
             gathering_str=gathering_str,
             place_name=watch_day_by_id[0].place_name,
-            address=watch_day_by_id[0].address
+            address=watch_day_by_id[0].address,
         )
 
         watch_day_by_id_dict = [
@@ -28,16 +28,18 @@ class WatchDayHelper:
             watch_day["meeting_date"] = watch_day["meeting_date"].isoformat()
 
         return nearest_match_day, watch_day_by_id_dict
-    
+
     @staticmethod
     def format_match_date(meeting_date, gathering_offset_hours=0.5):
         weekday = WEEKDAYS_RU[meeting_date.weekday()]
         day = meeting_date.day
         month = MONTHS_RU[meeting_date.month]
-        
+
         formatted_date = f"{weekday}, {day} {month}"
         formatted_time = meeting_date.strftime("%H:%M")
-        
-        gathering_time = (meeting_date - timedelta(hours=gathering_offset_hours)).strftime("%H:%M")
-        
+
+        gathering_time = (
+            meeting_date - timedelta(hours=gathering_offset_hours)
+        ).strftime("%H:%M")
+
         return formatted_date, formatted_time, gathering_time

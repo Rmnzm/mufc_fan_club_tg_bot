@@ -35,7 +35,9 @@ async def create_or_update_matches():
     while True:
         try:
             task = asyncio.create_task(_process_matches_update())
-            await asyncio.wait_for(task, timeout=int(settings.default_task_timeout_in_sec))
+            await asyncio.wait_for(
+                task, timeout=int(settings.default_task_timeout_in_sec)
+            )
 
         except asyncio.TimeoutError:
             logger.warning("Match update task timed out")
@@ -44,6 +46,7 @@ async def create_or_update_matches():
         finally:
             logger.info("Create/update next matches task is sleeping ...")
             await asyncio.sleep(int(settings.update_match_job_timeout_in_sec))
+
 
 async def _process_matches_update():
     logger.info("Create/update next matches task is running ...")
@@ -59,8 +62,10 @@ async def _process_matches_update():
         processed_matches = 0
 
         for i in range(0, len(matches), batch_size):
-            chunk = matches[i:i + batch_size]
-            logger.debug(f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}")
+            chunk = matches[i : i + batch_size]
+            logger.debug(
+                f"Processing batch {len(chunk)} at index {i}: IDs {[m.eventId for m in chunk]}"
+            )
 
             try:
                 await asyncio.sleep(0.1)
@@ -69,7 +74,9 @@ async def _process_matches_update():
             except Exception as e:
                 logger.error(f"Error processing batch {len(chunk)} at index {i}: {e}")
 
-            logger.info(f"Batch {i//batch_size} with {processed_matches=} processed successfully")
+            logger.info(
+                f"Batch {i//batch_size} with {processed_matches=} processed successfully"
+            )
 
         logger.info("All matches processed!")
     except Exception as e:
@@ -105,6 +112,7 @@ async def run_bot(bot: Bot):
     await bot.delete_webhook(drop_pending_updates=True)
     logger.info("Bot started.")
     await dispatcher.start_polling(bot)
+
 
 async def main():
     bot = Bot(

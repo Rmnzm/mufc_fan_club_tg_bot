@@ -11,7 +11,10 @@ from callback_factory.callback_factory import (
     WatchPlaceChangeFactory,
 )
 from schemes.scheme import NearestMeetingsSchema, MatchDaySchema, PlacesSchema
-from lexicon.button_lexicon_ru import ADMIN_KEYBOARD_BUTTON_LEXICON_RU, ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU
+from lexicon.button_lexicon_ru import (
+    ADMIN_KEYBOARD_BUTTON_LEXICON_RU,
+    ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU,
+)
 
 
 class KeyboardGenerator:
@@ -46,12 +49,16 @@ class KeyboardGenerator:
             inline_keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["add_watch_day"], callback_data="add_watch_day"
+                        text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU[
+                            "add_watch_day"
+                        ],
+                        callback_data="add_watch_day",
                     )
                 ]
             )
         back_to_main_menu = InlineKeyboardButton(
-            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"],
+            callback_data="back_to_main_menu",
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -73,12 +80,16 @@ class KeyboardGenerator:
             inline_keyboard.append(
                 [
                     InlineKeyboardButton(
-                        text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU["add_watch_day"], callback_data="add_watch_day"
+                        text=ADMIN_WATCH_DAY_KEYBOARD_BUTTON_LEXICON_RU[
+                            "add_watch_day"
+                        ],
+                        callback_data="add_watch_day",
                     )
                 ]
             )
         back_to_main_menu = InlineKeyboardButton(
-            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"],
+            callback_data="back_to_main_menu",
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -94,7 +105,8 @@ class KeyboardGenerator:
             for factory_data in data_factories
         ]
         back_to_main_menu = InlineKeyboardButton(
-            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"],
+            callback_data="back_to_main_menu",
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(
@@ -112,7 +124,8 @@ class KeyboardGenerator:
             for factory_data in data_factories
         ]
         back_to_main_menu = InlineKeyboardButton(
-            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"], callback_data="back_to_main_menu"
+            text=ADMIN_KEYBOARD_BUTTON_LEXICON_RU["back_to_main_menu"],
+            callback_data="back_to_main_menu",
         )
         inline_keyboard.append([back_to_main_menu])
         keyboard = InlineKeyboardMarkup(

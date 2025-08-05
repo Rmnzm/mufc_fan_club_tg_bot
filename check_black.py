@@ -4,9 +4,7 @@ import sys
 
 def run_black_check():
     result = subprocess.run(
-        ["black", "--check", "--diff", "."],
-        capture_output=True,
-        text=True
+        ["black", "--check", "--diff", "."], capture_output=True, text=True
     )
 
     if result.returncode != 0:
